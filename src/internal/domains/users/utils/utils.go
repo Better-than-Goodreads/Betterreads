@@ -40,3 +40,40 @@ func MapUserRequestToUserRecord(user *models.UserRequest, id int) *models.UserRe
 		AboutMe:   user.AboutMe,
 	}
 }
+
+
+func MapUserStageRecordToUserStageResponse (user *models.UserStageRecord) *models.UserStageResponse {
+    return &models.UserStageResponse{
+        Email: user.Email,
+        Username: user.Username,
+        First_name: user.FirstName,
+        Last_name: user.LastName,
+        Token: user.Token,
+    }
+}
+
+
+func MapUserStageRequestToUserStageRecord (user *models.UserStageRequest, token string) *models.UserStageRecord {
+    return &models.UserStageRecord{
+        Email: user.Email,
+        Username: user.Username,
+        Password: user.Password,
+        FirstName: user.FirstName,
+        LastName: user.LastName,
+        Token: token,
+    }
+}
+
+func CombineUser(userPrimary *models.UserStageRecord, userSecondary *models.UserAdditionalRequest) *models.UserRecord {
+    return &models.UserRecord{
+        Email: userPrimary.Email,
+        Password: userPrimary.Password,
+        FirstName: userPrimary.FirstName,
+        LastName: userPrimary.LastName,
+        Username: userPrimary.Username,
+        Location: userSecondary.Location,
+        Gender: userSecondary.Gender,
+        Age: userSecondary.Age,
+        AboutMe: userPrimary.Username,
+    }
+}
