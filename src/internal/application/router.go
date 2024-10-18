@@ -1,26 +1,24 @@
 package application
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/betterreads/internal/domains/users/controller"
-	"github.com/betterreads/internal/domains/users/service"
 	"github.com/betterreads/internal/domains/users/repository"
+	"github.com/betterreads/internal/domains/users/service"
+	"github.com/gin-gonic/gin"
 )
 
 type Router struct {
 	engine *gin.Engine
-	port  string
+	port   string
 }
 
 func NewRouter(port string) *Router {
 	r := gin.Default()
-
-
 	addUsersHandlers(r)
 
 	return &Router{
 		engine: r,
-		port: port,
+		port:   port,
 	}
 }
 
@@ -29,11 +27,10 @@ func addUsersHandlers(r *gin.Engine) {
 	us := service.NewUsersService(rp)
 	uc := controller.NewUsersController(us)
 
-	r.POST("/users", uc.CreateUser)
+	r.POST("/users/register", uc.Register)
+	r.POST("/users/login", uc.LogIn)
 	r.GET("/users", uc.GetUsers)
 }
-
-
 
 func (r *Router) Run() {
 	r.engine.Run(r.port)
