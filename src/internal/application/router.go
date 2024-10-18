@@ -27,7 +27,8 @@ func addUsersHandlers(r *gin.Engine) {
 	us := service.NewUsersService(rp)
 	uc := controller.NewUsersController(us)
 
-	r.POST("/users/register", uc.Register)
+	r.POST("/users/register-first", uc.RegisterFirstStep)
+    r.POST("/users/register-second", uc.RegisterSecondStep)
 	r.POST("/users/login", uc.LogIn)
 	r.GET("/users", uc.GetUsers)
 }

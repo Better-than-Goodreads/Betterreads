@@ -2,54 +2,87 @@ package service
 
 import (
 	"errors"
+
 	"github.com/betterreads/internal/domains/users/models"
-	"github.com/betterreads/internal/domains/users/repository"
+	rs "github.com/betterreads/internal/domains/users/repository"
 	"github.com/betterreads/internal/domains/users/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UsersService struct {
-	rp repository.UsersDatabase
+	rp rs.UsersDatabase
 }
 
 var (
-	ErrUsernameAlreadyTaken = errors.New("username already taken")
-	ErrEmailAlreadyTaken    = errors.New("email already taken")
 	ErrWrongPassword        = errors.New("wrong password")
 )
 
-func NewUsersService(rp repository.UsersDatabase) *UsersService {
+func NewUsersService(rp rs.UsersDatabase) *UsersService {
 	return &UsersService{
 		rp: rp,
 	}
 }
 
-func (u *UsersService) RegisterUser(user *models.UserRequest) (*models.UserResponse, error) {
+// func (u *UsersService) RegisterUser(user *models.UserRequest) (*models.UserResponse, error) {
+// 	stored_user, _ := u.rp.GetUserByUsername(user.Username)
+// 	if stored_user != nil {
+// 		return nil, rs.ErrUsernameAlreadyTaken
+// 	}
+//
+// 	stored_user, _ = u.rp.GetUserByEmail(user.Email)
+// 	if stored_user != nil {
+// 		return nil, rs.ErrEmailAlreadyTaken
+// 	}
+//
+// 	// hashes the password
+// 	hashedPassword, err := hashPassword(user.Password)
+// 	if err != nil {
+// 		return nil, bcrypt.ErrPasswordTooLong // The password max length is 72
+// 	}
+// 	user.Password = hashedPassword
+//
+// 	userRecord, err := u.rp.CreateUser(user)
+// 	if err != nil {
+// 		return nil, err // TODO: return a better error
+// 	}
+//
+// 	UserResponse := utils.MapUserRecordToUserResponse(userRecord)
+// 	return UserResponse, nil
+// }
+
+func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error) {
 	stored_user, _ := u.rp.GetUserByUsername(user.Username)
 	if stored_user != nil {
-		return nil, ErrUsernameAlreadyTaken
+		return nil, rs.ErrUsernameAlreadyTaken
 	}
-
 	stored_user, _ = u.rp.GetUserByEmail(user.Email)
 	if stored_user != nil {
-		return nil, ErrEmailAlreadyTaken
+		return nil, rs.ErrEmailAlreadyTaken
 	}
 
-	// hashes the password
 	hashedPassword, err := hashPassword(user.Password)
 	if err != nil {
-		return nil, bcrypt.ErrPasswordTooLong // The password max length is 72
+		return nil, bcrypt.ErrPasswordTooLong
 	}
+
 	user.Password = hashedPassword
 
-	userRecord, err := u.rp.CreateUser(user)
-
+	userRecord, err := u.rp.CreateStageUser(user)
 	if err != nil {
-		return nil, err // TODO: return a better error
+		return nil, err
 	}
+	UserStageResponse := utils.MapUserStageRecordToUserStageResponse(userRecord)
+	return UserStageResponse, nil
+}
 
-	UserResponse := utils.MapUserRecordToUserResponse(userRecord)
-	return UserResponse, nil
+func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest) (*models.UserResponse, error) {
+    UserRecord, err := u.rp.JoinAndCreateUser(user)
+    if err != nil {
+        return nil, err
+    }
+
+    UserResponse := utils.MapUserRecordToUserResponse(UserRecord)
+    return UserResponse, nil
 }
 
 func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserResponse, error) {
@@ -73,13 +106,11 @@ func (u *UsersService) GetUsers() ([]*models.UserResponse, error) {
 	}
 
 	UserResponses, err := utils.MapUsersRecordToUsersResponses(users)
-
 	if err != nil {
 		return nil, err
 	}
 
 	return UserResponses, nil
-
 }
 
 func (u *UsersService) GetUser(id int) (*models.UserResponse, error) {

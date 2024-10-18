@@ -64,19 +64,36 @@ func (u *UsersController) LogIn(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
 }
 
-func (u *UsersController) Register(c *gin.Context) {
-	var user *models.UserRequest
 
-	if err := c.ShouldBindJSON(&user); err != nil {
+func (u *UsersController) RegisterFirstStep(c *gin.Context) {
+    var user *models.UserStageRequest
+ 	if err := c.ShouldBindJSON(&user); err != nil {
 		errors.SendError(c, errors.NewErrParsingRequest(err))
 		return
 	}
 
-	userResponse, err := u.us.RegisterUser(user)
+    userStageResponse , err := u.us.RegisterFirstStep(user)
 
-	if err != nil {
-		errors.SendError(c, errors.NewErrRegisterUser(err))
-		return
-	}
-	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
+    if err != nil {
+        errors.SendError(c, errors.NewErrRegisterUser(err))
+        return 
+    }
+
+    c.JSON(http.StatusCreated, gin.H{"user": userStageResponse})
 }
+
+
+func (u *UsersController) RegisterSecondStep(c *gin.Context) {
+    var user *models.UserAdditionalRequest
+    if err := c.ShouldBindJSON(&user); err != nil {
+        errors.SendError(c, errors.NewErrParsingRequest(err))
+        return
+    }
+    userResponse, err := u.us.RegisterSecondStep(user)
+    if err != nil {
+        errors.SendError(c, errors.NewErrRegisterUser(err))
+        return
+    }
+    c.JSON(http.StatusCreated, gin.H{"user": userResponse})
+}
+
