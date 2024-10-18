@@ -7,4 +7,5 @@ import (
 func main() {
 	r := application.NewRouter(":8080")
 	r.Run()
+
 }
