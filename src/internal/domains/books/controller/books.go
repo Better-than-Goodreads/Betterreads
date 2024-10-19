@@ -45,8 +45,7 @@ func (bc *BooksController) GetBook(ctx *gin.Context) {
 	}
 
 	if book == nil {
-		//TODO: valen acordate de crear un error en vez de devolver esto por default
-		ctx.JSON(http.StatusNotFound, gin.H{"message": "book not found"})
+		errors.SendError(ctx, errors.NewErrBookNotFound())
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{"book": book})
@@ -59,12 +58,12 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 
 	bookId, err := strconv.Atoi(strBookId)
 	if err != nil {
-		//TODO: errors.SendError(ctx, errors.NewErrParsingBookId(err))
+		errors.SendError(ctx, errors.NewErrParsingError(err))
 		return
 	}
 	rateAmount, err := strconv.Atoi(strRateAmount)
 	if err != nil {
-		//TODO: errors.SendError(ctx, errors.NewErrParsingRateAmount(err))
+		errors.SendError(ctx, errors.NewErrParsingError(err))
 		return
 	}
 
