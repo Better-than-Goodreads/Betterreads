@@ -1,0 +1,235 @@
+basePath: /api/v1
+definitions:
+  errors.ErrorDetails:
+    properties:
+      detail:
+        type: string
+      instance:
+        type: string
+      status:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  models.UserAdditionalRequest:
+    properties:
+      about_me:
+        type: string
+      age:
+        type: integer
+      gender:
+        type: string
+      location:
+        type: string
+      token:
+        type: string
+      username:
+        type: string
+    required:
+    - username
+    type: object
+  models.UserLoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  models.UserResponse:
+    properties:
+      about_me:
+        type: string
+      age:
+        type: integer
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      location:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserStageRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - username
+    type: object
+  models.UserStageResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      token:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a  server for Swagger with Gin.
+  title: BetterReads API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+      summary: Get all users
+      tags:
+      - users
+  /users/{id}:
+    get:
+      description: Get user by id
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get user by id
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in a user and return a JWT
+      parameters:
+      - description: User login request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Log in a user
+      tags:
+      - users
+  /users/register-first:
+    post:
+      consumes:
+      - application/json
+      description: Register first step
+      parameters:
+      - description: User stage request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserStageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserStageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Register first step
+      tags:
+      - users
+  /users/register-second:
+    post:
+      consumes:
+      - application/json
+      description: Register second step
+      parameters:
+      - description: User additional request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserAdditionalRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Register second step
+      tags:
+      - users
+swagger: "2.0"

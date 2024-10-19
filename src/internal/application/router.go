@@ -5,6 +5,10 @@ import (
 	booksRepository "github.com/betterreads/internal/domains/books/repository"
 	booksService "github.com/betterreads/internal/domains/books/service"
 
+
+    swaggerFiles "github.com/swaggo/files"
+    ginSwagger "github.com/swaggo/gin-swagger"
+
 	"github.com/betterreads/internal/domains/users/controller"
 	"github.com/betterreads/internal/domains/users/repository"
 	"github.com/betterreads/internal/domains/users/service"
@@ -21,6 +25,9 @@ func NewRouter(port string) *Router {
 	r := gin.Default()
 	addUsersHandlers(r)
 	addBooksHandlers(r)
+
+    //Adds swagger documentation
+    r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return &Router{
 		engine: r,

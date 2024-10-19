@@ -19,6 +19,14 @@ func NewUsersController(us *service.UsersService) *UsersController {
 	}
 }
 
+// GetUsers godoc
+// @Summary Get all users
+// @Description Get all users
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} models.UserResponse
+// @Router /users [get]
 func (u *UsersController) GetUsers(c *gin.Context) {
 	Users, err := u.us.GetUsers()
 	if err != nil {
@@ -28,6 +36,16 @@ func (u *UsersController) GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"users": Users})
 }
 
+// GetUser godoc
+// @Summary Get user by id
+// @Description Get user by id
+// @Tags users
+// @Param id path int true "User id"
+// @Produce  json
+// @Success 200 {object} models.UserResponse
+// @Router /users/{id} [get]
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
 func (u *UsersController) GetUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -46,6 +64,17 @@ func (u *UsersController) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
+// LogIn godoc
+// @Summary Log in a user
+// @Description Log in a user and return a JWT
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param user body models.UserLoginRequest true "User login request"
+// @Success 202 {object} models.UserResponse
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Router /users/login [post]
 func (u *UsersController) LogIn(c *gin.Context) {
 	var user *models.UserLoginRequest
 
@@ -64,7 +93,17 @@ func (u *UsersController) LogIn(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
 }
 
-
+// RegisterFirst godoc
+// @Summary Register first step
+// @Description Register first step
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param user body models.UserStageRequest true "User stage request"
+// @Success 201 {object} models.UserStageResponse
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /users/register-first [post]
 func (u *UsersController) RegisterFirstStep(c *gin.Context) {
     var user *models.UserStageRequest
  	if err := c.ShouldBindJSON(&user); err != nil {
@@ -82,7 +121,17 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
     c.JSON(http.StatusCreated, gin.H{"user": userStageResponse})
 }
 
-
+// RegisterSecond godoc
+// @Summary Register second step
+// @Description Register second step
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param user body models.UserAdditionalRequest true "User additional request"
+// @Success 201 {object} models.UserResponse
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /users/register-second [post]
 func (u *UsersController) RegisterSecondStep(c *gin.Context) {
     var user *models.UserAdditionalRequest
     if err := c.ShouldBindJSON(&user); err != nil {
