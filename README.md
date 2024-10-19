@@ -15,6 +15,10 @@ Luego para generar la documentación se utiliza el comando dentro de src/:
 swag init -g cmd/main.go
 ```
 
+Para visualizar la documentación, teniendo el servidor corriendo simplemente acceda a :
+[Link con puerto en 8080](http://localhost:8080/swagger/index.html#/)
+link generico : http://localhost:PORT/swagger/index.html#/
+
 ## To do List:
 
 [x] Publicar libro
