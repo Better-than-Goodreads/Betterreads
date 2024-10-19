@@ -14,6 +14,12 @@ var (
 		"Error when parsing request: ",
 		http.StatusBadRequest,
 	)
+
+	ErrRatingBook = NewErrorDetails(
+		"failed to rate book",
+		"Rate must be between 1 and 5 (inclusive): ",
+		http.StatusBadRequest,
+	)
 )
 
 func NewErrPublishingBook(err error) *ErrorDetails {
@@ -43,4 +49,13 @@ func NewErrGettingBook(err error) *ErrorDetails {
 	)
 	return errorDetails
 
+}
+
+func NewErrRatingBook(err error) *ErrorDetails {
+	errorDetails := NewErrorDetails(
+		ErrRatingBook.Title,
+		ErrRatingBook.Detail+err.Error(),
+		ErrRatingBook.Status,
+	)
+	return errorDetails
 }

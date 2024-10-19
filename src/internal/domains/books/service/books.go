@@ -37,6 +37,11 @@ func (bs *BooksService) GetBook(name string) (*repository.Book, error) {
 }
 
 func (bs *BooksService) RateBook(bookId int, rateAmount int) error {
+
+	if rateAmount < 1 || rateAmount > 5 {
+		return errors.New("rating must be between 1 and 5")
+	}
+
 	err := bs.booksRepository.RateBook(bookId, rateAmount)
 	if err != nil {
 		return err

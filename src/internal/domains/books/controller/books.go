@@ -69,7 +69,7 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 	}
 
 	if err := bc.bookService.RateBook(bookId, rateAmount); err != nil {
-		//TODO: implementar error
+		errors.SendError(ctx, errors.NewErrRatingBook(err))
 		return
 	}
 
