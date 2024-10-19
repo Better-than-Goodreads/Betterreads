@@ -45,6 +45,7 @@ func addBooksHandlers(r *gin.Engine) {
 	bc := booksController.NewBooksController(bs)
 	r.POST("/books", bc.PublishBook)
 	r.GET("/books/:book-name", bc.GetBook)
+	r.POST("/books/:book-id/:rate-amount", bc.RateBook)
 }
 
 func (r *Router) Run() {

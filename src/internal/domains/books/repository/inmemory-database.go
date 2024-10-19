@@ -1,5 +1,6 @@
 package repository
 
+
 type InmemoryBooksDatabase struct {
 	books map[int]Book
 	newId int
@@ -17,9 +18,19 @@ func (db *InmemoryBooksDatabase) SaveBook(book Book) error {
 	return nil
 }
 
-func (db *InmemoryBooksDatabase) GetBookById(id int) (Book, error) {
-	//TODO implement me
-	panic("implement me")
+func (db *InmemoryBooksDatabase) GetBookById(id int) (*Book, error) {
+	if len(db.books) == 0 {
+		return nil, nil
+	}
+
+	book, ok := db.books[id]
+
+	if !ok {
+		return nil, nil
+	}
+
+	return &book, nil
+	
 }
 
 func (db *InmemoryBooksDatabase) GetBookByName(name string) (*Book, error) {
@@ -38,4 +49,13 @@ func (db *InmemoryBooksDatabase) GenerateBookId() int {
 	id := db.newId
 	db.newId++
 	return id
+}
+
+func (db *InmemoryBooksDatabase) RateBook(bookId int, rating int) error {
+
+	var book = db.books[bookId]
+	book.Ratings = append(book.Ratings, rating)
+	db.books[bookId] = book
+
+	return nil
 }

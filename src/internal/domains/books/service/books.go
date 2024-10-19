@@ -35,3 +35,11 @@ func (bs *BooksService) GetBook(name string) (*repository.Book, error) {
 
 	return book, nil
 }
+
+func (bs *BooksService) RateBook(bookId int, rateAmount int) error {
+	err := bs.booksRepository.RateBook(bookId, rateAmount)
+	if err != nil {
+		return err
+	}
+	return nil
+}

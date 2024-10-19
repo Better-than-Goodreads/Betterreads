@@ -1,11 +1,15 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/betterreads/internal/domains/books/models"
 	"github.com/betterreads/internal/domains/books/service"
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
-	"net/http"
+
+	"strconv"
+
 )
 
 type BooksController struct {
@@ -46,4 +50,30 @@ func (bc *BooksController) GetBook(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{"book": book})
+}
+
+func (bc *BooksController) RateBook(ctx *gin.Context) {
+
+	strBookId := ctx.Param("book-id")
+	strRateAmount := ctx.Param("rate-amount")
+
+	bookId, err := strconv.Atoi(strBookId)
+	if err != nil {
+		//TODO: errors.SendError(ctx, errors.NewErrParsingBookId(err))
+		return
+	}
+	rateAmount, err := strconv.Atoi(strRateAmount)
+	if err != nil {
+		//TODO: errors.SendError(ctx, errors.NewErrParsingRateAmount(err))
+		return
+	}
+
+	if err := bc.bookService.RateBook(bookId, rateAmount); err != nil {
+		//TODO: implementar error
+		return
+	}
+
+	message := "book " + strBookId + " rated with " + strRateAmount
+
+	ctx.JSON(200, gin.H{"message": message,})
 }
