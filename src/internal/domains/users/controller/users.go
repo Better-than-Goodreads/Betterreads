@@ -6,6 +6,7 @@ import (
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+
 	"strconv"
 )
 
@@ -84,14 +85,22 @@ func (u *UsersController) LogIn(c *gin.Context) {
 		return
 	}
 
-	userResponse, err := u.us.LogInUser(user)
+	userResponse, token, err := u.us.LogInUser(user)
 
 	if err != nil {
 		errors.SendError(c, errors.NewErrLogInUser(err))
 		return
 	}
 
+    c.Header("Authorization", token)
+
 	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
+}
+
+func (u *UsersController) Welcome(c *gin.Context) {
+    username , _ := c.Get("username")
+    msg := "Welcome to BetterReads: " + username.(string)
+    c.JSON(http.StatusOK, gin.H{"message": msg})
 }
 
 // RegisterFirst godoc

@@ -5,8 +5,9 @@ import (
 
 	"github.com/betterreads/internal/domains/users/models"
 	rs "github.com/betterreads/internal/domains/users/repository"
+    "github.com/betterreads/internal/pkg/auth"
 	"github.com/betterreads/internal/domains/users/utils"
-	"golang.org/x/crypto/bcrypt"
+
 )
 
 type UsersService struct {
@@ -25,9 +26,9 @@ func NewUsersService(rp rs.UsersDatabase) *UsersService {
 
 
 func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error) {
-	hashedPassword, err := hashPassword(user.Password)
+	hashedPassword, err := auth.HashPassword(user.Password)
 	if err != nil {
-		return nil, bcrypt.ErrPasswordTooLong
+		return nil, err 
 	}
 
 	user.Password = hashedPassword
@@ -50,18 +51,23 @@ func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest) (
     return UserResponse, nil
 }
 
-func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserResponse, error) {
+func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserResponse, string, error,) {
 	userRecord, err := u.rp.GetUserByUsername(user.Username)
 	if userRecord == nil {
-		return nil, err
+		return nil,"", err
 	}
 
-	if !verifyPassword(userRecord.Password, user.Password) {
-		return nil, ErrWrongPassword
+	if !auth.VerifyPassword(userRecord.Password, user.Password) {
+		return nil,"",  ErrWrongPassword
 	}
 
 	UserResponse := utils.MapUserRecordToUserResponse(userRecord)
-	return UserResponse, nil
+    token, err := auth.GenerateToken(user.Username)
+    if err != nil {
+
+        return nil,"", err
+    }
+	return UserResponse, token, nil
 }
 
 func (u *UsersService) GetUsers() ([]*models.UserResponse, error) {
@@ -89,12 +95,4 @@ func (u *UsersService) GetUser(id int) (*models.UserResponse, error) {
 	return UserResponse, nil
 }
 
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
 
-func verifyPassword(hashedPassword, password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return err == nil
-}

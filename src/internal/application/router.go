@@ -45,6 +45,9 @@ func addUsersHandlers(r *gin.Engine) {
 	r.POST("/users/login", uc.LogIn)
 	r.GET("/users", uc.GetUsers)
     r.GET("/users/:id", uc.GetUser)
+
+    // Authenticated routes
+    r.GET("/users/welcome", authMiddleware, uc.Welcome)
 }
 
 func addBooksHandlers(r *gin.Engine) {

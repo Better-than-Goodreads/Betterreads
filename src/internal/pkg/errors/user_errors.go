@@ -29,7 +29,7 @@ func NewErrLogInUser(err error) *ErrorDetails {
     errLogInUser := NewErrorDetails(
 		"failed to log in user",
 		"Error when logging in user: " + err.Error(),
-		http.StatusBadRequest,
+		http.StatusUnauthorized,
 	)
 
 	return errLogInUser
