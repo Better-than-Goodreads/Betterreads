@@ -51,7 +51,7 @@ func (u *UsersController) GetUser(c *gin.Context) {
 
 	id_int, err := strconv.Atoi(id)
 	if err != nil {
-		errors.SendError(c, errors.NewErrInvalidID(id))
+		errors.SendError(c, errors.NewErrInvalidUserID(id))
 		return
 	}
 

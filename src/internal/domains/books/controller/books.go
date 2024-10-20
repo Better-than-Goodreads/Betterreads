@@ -23,7 +23,7 @@ func NewBooksController(bookService *service.BooksService) *BooksController {
 func (bc *BooksController) PublishBook(ctx *gin.Context) {
 	var newBookRequest models.NewBookRequest
 	if err := ctx.ShouldBindJSON(&newBookRequest); err != nil {
-		errors.SendError(ctx, errors.NewErrParsingBookRequest(err))
+		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
 		return
 	}
 
@@ -58,12 +58,12 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 
 	bookId, err := strconv.Atoi(strBookId)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrParsingError(err))
+		errors.SendError(ctx, errors.NewErrInvalidBookId(strBookId))
 		return
 	}
 	rateAmount, err := strconv.Atoi(strRateAmount)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrParsingError(err))
+		errors.SendError(ctx, errors.NewErrInvalidRating(strRateAmount))
 		return
 	}
 

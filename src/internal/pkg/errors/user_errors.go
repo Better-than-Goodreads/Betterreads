@@ -4,80 +4,53 @@ import (
 	"net/http"
 )
 
-var (
-	ErrFetchUsers = NewErrorDetails(
+
+func NewErrFetchUsers(err error) *ErrorDetails {
+    errFetchUsers := NewErrorDetails(
 		"failed to fetch all users",
-		"Error when Fetching all users:  ",
+		"Error when Fetching all users:  " + err.Error(),
 		http.StatusInternalServerError,
 	)
 
-	ErrRegisterUser = NewErrorDetails(
-		"failed to register user",
-		"Error when registering user: ",
-		http.StatusBadRequest,
-	)
-
-	ErrLogInUser = NewErrorDetails(
-		"failed to log in user",
-		"Error when logging in user: ",
-		http.StatusBadRequest,
-	)
-
-
-	ErrInvalidID = NewErrorDetails(
-		"failed to parse user id",
-		"value of id should be a number: ",
-		http.StatusBadRequest,
-	)
-
-	ErrUserNotFoundById = NewErrorDetails(
-		"failed to fetch user by id",
-		"Error when fetching user by id: ",
-		http.StatusNotFound,
-	)
-)
-
-func NewErrFetchUsers(err error) *ErrorDetails {
-	errorDetails := NewErrorDetails(
-		ErrFetchUsers.Title,
-		ErrFetchUsers.Detail+err.Error(),
-		ErrFetchUsers.Status,
-	)
-	return errorDetails
+	return errFetchUsers
 }
 
 func NewErrRegisterUser(err error) *ErrorDetails {
-	errorDetails := NewErrorDetails(
-		ErrRegisterUser.Title,
-		ErrRegisterUser.Detail+err.Error(),
-		ErrRegisterUser.Status,
+    errRegisterUser := NewErrorDetails(
+		"failed to register user",
+		"Error when registering user: " + err.Error(),
+		http.StatusBadRequest,
 	)
-	return errorDetails
+	
+	return errRegisterUser 
 }
 
 func NewErrLogInUser(err error) *ErrorDetails {
-	errorDetails := NewErrorDetails(
-		ErrLogInUser.Title,
-		ErrLogInUser.Detail+err.Error(),
-		ErrLogInUser.Status,
+    errLogInUser := NewErrorDetails(
+		"failed to log in user",
+		"Error when logging in user: " + err.Error(),
+		http.StatusBadRequest,
 	)
-	return errorDetails
+
+	return errLogInUser
 }
 
-func NewErrInvalidID(id string) *ErrorDetails {
-	errorDetails := NewErrorDetails(
-		ErrInvalidID.Title,
-		ErrInvalidID.Detail+"Id: "+id,
-		ErrInvalidID.Status,
+func NewErrInvalidUserID(id string) *ErrorDetails {
+    errInvalidUserID := NewErrorDetails(
+		"failed to parse user id",
+        "value of id should be a number: Id: " + id,
+		http.StatusBadRequest,
 	)
-	return errorDetails
+
+	return errInvalidUserID
 }
 
 func NewErrUserNotFoundById(err error) *ErrorDetails {
-	errorDetails := NewErrorDetails(
-		ErrUserNotFoundById.Title,
-		ErrUserNotFoundById.Detail+err.Error(),
-		ErrUserNotFoundById.Status,
+    errUserNotFoundById := NewErrorDetails(
+		"failed to fetch user by id",
+		"Error when fetching user by id: " + err.Error(),
+		http.StatusNotFound,
 	)
-	return errorDetails
+
+	return errUserNotFoundById
 }
