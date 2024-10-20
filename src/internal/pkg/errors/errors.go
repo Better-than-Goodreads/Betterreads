@@ -44,12 +44,12 @@ type ErrorDetailsWithParams struct{
     Title string `json:"title"`
     Detail string `json:"detail"`
     Instance string `json:"instance"`
-    Params []ErrorParam `json:"error_params"`
+    Params []ErrorParam `json:"validation_errors"`
     Status int `json:"status"`
 }
 
 type ErrorParam struct {
-    Name string `json:"name"`
+    Name string `json:"field"`
     Reason string `json:"reason"`
 }
 
