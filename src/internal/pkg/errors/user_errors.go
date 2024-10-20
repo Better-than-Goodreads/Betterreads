@@ -23,11 +23,6 @@ var (
 		http.StatusBadRequest,
 	)
 
-	ErrParsingRequest = NewErrorDetails(
-		"failed to parse request",
-		"Error when parsing request: ",
-		http.StatusBadRequest,
-	)
 
 	ErrInvalidID = NewErrorDetails(
 		"failed to parse user id",
@@ -65,15 +60,6 @@ func NewErrLogInUser(err error) *ErrorDetails {
 		ErrLogInUser.Title,
 		ErrLogInUser.Detail+err.Error(),
 		ErrLogInUser.Status,
-	)
-	return errorDetails
-}
-
-func NewErrParsingRequest(err error) *ErrorDetails {
-	errorDetails := NewErrorDetails(
-		ErrParsingRequest.Title,
-		ErrParsingRequest.Detail+err.Error(),
-		ErrParsingRequest.Status,
 	)
 	return errorDetails
 }

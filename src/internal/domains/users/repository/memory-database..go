@@ -31,6 +31,10 @@ func (m *MemoryDatabase) createUser(user *models.UserRequest) (*models.UserRecor
 }
 
 func (m *MemoryDatabase) CreateStageUser(user *models.UserStageRequest) (*models.UserStageRecord, error) {
+    if err := m.checkUserExist(user.Username, user.Email); err != nil {
+        return nil, err
+    }
+
     token := uuid.New().String()
     userRecord := utils.MapUserStageRequestToUserStageRecord(user, token)
 
@@ -130,6 +134,7 @@ func (m *MemoryDatabase) GetUserByEmail(email string) (*models.UserRecord, error
 	}
 	return nil, ErrUserNotFound
 }
+
 
 func (m *MemoryDatabase) CreateStagingUser(user *models.UserStageRecord) (*models.UserStageRecord, error) {
     m.registeringUsers[user.Username] = user

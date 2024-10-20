@@ -23,43 +23,8 @@ func NewUsersService(rp rs.UsersDatabase) *UsersService {
 	}
 }
 
-// func (u *UsersService) RegisterUser(user *models.UserRequest) (*models.UserResponse, error) {
-// 	stored_user, _ := u.rp.GetUserByUsername(user.Username)
-// 	if stored_user != nil {
-// 		return nil, rs.ErrUsernameAlreadyTaken
-// 	}
-//
-// 	stored_user, _ = u.rp.GetUserByEmail(user.Email)
-// 	if stored_user != nil {
-// 		return nil, rs.ErrEmailAlreadyTaken
-// 	}
-//
-// 	// hashes the password
-// 	hashedPassword, err := hashPassword(user.Password)
-// 	if err != nil {
-// 		return nil, bcrypt.ErrPasswordTooLong // The password max length is 72
-// 	}
-// 	user.Password = hashedPassword
-//
-// 	userRecord, err := u.rp.CreateUser(user)
-// 	if err != nil {
-// 		return nil, err // TODO: return a better error
-// 	}
-//
-// 	UserResponse := utils.MapUserRecordToUserResponse(userRecord)
-// 	return UserResponse, nil
-// }
 
 func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error) {
-	stored_user, _ := u.rp.GetUserByUsername(user.Username)
-	if stored_user != nil {
-		return nil, rs.ErrUsernameAlreadyTaken
-	}
-	stored_user, _ = u.rp.GetUserByEmail(user.Email)
-	if stored_user != nil {
-		return nil, rs.ErrEmailAlreadyTaken
-	}
-
 	hashedPassword, err := hashPassword(user.Password)
 	if err != nil {
 		return nil, bcrypt.ErrPasswordTooLong

@@ -73,13 +73,14 @@ func (u *UsersController) GetUser(c *gin.Context) {
 // @Param user body models.UserLoginRequest true "User login request"
 // @Success 202 {object} models.UserResponse
 // @Failure 400 {object} errors.ErrorDetails
+// @Failure 400 {object} errors.ErrorDetailsWithParams
 // @Failure 404 {object} errors.ErrorDetails
 // @Router /users/login [post]
 func (u *UsersController) LogIn(c *gin.Context) {
 	var user *models.UserLoginRequest
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		errors.SendError(c, errors.NewErrParsingRequest(err))
+		errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
 		return
 	}
 
@@ -101,15 +102,15 @@ func (u *UsersController) LogIn(c *gin.Context) {
 // @Produce  json
 // @Param user body models.UserStageRequest true "User stage request"
 // @Success 201 {object} models.UserStageResponse
-// @Failure 400 {object} errors.ErrorDetails
+// @Failure 400 {object} errors.ErrorDetailsWithParams
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/register-first [post]
 func (u *UsersController) RegisterFirstStep(c *gin.Context) {
     var user *models.UserStageRequest
- 	if err := c.ShouldBindJSON(&user); err != nil {
-		errors.SendError(c, errors.NewErrParsingRequest(err))
-		return
-	}
+    if err := c.ShouldBindJSON(&user); err != nil {
+        errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
+        return
+    }
 
     userStageResponse , err := u.us.RegisterFirstStep(user)
 
@@ -130,14 +131,16 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 // @Param user body models.UserAdditionalRequest true "User additional request"
 // @Success 201 {object} models.UserResponse
 // @Failure 400 {object} errors.ErrorDetails
+// @Failure 400 {object} errors.ErrorDetailsWithParams
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/register-second [post]
 func (u *UsersController) RegisterSecondStep(c *gin.Context) {
     var user *models.UserAdditionalRequest
     if err := c.ShouldBindJSON(&user); err != nil {
-        errors.SendError(c, errors.NewErrParsingRequest(err))
+        errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
         return
     }
+
     userResponse, err := u.us.RegisterSecondStep(user)
     if err != nil {
         errors.SendError(c, errors.NewErrRegisterUser(err))

@@ -44,6 +44,7 @@ func addUsersHandlers(r *gin.Engine) {
     r.POST("/users/register-second", uc.RegisterSecondStep)
 	r.POST("/users/login", uc.LogIn)
 	r.GET("/users", uc.GetUsers)
+    r.GET("/users/:id", uc.GetUser)
 }
 
 func addBooksHandlers(r *gin.Engine) {
