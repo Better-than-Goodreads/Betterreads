@@ -43,7 +43,7 @@ type UserAdditionalRequest struct {
     Location string `json:"location"`
     Gender string `json:"gender"`
     AboutMe string `json:"about_me"`
-    Token string `json:"token"`
+    Uuid string `json:"uuid"`
     Age int `json:"age"`
 }
 

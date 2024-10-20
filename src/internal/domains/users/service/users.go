@@ -37,6 +37,7 @@ func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models
 	if err != nil {
 		return nil, err
 	}
+
 	UserStageResponse := utils.MapUserStageRecordToUserStageResponse(userRecord)
 	return UserStageResponse, nil
 }

@@ -43,7 +43,7 @@ func (m *MemoryDatabase) CreateStageUser(user *models.UserStageRequest) (*models
 }
 
 func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditionalRequest) (*models.UserRecord, error) {
-    user, ok := m.registeringUsers[userAdditional.Token]
+    user, ok := m.registeringUsers[userAdditional.Uuid]
     if !ok {
         return nil, ErrUserNotFound
     }
@@ -109,8 +109,8 @@ func (m *MemoryDatabase) GetUsers() ([]*models.UserRecord, error) {
 	return usersArr, nil
 }
 
-func (m *MemoryDatabase) GetStageUser(token string) (*models.UserStageRecord, error) {
-    user, ok := m.registeringUsers[token]
+func (m *MemoryDatabase) GetStageUser(uuid string) (*models.UserStageRecord, error) {
+    user, ok := m.registeringUsers[uuid]
     if !ok {
         return nil, ErrUserNotFound
     }

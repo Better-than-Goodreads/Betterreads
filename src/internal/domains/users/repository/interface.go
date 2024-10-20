@@ -18,7 +18,7 @@ type UsersDatabase interface {
     JoinAndCreateUser(userAddtional *models.UserAdditionalRequest) (*models.UserRecord, error)
 	GetUser(id int) (*models.UserRecord, error)
 	GetUsers() ([]*models.UserRecord, error)
-    GetStageUser(token string) (*models.UserStageRecord, error)
+    GetStageUser(uuid string) (*models.UserStageRecord, error)
 	GetUserByUsername(username string) (*models.UserRecord, error)
 	GetUserByEmail(email string) (*models.UserRecord, error)
 }
