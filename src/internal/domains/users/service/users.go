@@ -15,6 +15,7 @@ type UsersService struct {
 }
 
 var (
+	ErrUsernameNotExists    = errors.New("username doesn't exist")
 	ErrWrongPassword        = errors.New("wrong password")
 )
 
@@ -52,10 +53,10 @@ func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest) (
     return UserResponse, nil
 }
 
-func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserResponse, string, error,) {
+func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserResponse, string, error) {
 	userRecord, err := u.rp.GetUserByUsername(user.Username)
-	if userRecord == nil {
-		return nil,"", err
+	if err != nil {
+		return nil,"", ErrUsernameNotExists
 	}
 
 	if !auth.VerifyPassword(userRecord.Password, user.Password) {
@@ -65,7 +66,6 @@ func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserRes
 	UserResponse := utils.MapUserRecordToUserResponse(userRecord)
     token, err := auth.GenerateToken(user.Username)
     if err != nil {
-
         return nil,"", err
     }
 	return UserResponse, token, nil
@@ -85,7 +85,7 @@ func (u *UsersService) GetUsers() ([]*models.UserResponse, error) {
 	return UserResponses, nil
 }
 
-func (u *UsersService) GetUser(id int) (*models.UserResponse, error) {
+func (u *UsersService) GetUser(id string) (*models.UserResponse, error) {
 	user, err := u.rp.GetUser(id)
 	if err != nil {
 		return nil, err

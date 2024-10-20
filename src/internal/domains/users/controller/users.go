@@ -6,8 +6,6 @@ import (
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
-
-	"strconv"
 )
 
 type UsersController struct {
@@ -50,13 +48,7 @@ func (u *UsersController) GetUsers(c *gin.Context) {
 func (u *UsersController) GetUser(c *gin.Context) {
 	id := c.Param("id")
 
-	id_int, err := strconv.Atoi(id)
-	if err != nil {
-		errors.SendError(c, errors.NewErrInvalidUserID(id))
-		return
-	}
-
-	user, err := u.us.GetUser(id_int)
+	user, err := u.us.GetUser(id)
 
 	if err != nil {
 		errors.SendError(c, errors.NewErrUserNotFoundById(err))
