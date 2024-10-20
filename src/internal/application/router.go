@@ -100,6 +100,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 	r.engine.POST("/books", bc.PublishBook)
 	r.engine.GET("/books/:book-name", bc.GetBook)
 	r.engine.POST("/books/rate", bc.RateBook)
+	r.engine.DELETE("/books/rate", bc.DeleteRating)
 }
 
 func (r *Router) Run() {

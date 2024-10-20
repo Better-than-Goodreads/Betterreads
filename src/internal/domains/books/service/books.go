@@ -36,13 +36,21 @@ func (bs *BooksService) GetBook(name string) (*repository.Book, error) {
 	return book, nil
 }
 
-func (bs *BooksService) RateBook(bookId int, rateAmount int) error {
+func (bs *BooksService) RateBook(bookId int, userId int, rateAmount int) error {
 
 	if rateAmount < 1 || rateAmount > 5 {
 		return errors.New("rating must be between 1 and 5")
 	}
 
-	err := bs.booksRepository.RateBook(bookId, rateAmount)
+	err := bs.booksRepository.RateBook(bookId, userId, rateAmount)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (bs *BooksService) DeleteRating(bookId int, userId int) error {
+	err := bs.booksRepository.DeleteRating(bookId, userId)
 	if err != nil {
 		return err
 	}

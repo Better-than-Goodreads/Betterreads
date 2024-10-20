@@ -9,12 +9,14 @@ type Book struct {
 	PublicationDate string   `json:"publication_date" binding:"required"`
 	Language        string   `json:"language" binding:"required"`
 	Genres          []string `json:"genres" binding:"required"`
-	Ratings         []int    `json:"ratings"` //Tal vez haya que modificar esto mas adelante
+	Ratings         map[int]int    `json:"ratings"` //Tal vez haya que modificar esto mas adelante
+	// El id de un rating es IdBookIdUser, los 2 numeros concatenados
 }
 
 type BooksDatabase interface {
 	SaveBook(book Book) error
 	GetBookById(id int) (*Book, error)
 	GetBookByName(name string) (*Book, error)
-	RateBook(bookId int, rating int) error
+	RateBook(bookId int, userId int, rating int) error
+	DeleteRating(bookId int, userId int) error
 }

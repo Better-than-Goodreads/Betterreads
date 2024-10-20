@@ -13,5 +13,6 @@ type NewBookRequest struct {
 
 type NewBookRating struct {
 	BookId int		`json:"book_id" binding:"required"`
+	UserId int 		`json:"user_id" binding:"required"`
 	Rating int		`json:"rating" binding:"required"`
 }

@@ -60,9 +60,9 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 	}
 	rateAmount := newBookRating.Rating
 	bookId := newBookRating.BookId
+	userId := newBookRating.UserId
 
-
-	if err := bc.bookService.RateBook(bookId, rateAmount); err != nil {
+	if err := bc.bookService.RateBook(bookId, userId, rateAmount); err != nil {
 		errors.SendError(ctx, errors.NewErrRatingBook(err))
 		return
 	}
@@ -70,4 +70,22 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 	message := "book rated "
 
 	ctx.JSON(200, gin.H{"message": message,})
+}
+
+func (bc *BooksController) DeleteRating(ctx *gin.Context) {
+
+	var newBookRating models.NewBookRating
+	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
+		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+		return
+	}
+	bookId := newBookRating.BookId
+	userId := newBookRating.UserId
+
+	if err := bc.bookService.DeleteRating(bookId, userId); err != nil {
+		//errors.SendError(ctx, errors.NewErrDeletingRating(err))
+		return
+	}
+
+	ctx.JSON(200, gin.H{"message": "rating deleted"})
 }
