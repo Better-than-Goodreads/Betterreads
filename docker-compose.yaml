@@ -1,0 +1,39 @@
+services:
+  service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    env_file:
+      - ./src/.env
+    depends_on:
+      postgres:
+          condition: service_healthy
+          restart: true
+  
+  postgres:
+    image: postgres:16.4-alpine3.20
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d users_db"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    ports:
+      - 5432:5432
+    env_file:
+      - ./database/.env
+    volumes:
+      - ./database/postgres:/var/lib/postgresql/data
+  
+  # test:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     target: betterreads-test-stage
+  #   env_file:
+  #     - ./src/.env
+  #   depends_on:
+  #     postgres:
+  #         condition: service_healthy
+  #         restart: true

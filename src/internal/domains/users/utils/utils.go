@@ -26,7 +26,7 @@ func MapUserRecordToUserResponse(user *models.UserRecord) *models.UserResponse {
 	}
 }
 
-func MapUserRequestToUserRecord(user *models.UserRequest, id int) *models.UserRecord {
+func MapUserRequestToUserRecord(user *models.UserRequest, id string) *models.UserRecord {
 	return &models.UserRecord{
 		Id:        id,
 		Password:  user.Password,
@@ -48,19 +48,19 @@ func MapUserStageRecordToUserStageResponse (user *models.UserStageRecord) *model
         Username: user.Username,
         First_name: user.FirstName,
         Last_name: user.LastName,
-        Token: user.Token,
+        Id: user.Id,
     }
 }
 
 
-func MapUserStageRequestToUserStageRecord (user *models.UserStageRequest, token string) *models.UserStageRecord {
+func MapUserStageRequestToUserStageRecord (user *models.UserStageRequest, id string) *models.UserStageRecord {
     return &models.UserStageRecord{
         Email: user.Email,
         Username: user.Username,
         Password: user.Password,
         FirstName: user.FirstName,
         LastName: user.LastName,
-        Token: token,
+        Id: id,
     }
 }
 

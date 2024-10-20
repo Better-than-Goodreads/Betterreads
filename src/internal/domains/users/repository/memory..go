@@ -7,26 +7,23 @@ import (
 )
 
 type MemoryDatabase struct {
-	users  map[int]*models.UserRecord
+	users  map[string]*models.UserRecord
     registeringUsers map[string]*models.UserStageRecord
-	currId int
 }
 
 func NewMemoryDatabase() UsersDatabase{
     db := new(MemoryDatabase)
-    db.users = make(map[int]*models.UserRecord)
+    db.users = make(map[string]*models.UserRecord)
     db.registeringUsers = make(map[string]*models.UserStageRecord)
-    db.currId = 0
     return db
 }
 
 func (m *MemoryDatabase) createUser(user *models.UserRequest) (*models.UserRecord, error) {
- 	id := m.currId + 1
+ 	id := uuid.New().String()
 
  	userRecord := utils.MapUserRequestToUserRecord(user, id)
 
  	m.users[id] = userRecord
- 	m.currId = id
  	return userRecord, nil
 }
 
@@ -43,7 +40,7 @@ func (m *MemoryDatabase) CreateStageUser(user *models.UserStageRequest) (*models
 }
 
 func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditionalRequest) (*models.UserRecord, error) {
-    user, ok := m.registeringUsers[userAdditional.Uuid]
+    user, ok := m.registeringUsers[userAdditional.Id]
     if !ok {
         return nil, ErrUserNotFound
     }
@@ -54,6 +51,7 @@ func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditiona
         LastName: user.LastName,
         Username: user.Username,
         Location: userAdditional.Location,
+        Age: userAdditional.Age,
         Gender: userAdditional.Gender,
         AboutMe: userAdditional.AboutMe,
     }
@@ -62,7 +60,7 @@ func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditiona
     return userRecord, err
 }
 
-func (m *MemoryDatabase) deleteStageUser(id int) error {
+func (m *MemoryDatabase) deleteStageUser(id string) error {
     _, ok := m.users[id]
     if !ok {
         return ErrUserNotFound
@@ -93,7 +91,7 @@ func (m *MemoryDatabase) checkUserExist(username string, email string) error {
     return nil 
 }
 
-func (m *MemoryDatabase) GetUser(id int) (*models.UserRecord, error) {
+func (m *MemoryDatabase) GetUser(id string) (*models.UserRecord, error) {
 	user, ok := m.users[id]
 	if !ok {
 		return nil, ErrUserNotFound
