@@ -10,3 +10,8 @@ type NewBookRequest struct {
 	Language        string   `json:"language" binding:"required"`
 	Genres          []string `json:"genres" binding:"required"`
 }
+
+type NewBookRating struct {
+	BookId int		`json:"book_id" binding:"required"`
+	Rating int		`json:"rating" binding:"required"`
+}

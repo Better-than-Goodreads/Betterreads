@@ -8,7 +8,7 @@ import (
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
 
-	"strconv"
+
 
 )
 
@@ -53,26 +53,21 @@ func (bc *BooksController) GetBook(ctx *gin.Context) {
 
 func (bc *BooksController) RateBook(ctx *gin.Context) {
 
-	strBookId := ctx.Param("book-id")
-	strRateAmount := ctx.Param("rate-amount")
+	var newBookRating models.NewBookRating
+	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
+		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+		return
+	}
+	rateAmount := newBookRating.Rating
+	bookId := newBookRating.BookId
 
-	bookId, err := strconv.Atoi(strBookId)
-	if err != nil {
-		errors.SendError(ctx, errors.NewErrInvalidBookId(strBookId))
-		return
-	}
-	rateAmount, err := strconv.Atoi(strRateAmount)
-	if err != nil {
-		errors.SendError(ctx, errors.NewErrInvalidRating(strRateAmount))
-		return
-	}
 
 	if err := bc.bookService.RateBook(bookId, rateAmount); err != nil {
 		errors.SendError(ctx, errors.NewErrRatingBook(err))
 		return
 	}
 
-	message := "book " + strBookId + " rated with " + strRateAmount
+	message := "book rated "
 
 	ctx.JSON(200, gin.H{"message": message,})
 }
