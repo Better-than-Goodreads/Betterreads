@@ -1,5 +1,9 @@
 package models
 
+import (
+    "github.com/google/uuid"
+)
+
 type UserRecord struct {
 	Email     string `json:"email" db:"email"`
 	Password  string `json:"password" db:"password"`
@@ -9,17 +13,17 @@ type UserRecord struct {
 	Location  string `json:"location" db:"location"`
 	Gender    string `json:"gender" db:"gender"`
 	AboutMe   string `json:"about_me" db:"about_me"`
-	Id        string    `json:"id" db:"id"`
+	Id        uuid.UUID    `json:"id" db:"id"`
 	Age       int    `json:"age" db:"age"`
 }
 
 type UserStageRecord struct {
-    Id string `json:"id" db:"id"`
     Email string `json:"email" db:"email"`
     Username string `json:"username" db:"username"`
     Password string `json:"password" db:"password"`
     FirstName string `json:"first_name" db:"first_name"`
     LastName string `json:"last_name" db:"last_name"`
+	Id        uuid.UUID    `json:"id" db:"id"`
 }
 
 type UserStageResponse struct {
@@ -27,7 +31,7 @@ type UserStageResponse struct {
     Username string `json:"username"`
     First_name string `json:"first_name"`
     Last_name string `json:"last_name"`
-    Id string `json:"id"`
+	Id        uuid.UUID    `json:"id_register" db:"id"`
 }
 
 type UserStageRequest struct {
@@ -53,7 +57,7 @@ type UserResponse struct {
 	Location  string `json:"location"`
 	Gender    string `json:"gender"`
 	AboutMe   string `json:"about_me"`
-	Id        string    `json:"id"`
+	Id        uuid.UUID    `json:"id" db:"id"`
 	Age       int    `json:"age"`
 }
 

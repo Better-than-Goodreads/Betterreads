@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
-
+    "github.com/google/uuid"
 	"github.com/betterreads/internal/domains/users/models"
 	"github.com/jmoiron/sqlx"
 )
@@ -14,7 +14,7 @@ type PostgresUserRepository struct {
 	c *sqlx.DB
 }
 
-func NewPostgresUserRepository(c *sqlx.DB) (*PostgresUserRepository, error) {
+func NewPostgresUserRepository(c *sqlx.DB) (UsersDatabase, error) {
 	enableUUIDExtension := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 	if _, err := c.Exec(enableUUIDExtension); err != nil {
 		return nil, fmt.Errorf("failed to enable uuid extension: %w", err)
@@ -81,7 +81,7 @@ func (r *PostgresUserRepository) CreateStageUser(user *models.UserStageRequest) 
 
 
 
-func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAdditionalRequest, id string) (*models.UserRecord, error) {
+func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAdditionalRequest, id uuid.UUID) (*models.UserRecord, error) {
 	user, err := r.GetStageUser(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed joining: %w", err)
@@ -115,7 +115,7 @@ func (r *PostgresUserRepository) createUser(user *models.UserStageRecord, userAd
 	return userRecord, nil
 }
 
-func (r *PostgresUserRepository) deleteStageUser(id string) error {
+func (r *PostgresUserRepository) deleteStageUser(id uuid.UUID) error {
 	query := `DELETE FROM registry WHERE id = $1;`
 	if _, err := r.c.Exec(query, id); err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
@@ -123,7 +123,7 @@ func (r *PostgresUserRepository) deleteStageUser(id string) error {
 	return nil
 }
 
-func (r *PostgresUserRepository) GetUser(id string) (*models.UserRecord, error) {
+func (r *PostgresUserRepository) GetUser(id uuid.UUID) (*models.UserRecord, error) {
     user := &models.UserRecord{}
 	query := `SELECT * FROM users WHERE id = $1;`
 	if err := r.c.Get(user, query, id); err != nil {
@@ -135,10 +135,13 @@ func (r *PostgresUserRepository) GetUser(id string) (*models.UserRecord, error) 
 	return user, nil
 }
 
-func (r *PostgresUserRepository) GetStageUser(uuid string) (*models.UserStageRecord, error) {
+func (r *PostgresUserRepository) GetStageUser(uuid uuid.UUID) (*models.UserStageRecord, error) {
     user := &models.UserStageRecord{}
 	query := `SELECT * FROM registry WHERE id = $1;`
 	if err := r.c.Get(user, query, uuid); err != nil {
+        if err == sql.ErrNoRows {
+            return nil, fmt.Errorf("user with id %s not found", uuid)
+        }
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return user, nil

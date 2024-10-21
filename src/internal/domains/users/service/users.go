@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+    "github.com/google/uuid"
 
 	"github.com/betterreads/internal/domains/users/models"
 	rs "github.com/betterreads/internal/domains/users/repository"
@@ -47,7 +48,7 @@ func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models
 	return UserStageResponse, nil
 }
 
-func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest, id string) (*models.UserResponse, error) {
+func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest, id uuid.UUID) (*models.UserResponse, error) {
     UserRecord, err := u.rp.JoinAndCreateUser(user, id)
     if err != nil {
         return nil, err
@@ -91,10 +92,10 @@ func (u *UsersService) GetUsers() ([]*models.UserResponse, error) {
 
 
 
-func (u *UsersService) GetUser(id string) (*models.UserResponse, error) {
+func (u *UsersService) GetUser(id uuid.UUID) (*models.UserResponse, error) {
 	user, err := u.rp.GetUser(id)
 	if err != nil {
-		return nil, err
+		return nil, rs.ErrUserNotFound
 	}
 
 	UserResponse := utils.MapUserRecordToUserResponse(user)

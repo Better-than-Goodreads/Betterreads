@@ -5,6 +5,7 @@ import (
 	"github.com/betterreads/internal/domains/users/service"
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
+    "github.com/google/uuid"
 	"net/http"
 )
 
@@ -47,8 +48,12 @@ func (u *UsersController) GetUsers(c *gin.Context) {
 // @Failure 404 {object} errors.ErrorDetails
 func (u *UsersController) GetUser(c *gin.Context) {
 	id := c.Param("id")
+    uuid , err := uuid.Parse(id)
+    if err != nil {
+        errors.SendError(c, errors.NewErrInvalidUserID(id))
+    }
 
-	user, err := u.us.GetUser(id)
+	user, err := u.us.GetUser(uuid)
 
 	if err != nil {
 		errors.SendError(c, errors.NewErrUserNotFoundById(err))
@@ -138,8 +143,10 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 // @Router /users/register-second [post]
 func (u *UsersController) RegisterSecondStep(c *gin.Context) {
     id := c.Param("id")
-    if id == "" {
+    uuid , err := uuid.Parse(id)
+    if err != nil {
         errors.SendError(c, errors.NewErrInvalidRegisterId(id))
+        return
     }
     var user *models.UserAdditionalRequest
     if err := c.ShouldBindJSON(&user); err != nil {
@@ -147,7 +154,7 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
         return
     }
 
-    userResponse, err := u.us.RegisterSecondStep(user, id)
+    userResponse, err := u.us.RegisterSecondStep(user, uuid)
     if err != nil {
         errors.SendError(c, errors.NewErrRegisterUser(err))
         return

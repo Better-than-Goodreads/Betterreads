@@ -1,6 +1,7 @@
 package utils
 
 import (
+    "github.com/google/uuid"
 	"github.com/betterreads/internal/domains/users/models"
 )
 
@@ -27,7 +28,7 @@ func MapUserRecordToUserResponse(user *models.UserRecord) *models.UserResponse {
 	}
 }
 
-func MapUserRequestToUserRecord(user *models.UserRequest, id string) *models.UserRecord {
+func MapUserRequestToUserRecord(user *models.UserRequest, id uuid.UUID) *models.UserRecord {
 	return &models.UserRecord{
 		Id:        id,
 		Password:  user.Password,

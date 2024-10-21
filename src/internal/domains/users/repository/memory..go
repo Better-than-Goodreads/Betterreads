@@ -7,19 +7,19 @@ import (
 )
 
 type MemoryDatabase struct {
-	users  map[string]*models.UserRecord
-    registeringUsers map[string]*models.UserStageRecord
+	users  map[uuid.UUID]*models.UserRecord
+    registeringUsers map[uuid.UUID]*models.UserStageRecord
 }
 
 func NewMemoryDatabase() *MemoryDatabase{
     db := new(MemoryDatabase)
-    db.users = make(map[string]*models.UserRecord)
-    db.registeringUsers = make(map[string]*models.UserStageRecord)
+    db.users = make(map[uuid.UUID]*models.UserRecord)
+    db.registeringUsers = make(map[uuid.UUID]*models.UserStageRecord)
     return db
 }
 
 func (m *MemoryDatabase) createUser(user *models.UserRequest) (*models.UserRecord, error) {
- 	id := uuid.New().String()
+ 	id := uuid.New()
 
  	userRecord := utils.MapUserRequestToUserRecord(user, id)
 
@@ -29,7 +29,7 @@ func (m *MemoryDatabase) createUser(user *models.UserRequest) (*models.UserRecor
 
 func (m *MemoryDatabase) CreateStageUser(user *models.UserStageRequest) (*models.UserStageRecord, error) {
 
-    token := uuid.New().String()
+    token := uuid.New()
     userRecord := utils.MapUserStageRequestToUserStageRecord(user)
     userRecord.Id = token
 
@@ -37,7 +37,7 @@ func (m *MemoryDatabase) CreateStageUser(user *models.UserStageRequest) (*models
     return userRecord, nil
 }
 
-func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditionalRequest, id string) (*models.UserRecord, error) {
+func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditionalRequest, id uuid.UUID) (*models.UserRecord, error) {
     user, ok := m.registeringUsers[id]
     if !ok {
         return nil, ErrUserNotFound
@@ -58,7 +58,7 @@ func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditiona
     return userRecord, err
 }
 
-func (m *MemoryDatabase) deleteStageUser(id string) error {
+func (m *MemoryDatabase) deleteStageUser(id uuid.UUID) error {
     _, ok := m.users[id]
     if !ok {
         return ErrUserNotFound
@@ -92,7 +92,7 @@ func (m *MemoryDatabase) CheckUserExists(userStage *models.UserStageRequest) err
     return nil 
 }
 
-func (m *MemoryDatabase) GetUser(id string) (*models.UserRecord, error) {
+func (m *MemoryDatabase) GetUser(id uuid.UUID) (*models.UserRecord, error) {
 	user, ok := m.users[id]
 	if !ok {
 		return nil, ErrUserNotFound
@@ -108,7 +108,7 @@ func (m *MemoryDatabase) GetUsers() ([]*models.UserRecord, error) {
 	return usersArr, nil
 }
 
-func (m *MemoryDatabase) GetStageUser(uuid string) (*models.UserStageRecord, error) {
+func (m *MemoryDatabase) GetStageUser(uuid uuid.UUID) (*models.UserStageRecord, error) {
     user, ok := m.registeringUsers[uuid]
     if !ok {
         return nil, ErrUserNotFound
@@ -135,7 +135,4 @@ func (m *MemoryDatabase) GetUserByEmail(email string) (*models.UserRecord, error
 }
 
 
-func (m *MemoryDatabase) CreateStagingUser(user *models.UserStageRecord) (*models.UserStageRecord, error) {
-    m.registeringUsers[user.Username] = user
-    return user, nil
-}
+

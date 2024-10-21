@@ -37,8 +37,8 @@ func NewErrLogInUser(err error) *ErrorDetails {
 
 func NewErrInvalidRegisterId(id string) *ErrorDetails {
     errInvalidRegisterId := NewErrorDetails(
-        "failed to get register id",
-        "Didn't get id in header: Id: " + id,
+        "Invalid id",
+        "Id: " + id + " is not a valid uuid",
         http.StatusBadRequest,
     )
     return errInvalidRegisterId

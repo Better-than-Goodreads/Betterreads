@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/betterreads/internal/domains/users/models"
+    "github.com/google/uuid"
 )
 
 var (
@@ -15,10 +16,10 @@ var (
 
 type UsersDatabase interface {
     CreateStageUser(user *models.UserStageRequest) (*models.UserStageRecord, error)
-    JoinAndCreateUser(userAddtional *models.UserAdditionalRequest, id string) (*models.UserRecord, error)
-	GetUser(id string) (*models.UserRecord, error)
+    JoinAndCreateUser(userAddtional *models.UserAdditionalRequest, id uuid.UUID) (*models.UserRecord, error)
+	GetUser(id uuid.UUID) (*models.UserRecord, error)
 	GetUsers() ([]*models.UserRecord, error)
-    GetStageUser(uuid string) (*models.UserStageRecord, error)
+    GetStageUser(id uuid.UUID) (*models.UserStageRecord, error)
 	GetUserByUsername(username string) (*models.UserRecord, error)
 	GetUserByEmail(email string) (*models.UserRecord, error)
     CheckUserExists(user *models.UserStageRequest) error
