@@ -27,9 +27,13 @@ func NewUsersService(rp rs.UsersDatabase) *UsersService {
 
 
 func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error) {
+    if err := u.rp.CheckUserExists(user); err != nil {
+        return nil, err
+    }
+
 	hashedPassword, err := auth.HashPassword(user.Password)
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	user.Password = hashedPassword
@@ -84,6 +88,8 @@ func (u *UsersService) GetUsers() ([]*models.UserResponse, error) {
 
 	return UserResponses, nil
 }
+
+
 
 func (u *UsersService) GetUser(id string) (*models.UserResponse, error) {
 	user, err := u.rp.GetUser(id)

@@ -11,7 +11,7 @@ type MemoryDatabase struct {
     registeringUsers map[string]*models.UserStageRecord
 }
 
-func NewMemoryDatabase() UsersDatabase{
+func NewMemoryDatabase() *MemoryDatabase{
     db := new(MemoryDatabase)
     db.users = make(map[string]*models.UserRecord)
     db.registeringUsers = make(map[string]*models.UserStageRecord)
@@ -28,12 +28,10 @@ func (m *MemoryDatabase) createUser(user *models.UserRequest) (*models.UserRecor
 }
 
 func (m *MemoryDatabase) CreateStageUser(user *models.UserStageRequest) (*models.UserStageRecord, error) {
-    if err := m.checkUserExist(user.Username, user.Email); err != nil {
-        return nil, err
-    }
 
     token := uuid.New().String()
-    userRecord := utils.MapUserStageRequestToUserStageRecord(user, token)
+    userRecord := utils.MapUserStageRequestToUserStageRecord(user)
+    userRecord.Id = token
 
     m.registeringUsers[token] = userRecord 
     return userRecord, nil
@@ -69,7 +67,10 @@ func (m *MemoryDatabase) deleteStageUser(id string) error {
     return nil
 }
 
-func (m *MemoryDatabase) checkUserExist(username string, email string) error {
+func (m *MemoryDatabase) CheckUserExists(userStage *models.UserStageRequest) error {
+    email := userStage.Email
+    username := userStage.Username
+
     for _, user := range m.users {
         if user.Username == username {
             return ErrUsernameAlreadyTaken

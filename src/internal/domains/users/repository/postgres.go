@@ -1,14 +1,14 @@
 package repository
 
 import (
-	_ "database/sql"
-	_ "github.com/lib/pq"
+	"database/sql"
 	"fmt"
+
+	_ "github.com/lib/pq"
 
 	"github.com/betterreads/internal/domains/users/models"
 	"github.com/jmoiron/sqlx"
 )
-
 
 type PostgresUserRepository struct {
 	c *sqlx.DB
@@ -41,11 +41,11 @@ func NewPostgresUserRepository(c *sqlx.DB) (*PostgresUserRepository, error) {
 	schemaRegistry := `
 		CREATE TABLE IF NOT EXISTS registry (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-			username VARCHAR(255) NOT NULL UNIQUE,
-			first_name VARCHAR(255) NOT NULL,
-			last_name VARCHAR(255) NOT NULL,
 			email VARCHAR(255) NOT NULL UNIQUE,
-			password TEXT NOT NULL
+			username VARCHAR(255) NOT NULL UNIQUE,
+			password TEXT NOT NULL,
+			first_name VARCHAR(255) NOT NULL,
+			last_name VARCHAR(255) NOT NULL
 		);
 		
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -60,84 +60,59 @@ func NewPostgresUserRepository(c *sqlx.DB) (*PostgresUserRepository, error) {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
 
-	return &PostgresUserRepository{c} , nil
+	return &PostgresUserRepository{c}, nil
 }
 
-func (r *PostgresUserRepository) CreateStageUser(user *models.UserStageRequest) (*models.UserStageRecord, error) { 
-	// err := r.checkUserExists(user)
-	
-	var userRecord *models.UserStageRecord
+func (r *PostgresUserRepository) CreateStageUser(user *models.UserStageRequest) (*models.UserStageRecord, error) {
+    userRecord := &models.UserStageRecord{}
 	query := `INSERT INTO registry (email, username, password, first_name, last_name)
-			  VALUES (:username, :email, :password, :first_name, :last_name) 
-			  RETURNING id, email, username, first_name, last_name;`
+                    VALUES ($1, $2, $3, $4, $5)
+                    RETURNING id, email, username, first_name, last_name;`
 
-	rows , err := r.c.NamedQuery(query, user)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create user: %w", err)
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		if err := rows.StructScan(userRecord); err != nil {
-			return nil, fmt.Errorf("error scanning user data: %w", err)
-		}
-	} else {
-		return nil, fmt.Errorf("error: no user created")
-	}
-
+    args := []interface{}{user.Email, user.Username, user.Password, user.FirstName, user.LastName}
+    
+    err := r.c.Get(userRecord, query, args...)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create user: %w", err)
+    }
+    
 	return userRecord, nil
 }
 
-func (r *PostgresUserRepository) GetStageUser(uuid string) (*models.UserStageRecord, error) {
-	var user *models.UserStageRecord
-	query := `SELECT * FROM registry WHERE id = $1;`
-	if err := r.c.Select(user, query, uuid); err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-	return user, nil
-}
 
 
-func (r *PostgresUserRepository) JoinAndCreateUser(userAddtional *models.UserAdditionalRequest) (*models.UserRecord, error) {
-	user , err := r.GetStageUser(userAddtional.Id)	
+func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAdditionalRequest) (*models.UserRecord, error) {
+	user, err := r.GetStageUser(userAdditional.Id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
+		return nil, fmt.Errorf("failed joining: %w", err)
 	}
-	userRecord := &models.UserRecord{
-		Email: user.Email,
-		Password: user.Password,
-		FirstName: user.FirstName,
-		LastName: user.LastName,
-		Username: user.Username,
-		Location: userAddtional.Location,
-		Age: userAddtional.Age,
-		Gender: userAddtional.Gender,
-		AboutMe: userAddtional.AboutMe,
-	}
-
-	if err := r.createUser(userRecord) ; err != nil {
+    userRecord, err := r.createUser(user, userAdditional)
+    if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	if err := r.deleteStageUser(userAddtional.Id); err != nil {
+	if err := r.deleteStageUser(userAdditional.Id); err != nil {
 		return nil, fmt.Errorf("failed to delete stage user: %w", err)
 	}
 
 	return userRecord, nil
 }
 
-func (r *PostgresUserRepository) createUser(user *models.UserRecord) error {
-	userRecord := &models.UserRecord{}
+func (r *PostgresUserRepository) createUser(user *models.UserStageRecord, userAdditional *models.UserAdditionalRequest) (*models.UserRecord, error) {
+    userRecord := &models.UserRecord{}
+	query := `INSERT INTO users (email, password, first_name, last_name, username, 
+                    location, gender, about_me, age)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    RETURNING id, email, password, first_name, last_name, username, location, gender,about_me,age`
+    
+    args := []interface{}{user.Email, user.Password, user.FirstName, user.LastName, user.Username, userAdditional.Location, userAdditional.Gender, userAdditional.AboutMe, userAdditional.Age}
+    
+    err := r.c.Get(userRecord, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
 
-	query := `INSERT INTO users (email, username, password, first_name, last_name,username, location, age, gender, about_me)
-	          VALUES (:email, :username, :password, :first_name, :last_name, :username, :location, :age, :gender, :about_me)
-			  RETURNING email, username, first_name, last_name, username, location, age, gender, about_me;`
-
-
-	if err := r.c.QueryRowx(query, user).StructScan(userRecord); err != nil {
-		return fmt.Errorf("failed to create user: %w", err)
-	}	
-	return nil
+	return userRecord, nil
 }
 
 func (r *PostgresUserRepository) deleteStageUser(id string) error {
@@ -149,9 +124,21 @@ func (r *PostgresUserRepository) deleteStageUser(id string) error {
 }
 
 func (r *PostgresUserRepository) GetUser(id string) (*models.UserRecord, error) {
-	var user *models.UserRecord
+    user := &models.UserRecord{}
 	query := `SELECT * FROM users WHERE id = $1;`
-	if err := r.c.Select(user, query, id); err != nil {
+	if err := r.c.Get(user, query, id); err != nil {
+        if err == sql.ErrNoRows {
+            return nil, fmt.Errorf("user with id %s not found", id)
+        }
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	return user, nil
+}
+
+func (r *PostgresUserRepository) GetStageUser(uuid string) (*models.UserStageRecord, error) {
+    user := &models.UserStageRecord{}
+	query := `SELECT * FROM registry WHERE id = $1;`
+	if err := r.c.Get(user, query, uuid); err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return user, nil
@@ -160,43 +147,76 @@ func (r *PostgresUserRepository) GetUser(id string) (*models.UserRecord, error) 
 func (r *PostgresUserRepository) GetUsers() ([]*models.UserRecord, error) {
 	var users []*models.UserRecord
 	query := `SELECT * FROM users;`
-	if err := r.c.Select(users, query); err != nil {
+	if err := r.c.Select(&users, query); err != nil {
+        if err == sql.ErrNoRows {
+            return nil, fmt.Errorf("No users found")
+        }
 		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
 	return users, nil
 }
 
+
 func (r *PostgresUserRepository) GetUserByUsername(username string) (*models.UserRecord, error) {
-	var user *models.UserRecord
+    user := &models.UserRecord{}
 	query := `SELECT * FROM users WHERE username = $1;`
-	if err := r.c.Select(user, query, username); err != nil {
+	if err := r.c.Get(user, query, username); err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return user, nil
 }
 
 func (r *PostgresUserRepository) GetUserByEmail(email string) (*models.UserRecord, error) {
-	var user *models.UserRecord
+    user := &models.UserRecord{}
 	query := `SELECT * FROM users WHERE email = $1;`
-	if err := r.c.Select(user, query, email); err != nil {
+	if err := r.c.Get(user, query, email); err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return user, nil
 }
 
-// func (r *PostgresUserRepository) checkUserExists(user *models.UserStageRequest) error {
-// 	var userRecord *models.UserRecord
-// 	query := `SELECT * FROM users WHERE email = $1 OR username = $2;`
-// 	if err := r.c.Select(userRecord, query, user.Email, user.Username); err != nil {
-// 		return  fmt.Errorf("failed to get user: %w", err)
-// 	}
+func (r *PostgresUserRepository) CheckUserExists(user *models.UserStageRequest) error {
+    result_registry_email, result_registry_username , err:= r.checkUserExistsInTable(user , "registry")
+    if err != nil {
+        return  fmt.Errorf("failed to check user exists in user table: %w", err)
+    }
+    result_users_email, result_users_username, err :=  r.checkUserExistsInTable(user , "users")
+    if err != nil {
+        return  fmt.Errorf("failed to check user exists in user table: %w", err)
+    }
 
-// 	var userStage *models.UserStageRecord 
-// 	query = `SELECT * FROM registry WHERE email = $1 OR username = $2;`
-// 	if err := r.c.Select(userStage, query, user.Email, user.Username); err != nil {
-// 		return  fmt.Errorf("failed to get user: %w", err)
-// 	}
-	
-// 	return nil
-// }
+
+    if result_registry_email || result_users_email {
+        return fmt.Errorf("email already exists")
+    }
+
+    if result_registry_username || result_users_username {
+        return fmt.Errorf("username already exists")
+    }
+
+
+    return nil 
+}
+    
+
+func (r *PostgresUserRepository) checkUserExistsInTable(user *models.UserStageRequest, table string) (bool, bool, error) {
+    result_email := false
+    result_username := false
+
+    // Check if the email exists
+    query := fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE email = $1);`, table)
+    err := r.c.Get(&result_email, query, user.Email)
+    if err != nil {
+        return false, false, fmt.Errorf("failed to check user exists for email: %w", err)
+    }
+
+    // Check if the username exists
+    query = fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE username = $1);`, table)
+    err = r.c.Get(&result_username, query, user.Username)
+    if err != nil {
+        return false, false, fmt.Errorf("failed to check user exists for username: %w", err)
+    }
+
+    return result_email, result_username, nil
+}
 
