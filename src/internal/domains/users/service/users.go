@@ -47,8 +47,8 @@ func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models
 	return UserStageResponse, nil
 }
 
-func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest) (*models.UserResponse, error) {
-    UserRecord, err := u.rp.JoinAndCreateUser(user)
+func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest, id string) (*models.UserResponse, error) {
+    UserRecord, err := u.rp.JoinAndCreateUser(user, id)
     if err != nil {
         return nil, err
     }

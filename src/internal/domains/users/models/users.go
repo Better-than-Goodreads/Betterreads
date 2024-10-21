@@ -42,7 +42,6 @@ type UserAdditionalRequest struct {
     Location string `json:"location"`
     Gender string `json:"gender"`
     AboutMe string `json:"about_me"`
-    Id string `json:"id" binding:"required"`
     Age int `json:"age"`
 }
 

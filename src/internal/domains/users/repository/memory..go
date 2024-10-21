@@ -37,8 +37,8 @@ func (m *MemoryDatabase) CreateStageUser(user *models.UserStageRequest) (*models
     return userRecord, nil
 }
 
-func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditionalRequest) (*models.UserRecord, error) {
-    user, ok := m.registeringUsers[userAdditional.Id]
+func (m *MemoryDatabase) JoinAndCreateUser (userAdditional *models.UserAdditionalRequest, id string) (*models.UserRecord, error) {
+    user, ok := m.registeringUsers[id]
     if !ok {
         return nil, ErrUserNotFound
     }

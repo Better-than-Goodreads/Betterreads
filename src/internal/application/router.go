@@ -82,8 +82,8 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 	us := usersService.NewUsersService(userRepo)
 	uc := usersController.NewUsersController(us)
 
-	r.engine.POST("/users/register-first", uc.RegisterFirstStep)
-    r.engine.POST("/users/register-second", uc.RegisterSecondStep)
+	r.engine.POST("/users/register/basic", uc.RegisterFirstStep)
+    r.engine.POST("/users/register/additional-info/:id", uc.RegisterSecondStep)
 	r.engine.POST("/users/login", uc.LogIn)
 	r.engine.GET("/users", uc.GetUsers)
     r.engine.GET("/users/:id", uc.GetUser)

@@ -81,8 +81,8 @@ func (r *PostgresUserRepository) CreateStageUser(user *models.UserStageRequest) 
 
 
 
-func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAdditionalRequest) (*models.UserRecord, error) {
-	user, err := r.GetStageUser(userAdditional.Id)
+func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAdditionalRequest, id string) (*models.UserRecord, error) {
+	user, err := r.GetStageUser(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed joining: %w", err)
 	}
@@ -91,7 +91,7 @@ func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAd
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	if err := r.deleteStageUser(userAdditional.Id); err != nil {
+	if err := r.deleteStageUser(id); err != nil {
 		return nil, fmt.Errorf("failed to delete stage user: %w", err)
 	}
 

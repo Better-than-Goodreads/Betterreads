@@ -129,6 +129,7 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 // @Tags users
 // @Accept  json
 // @Produce  json
+// @Param id path int true "User register id"
 // @Param user body models.UserAdditionalRequest true "User additional request"
 // @Success 201 {object} models.UserResponse
 // @Failure 400 {object} errors.ErrorDetails
@@ -136,13 +137,17 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/register-second [post]
 func (u *UsersController) RegisterSecondStep(c *gin.Context) {
+    id := c.Param("id")
+    if id == "" {
+        errors.SendError(c, errors.NewErrInvalidRegisterId(id))
+    }
     var user *models.UserAdditionalRequest
     if err := c.ShouldBindJSON(&user); err != nil {
         errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
         return
     }
 
-    userResponse, err := u.us.RegisterSecondStep(user)
+    userResponse, err := u.us.RegisterSecondStep(user, id)
     if err != nil {
         errors.SendError(c, errors.NewErrRegisterUser(err))
         return

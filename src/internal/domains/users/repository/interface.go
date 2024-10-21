@@ -15,7 +15,7 @@ var (
 
 type UsersDatabase interface {
     CreateStageUser(user *models.UserStageRequest) (*models.UserStageRecord, error)
-    JoinAndCreateUser(userAddtional *models.UserAdditionalRequest) (*models.UserRecord, error)
+    JoinAndCreateUser(userAddtional *models.UserAdditionalRequest, id string) (*models.UserRecord, error)
 	GetUser(id string) (*models.UserRecord, error)
 	GetUsers() ([]*models.UserRecord, error)
     GetStageUser(uuid string) (*models.UserStageRecord, error)

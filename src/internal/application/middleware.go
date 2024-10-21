@@ -2,6 +2,7 @@ package application
 
 
 import (
+    "fmt"
     "github.com/gin-gonic/gin"
     "github.com/golang-jwt/jwt/v5"
     "github.com/betterreads/internal/pkg/auth"
@@ -12,6 +13,7 @@ import (
 func authMiddleware(c *gin.Context) {
     // Get the Authorization header
     tokenString := c.Request.Header.Get("Authorization")
+    fmt.Printf("token : %s",  tokenString)
     // Check if the token is valid
     if tokenString == ""{
         // Token is missing, abort the request
@@ -26,7 +28,8 @@ func authMiddleware(c *gin.Context) {
 
     if err != nil || !token.Valid {
         // Token is invalid, abort the request
-        c.AbortWithStatus(401)
+        c.JSON(401, gin.H{"error": "Unauthorized request"})
+        c.Abort()
     }
     
     username := (*claims)["username"].(string)

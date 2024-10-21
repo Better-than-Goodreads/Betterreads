@@ -35,6 +35,15 @@ func NewErrLogInUser(err error) *ErrorDetails {
 	return errLogInUser
 }
 
+func NewErrInvalidRegisterId(id string) *ErrorDetails {
+    errInvalidRegisterId := NewErrorDetails(
+        "failed to get register id",
+        "Didn't get id in header: Id: " + id,
+        http.StatusBadRequest,
+    )
+    return errInvalidRegisterId
+}
+
 func NewErrInvalidUserID(id string) *ErrorDetails {
     errInvalidUserID := NewErrorDetails(
 		"failed to parse user id",
