@@ -196,37 +196,7 @@ paths:
       summary: Log in a user
       tags:
       - users
-  /users/register-first:
-    post:
-      consumes:
-      - application/json
-      description: Register first step
-      parameters:
-      - description: User stage request
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.UserStageRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.UserStageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/errors.ErrorDetailsWithParams'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.ErrorDetails'
-      summary: Register first step
-      tags:
-      - users
-  /users/register-second:
+  /users/register/additonal-info/{id}:
     post:
       consumes:
       - application/json
@@ -259,6 +229,36 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Register second step
+      tags:
+      - users
+  /users/register/basic:
+    post:
+      consumes:
+      - application/json
+      description: Register first step
+      parameters:
+      - description: User stage request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserStageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserStageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Register first step
       tags:
       - users
 swagger: "2.0"

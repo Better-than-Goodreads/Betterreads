@@ -17,14 +17,14 @@ import (
 	usersRepository "github.com/betterreads/internal/domains/users/repository"
 	usersService "github.com/betterreads/internal/domains/users/service"
 
-    "github.com/gin-contrib/cors"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
 type Router struct {
-	engine *gin.Engine
-	address   string
+	engine  *gin.Engine
+	address string
 }
 
 func createRouterFromConfig(cfg *Config) *Router {
@@ -50,40 +50,35 @@ func createRouterFromConfig(cfg *Config) *Router {
 
 func NewRouter(port string) *Router {
 	cfg := LoadConfig()
-	
+
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			cfg.DatabaseUser,
-			cfg.DatabasePassword,
-			cfg.DatabaseHost,
-			cfg.DatabasePort,
-			cfg.DatabaseName)
+		cfg.DatabaseUser,
+		cfg.DatabasePassword,
+		cfg.DatabaseHost,
+		cfg.DatabasePort,
+		cfg.DatabaseName)
 
 	conn, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		log.Fatalf("can't connect to db: %v", err)
 	}
-	
 
 	r := createRouterFromConfig(cfg)
+	addCorsConfiguration(r)
 	addUsersHandlers(r, conn)
 	addBooksHandlers(r, conn)
 
-    //Adds swagger documentation
-    r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//Adds swagger documentation
+	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return r
 }
 
 func addCorsConfiguration(r *Router) {
-    config := cors.Config{
-		// Allow only your frontend origin (replace with your frontend URL)
-		AllowOrigins:     []string{"*"}, // Frontend URL (adjust to your setup)
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE","OPTIONS","PATCH"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-	}
-    r.engine.Use(cors.New(config))
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowCredentials = true
+	r.engine.Use(cors.New(config))
 }
 
 func addUsersHandlers(r *Router, conn *sqlx.DB) {
@@ -97,13 +92,13 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 	uc := usersController.NewUsersController(us)
 
 	r.engine.POST("/users/register/basic", uc.RegisterFirstStep)
-    r.engine.POST("/users/register/additional-info/:id", uc.RegisterSecondStep)
+	r.engine.POST("/users/register/:id/additional-info", uc.RegisterSecondStep)
 	r.engine.POST("/users/login", uc.LogIn)
 	r.engine.GET("/users", uc.GetUsers)
-    r.engine.GET("/users/:id", uc.GetUser)
+	r.engine.GET("/users/:id", uc.GetUser)
 
-    // Authenticated routes
-    r.engine.GET("/users/welcome", authMiddleware, uc.Welcome)
+	// Authenticated routes
+	r.engine.GET("/users/welcome", authMiddleware, uc.Welcome)
 }
 
 func addBooksHandlers(r *Router, conn *sqlx.DB) {

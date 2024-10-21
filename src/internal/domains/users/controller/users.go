@@ -49,10 +49,10 @@ func (u *UsersController) GetUsers(c *gin.Context) {
 // @Failure 404 {object} errors.ErrorDetails
 func (u *UsersController) GetUser(c *gin.Context) {
 	id := c.Param("id")
-    uuid , err := uuid.Parse(id)
-    if err != nil {
-        errors.SendError(c, errors.NewErrInvalidUserID(id))
-    }
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		errors.SendError(c, errors.NewErrInvalidUserID(id))
+	}
 
 	user, err := u.us.GetUser(uuid)
 
@@ -90,18 +90,18 @@ func (u *UsersController) LogIn(c *gin.Context) {
 		return
 	}
 
-    c.Header("Authorization", token)
+	c.Header("Authorization", token)
 
 	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
 }
 
 func (u *UsersController) Welcome(c *gin.Context) {
-    username , _ := c.Get("username")
-    msg := "Welcome to BetterReads: " + username.(string)
-    c.JSON(http.StatusOK, gin.H{"message": msg})
+	username, _ := c.Get("username")
+	msg := "Welcome to BetterReads: " + username.(string)
+	c.JSON(http.StatusOK, gin.H{"message": msg})
 }
 
-// RegisterFirst godoc
+// RegisterBasic godoc
 // @Summary Register first step
 // @Description Register first step
 // @Tags users
@@ -111,22 +111,22 @@ func (u *UsersController) Welcome(c *gin.Context) {
 // @Success 201 {object} models.UserStageResponse
 // @Failure 400 {object} errors.ErrorDetailsWithParams
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /users/register-first [post]
+// @Router /users/register/basic [post]
 func (u *UsersController) RegisterFirstStep(c *gin.Context) {
-    var user *models.UserStageRequest
-    if err := c.ShouldBindJSON(&user); err != nil {
-        errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
-        return
-    }
+	var user *models.UserStageRequest
+	if err := c.ShouldBindJSON(&user); err != nil {
+		errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
+		return
+	}
 
-    userStageResponse , err := u.us.RegisterFirstStep(user)
+	userStageResponse, err := u.us.RegisterFirstStep(user)
 
-    if err != nil {
-        errors.SendError(c, errors.NewErrRegisterUser(err))
-        return 
-    }
+	if err != nil {
+		errors.SendError(c, errors.NewErrRegisterUser(err))
+		return
+	}
 
-    c.JSON(http.StatusCreated, gin.H{"user": userStageResponse})
+	c.JSON(http.StatusCreated, gin.H{"user": userStageResponse})
 }
 
 // RegisterSecond godoc
@@ -141,26 +141,24 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 400 {object} errors.ErrorDetailsWithParams
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /users/register-second [post]
+// @Router /users/register/{id}/additional-info [post]
 func (u *UsersController) RegisterSecondStep(c *gin.Context) {
-    id := c.Param("id")
-    uuid , err := uuid.Parse(id)
-    if err != nil {
-        errors.SendError(c, errors.NewErrInvalidRegisterId(id))
-        return
-    }
-    var user *models.UserAdditionalRequest
-    if err := c.ShouldBindJSON(&user); err != nil {
-        errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
-        return
-    }
+	id := c.Param("id")
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		errors.SendError(c, errors.NewErrInvalidRegisterId(id))
+		return
+	}
+	var user *models.UserAdditionalRequest
+	if err := c.ShouldBindJSON(&user); err != nil {
+		errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
+		return
+	}
 
-    userResponse, err := u.us.RegisterSecondStep(user, uuid)
-    if err != nil {
-        errors.SendError(c, errors.NewErrRegisterUser(err))
-        return
-    }
-    c.JSON(http.StatusCreated, gin.H{"user": userResponse})
+	userResponse, err := u.us.RegisterSecondStep(user, uuid)
+	if err != nil {
+		errors.SendError(c, errors.NewErrRegisterUser(err))
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
 }
-
-
