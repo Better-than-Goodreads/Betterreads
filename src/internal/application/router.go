@@ -16,6 +16,8 @@ import (
 	usersController "github.com/betterreads/internal/domains/users/controller"
 	usersRepository "github.com/betterreads/internal/domains/users/repository"
 	usersService "github.com/betterreads/internal/domains/users/service"
+
+    "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
@@ -70,6 +72,18 @@ func NewRouter(port string) *Router {
     r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return r
+}
+
+func addCorsConfiguration(r *Router) {
+    config := cors.Config{
+		// Allow only your frontend origin (replace with your frontend URL)
+		AllowOrigins:     []string{"*"}, // Frontend URL (adjust to your setup)
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE","OPTIONS","PATCH"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}
+    r.engine.Use(cors.New(config))
 }
 
 func addUsersHandlers(r *Router, conn *sqlx.DB) {
