@@ -1,7 +1,8 @@
 package repository
 
 import (
-	"strconv"
+	// "fmt"
+
 )
 
 type InmemoryBooksDatabase struct {
@@ -57,10 +58,7 @@ func (db *InmemoryBooksDatabase) GenerateBookId() int {
 func (db *InmemoryBooksDatabase) RateBook(bookId int, userId int, rating int) error {
 	var book = db.books[bookId]
 	
-	ratingId := db.createRateId(bookId, userId)
-
-	book.Ratings[ratingId] = rating
-
+	book.Ratings[userId] = rating
 
 	db.books[bookId] = book
 
@@ -70,24 +68,9 @@ func (db *InmemoryBooksDatabase) RateBook(bookId int, userId int, rating int) er
 func (db *InmemoryBooksDatabase) DeleteRating(bookId int, userId int) error {
 	var book = db.books[bookId]
 	
-	ratingId := db.createRateId(bookId, userId)
-
-	delete(book.Ratings, ratingId)
+	delete(book.Ratings, userId)
 
 	db.books[bookId] = book
 	return nil
 }
 
-func (db *InmemoryBooksDatabase) createRateId(bookId int, userId int) int {
-	strA := strconv.Itoa(bookId)
-	strB := strconv.Itoa(userId)
-
-	concatenated := strA + strB
-
-	result, err := strconv.Atoi(concatenated)
-	if err != nil {
-		return -1
-	}
-
-	return result
-}

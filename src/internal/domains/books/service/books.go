@@ -50,6 +50,7 @@ func (bs *BooksService) RateBook(bookId int, userId int, rateAmount int) error {
 }
 
 func (bs *BooksService) DeleteRating(bookId int, userId int) error {
+	
 	err := bs.booksRepository.DeleteRating(bookId, userId)
 	if err != nil {
 		return err
