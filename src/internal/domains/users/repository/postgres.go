@@ -31,7 +31,8 @@ func NewPostgresUserRepository(c *sqlx.DB) (UsersDatabase, error) {
 			location VARCHAR(255) NULL,
 			age INTEGER,
 			gender VARCHAR(255),
-			about_me TEXT
+			about_me TEXT,
+            is_author BOOLEAN DEFAULT FALSE
 		);
 		
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -45,7 +46,8 @@ func NewPostgresUserRepository(c *sqlx.DB) (UsersDatabase, error) {
 			username VARCHAR(255) NOT NULL UNIQUE,
 			password TEXT NOT NULL,
 			first_name VARCHAR(255) NOT NULL,
-			last_name VARCHAR(255) NOT NULL
+			last_name VARCHAR(255) NOT NULL,
+            is_author BOOLEAN DEFAULT FALSE
 		);
 		
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -65,11 +67,12 @@ func NewPostgresUserRepository(c *sqlx.DB) (UsersDatabase, error) {
 
 func (r *PostgresUserRepository) CreateStageUser(user *models.UserStageRequest) (*models.UserStageRecord, error) {
     userRecord := &models.UserStageRecord{}
-	query := `INSERT INTO registry (email, username, password, first_name, last_name)
-                    VALUES ($1, $2, $3, $4, $5)
-                    RETURNING id, email, username, first_name, last_name;`
+	query :=`INSERT INTO registry (email, username, password, first_name, last_name, 
+            is_author)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, email, username, first_name, last_name, is_author;`
 
-    args := []interface{}{user.Email, user.Username, user.Password, user.FirstName, user.LastName}
+    args := []interface{}{user.Email, user.Username, user.Password, user.FirstName, user.LastName, user.IsAuthor}
     
     err := r.c.Get(userRecord, query, args...)
     if err != nil {
@@ -101,11 +104,11 @@ func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAd
 func (r *PostgresUserRepository) createUser(user *models.UserStageRecord, userAdditional *models.UserAdditionalRequest) (*models.UserRecord, error) {
     userRecord := &models.UserRecord{}
 	query := `INSERT INTO users (email, password, first_name, last_name, username, 
-                    location, gender, about_me, age)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    location, gender, about_me, age, is_author)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                     RETURNING id, email, password, first_name, last_name, username, location, gender,about_me,age`
     
-    args := []interface{}{user.Email, user.Password, user.FirstName, user.LastName, user.Username, userAdditional.Location, userAdditional.Gender, userAdditional.AboutMe, userAdditional.Age}
+    args := []interface{}{user.Email, user.Password, user.FirstName, user.LastName, user.Username, userAdditional.Location, userAdditional.Gender, userAdditional.AboutMe, userAdditional.Age, user.IsAuthor}
     
     err := r.c.Get(userRecord, query, args...)
 	if err != nil {

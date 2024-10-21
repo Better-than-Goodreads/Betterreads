@@ -1,9 +1,12 @@
 package errors
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+
 	gin "github.com/gin-gonic/gin"
-    "github.com/go-playground/validator/v10"
-    "net/http"
+	"github.com/go-playground/validator/v10"
 )
 
 var (
@@ -13,6 +16,7 @@ var (
 		http.StatusBadRequest,
 	)
 )
+
 
 // Follows RFC 7807: https://datatracker.ietf.org/doc/html/rfc7807
 type ErrorDetails struct {
@@ -52,14 +56,27 @@ type ErrorParam struct {
 
 func parseParameters(err error) []ErrorParam {
     var errors []ErrorParam
-    if validationErrors, ok := err.(validator.ValidationErrors); ok {
+    if  unmarshalErr, ok := err.(*json.UnmarshalTypeError); ok{
+        errors = append(errors, ErrorParam{
+            Name: unmarshalErr.Field,
+            Reason: unmarshalErr.Type.String(),
+        })
+    } else if validationErrors, ok := err.(validator.ValidationErrors); ok {
         for _, err := range validationErrors {
+            fmt.Println(err)
             errors = append(errors, ErrorParam{
                 Name: err.Field(),
                 Reason: err.Tag(),
             })
         }
+    } else {
+        errors = append(errors, ErrorParam{
+            Name: "unknown",
+            Reason: err.Error(),
+        })
     }
+
+    
     return errors
 }
 

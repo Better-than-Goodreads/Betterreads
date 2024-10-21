@@ -1,7 +1,6 @@
 package utils
 
 import (
-    "github.com/google/uuid"
 	"github.com/betterreads/internal/domains/users/models"
 )
 
@@ -25,23 +24,11 @@ func MapUserRecordToUserResponse(user *models.UserRecord) *models.UserResponse {
         Id:       user.Id,
 		Age:       user.Age,
 		AboutMe:   user.AboutMe,
+        IsAuthor:  user.IsAuthor,
 	}
 }
 
-func MapUserRequestToUserRecord(user *models.UserRequest, id uuid.UUID) *models.UserRecord {
-	return &models.UserRecord{
-		Id:        id,
-		Password:  user.Password,
-		Email:     user.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Username:  user.Username,
-		Location:  user.Location,
-		Gender:    user.Gender,
-		Age:       user.Age,
-		AboutMe:   user.AboutMe,
-	}
-}
+
 
 
 func MapUserStageRecordToUserStageResponse (user *models.UserStageRecord) *models.UserStageResponse {
@@ -51,6 +38,7 @@ func MapUserStageRecordToUserStageResponse (user *models.UserStageRecord) *model
         First_name: user.FirstName,
         Last_name: user.LastName,
         Id: user.Id,
+        IsAuthor: user.IsAuthor,
     }
 }
 
@@ -62,6 +50,7 @@ func MapUserStageRequestToUserStageRecord (user *models.UserStageRequest) *model
         Password: user.Password,
         FirstName: user.FirstName,
         LastName: user.LastName,
+        IsAuthor: user.IsAuthor,
     }
 }
 
@@ -76,5 +65,6 @@ func CombineUser(userPrimary *models.UserStageRecord, userSecondary *models.User
         Gender: userSecondary.Gender,
         Age: userSecondary.Age,
         AboutMe: userPrimary.Username,
+        IsAuthor: userPrimary.IsAuthor,
     }
 }

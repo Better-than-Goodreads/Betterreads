@@ -1,12 +1,13 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/betterreads/internal/domains/users/models"
 	"github.com/betterreads/internal/domains/users/service"
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
-    "github.com/google/uuid"
-	"net/http"
+	"github.com/google/uuid"
 )
 
 type UsersController struct {

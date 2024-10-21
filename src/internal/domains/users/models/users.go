@@ -15,6 +15,7 @@ type UserRecord struct {
 	Location  string `json:"location" db:"location"`
 	Gender    string `json:"gender" db:"gender"`
 	AboutMe   string `json:"about_me" db:"about_me"`
+    IsAuthor  bool `json:"is_author" db:"is_author"`
 	Id        uuid.UUID    `json:"id" db:"id"`
 	Age       int    `json:"age" db:"age"`
 }
@@ -25,6 +26,7 @@ type UserStageRecord struct {
     Password string `json:"password" db:"password"`
     FirstName string `json:"first_name" db:"first_name"`
     LastName string `json:"last_name" db:"last_name"`
+    IsAuthor bool `json:"is_author" db:"is_author"`
 	Id        uuid.UUID    `json:"id" db:"id"`
 }
 
@@ -35,6 +37,7 @@ type UserStageResponse struct {
     Username string `json:"username"`
     First_name string `json:"first_name"`
     Last_name string `json:"last_name"`
+    IsAuthor bool `json:"is_author"`
 	Id        uuid.UUID    `json:"id_register" db:"id"`
 }
 
@@ -46,6 +49,7 @@ type UserResponse struct {
 	Location  string `json:"location"`
 	Gender    string `json:"gender"`
 	AboutMe   string `json:"about_me"`
+    IsAuthor  bool `json:"is_author"`
 	Id        uuid.UUID    `json:"id" db:"id"`
 	Age       int    `json:"age"`
 }
@@ -57,24 +61,14 @@ type UserLoginRequest struct {
     Password string `json:"password" binding:"required"`
 }
 
-type UserRequest struct {
-	Email     string `json:"email" binding:"required, email"`
-	Password  string `json:"password" binding:"required"`
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
-	Username  string `json:"username" binding:"required"`
-	Location  string `json:"location"`
-	Gender    string `json:"gender"`
-	AboutMe   string `json:"about_me"`
-	Age       int    `json:"age"`
-}
 
 type UserStageRequest struct {
-    Email    string `json:"email" binding:"required,email" db:"email"`
-    Username string `json:"username" binding:"required" db:"username"`
-    Password string `json:"password" binding:"required" db:"password"`
+    Email     string `json:"email" binding:"required,email" db:"email"`
+    Username  string `json:"username" binding:"required" db:"username"`
+    Password  string `json:"password" binding:"required" db:"password"`
     FirstName string `json:"first_name" binding:"required" db:"first_name"`
-    LastName string `json:"last_name" binding:"required" db:"last_name"`
+    LastName  string `json:"last_name" binding:"required" db:"last_name"`
+    IsAuthor  bool   `json:"is_author" db:"is_author"`
 }
 
 type UserAdditionalRequest struct {
