@@ -72,7 +72,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
                         }
                     },
                     "404": {
@@ -118,7 +118,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
                         }
                     },
                     "500": {
@@ -145,6 +145,13 @@ const docTemplate = `{
                 "summary": "Register second step",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "User register id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "User additional request",
                         "name": "user",
                         "in": "body",
@@ -164,7 +171,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
                         }
                     },
                     "500": {
@@ -239,11 +246,45 @@ const docTemplate = `{
                 }
             }
         },
+        "errors.ErrorDetailsWithParams": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "type": "string"
+                },
+                "instance": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "validation_errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/errors.ErrorParam"
+                    }
+                }
+            }
+        },
+        "errors.ErrorParam": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "models.UserAdditionalRequest": {
             "type": "object",
-            "required": [
-                "username"
-            ],
             "properties": {
                 "about_me": {
                     "type": "string"
@@ -255,12 +296,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }
@@ -299,7 +334,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
+                },
+                "is_author": {
+                    "type": "boolean"
                 },
                 "last_name": {
                     "type": "string"
@@ -328,6 +366,9 @@ const docTemplate = `{
                 "first_name": {
                     "type": "string"
                 },
+                "is_author": {
+                    "type": "boolean"
+                },
                 "last_name": {
                     "type": "string"
                 },
@@ -348,10 +389,13 @@ const docTemplate = `{
                 "first_name": {
                     "type": "string"
                 },
-                "last_name": {
+                "id_register": {
                     "type": "string"
                 },
-                "token": {
+                "is_author": {
+                    "type": "boolean"
+                },
+                "last_name": {
                     "type": "string"
                 },
                 "username": {

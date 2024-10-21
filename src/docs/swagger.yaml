@@ -13,6 +13,30 @@ definitions:
       type:
         type: string
     type: object
+  errors.ErrorDetailsWithParams:
+    properties:
+      detail:
+        type: string
+      instance:
+        type: string
+      status:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+      validation_errors:
+        items:
+          $ref: '#/definitions/errors.ErrorParam'
+        type: array
+    type: object
+  errors.ErrorParam:
+    properties:
+      field:
+        type: string
+      reason:
+        type: string
+    type: object
   models.UserAdditionalRequest:
     properties:
       about_me:
@@ -23,12 +47,6 @@ definitions:
         type: string
       location:
         type: string
-      token:
-        type: string
-      username:
-        type: string
-    required:
-    - username
     type: object
   models.UserLoginRequest:
     properties:
@@ -53,7 +71,9 @@ definitions:
       gender:
         type: string
       id:
-        type: integer
+        type: string
+      is_author:
+        type: boolean
       last_name:
         type: string
       location:
@@ -67,6 +87,8 @@ definitions:
         type: string
       first_name:
         type: string
+      is_author:
+        type: boolean
       last_name:
         type: string
       password:
@@ -86,9 +108,11 @@ definitions:
         type: string
       first_name:
         type: string
-      last_name:
+      id_register:
         type: string
-      token:
+      is_author:
+        type: boolean
+      last_name:
         type: string
       username:
         type: string
@@ -164,7 +188,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/errors.ErrorDetails'
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
         "404":
           description: Not Found
           schema:
@@ -194,7 +218,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/errors.ErrorDetails'
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
         "500":
           description: Internal Server Error
           schema:
@@ -208,6 +232,11 @@ paths:
       - application/json
       description: Register second step
       parameters:
+      - description: User register id
+        in: path
+        name: id
+        required: true
+        type: integer
       - description: User additional request
         in: body
         name: user
@@ -224,7 +253,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/errors.ErrorDetails'
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
         "500":
           description: Internal Server Error
           schema:
