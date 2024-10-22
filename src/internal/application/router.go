@@ -107,7 +107,10 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 }
 
 func addBooksHandlers(r *Router, conn *sqlx.DB) {
-	booksRepo := booksRepository.NewInmemoryBooksDatabase()
+	booksRepo, err := booksRepository.NewPostgresBookRepository(conn)
+	if err != nil {
+		fmt.Println("error: %w", err)
+	}
 	bs := booksService.NewBooksService(booksRepo)
 	bc := booksController.NewBooksController(bs)
 

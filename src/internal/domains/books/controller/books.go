@@ -8,8 +8,6 @@ import (
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
 
-
-
 )
 
 type BooksController struct {
