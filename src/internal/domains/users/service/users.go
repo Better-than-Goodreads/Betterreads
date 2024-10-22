@@ -86,7 +86,7 @@ func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserRes
 	}
 
 	userResponse := utils.MapUserRecordToUserResponse(userRecord)
-    token, err := auth.GenerateToken(userResponse.Id.String())
+    token, err := auth.GenerateToken(userResponse.Id.String(), userResponse.IsAuthor)
     if err != nil {
         return nil,"", err
     }

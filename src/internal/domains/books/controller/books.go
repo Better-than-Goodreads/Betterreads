@@ -31,6 +31,12 @@ func NewBooksController(bookService *service.BooksService) *BooksController {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books [post]
 func (bc *BooksController) PublishBook(ctx *gin.Context) {
+    // Validates if the user is an author through jwt
+    // isAuthor, _ := ctx.Get("IsAuthor")
+    // if isAuthor != true {
+    //     errors.SendError(ctx, errors.NewErrNotAuthor())
+    // }
+    //
 	var newBookRequest models.NewBookRequest
 	if err := ctx.ShouldBindJSON(&newBookRequest); err != nil {
 		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
@@ -74,6 +80,24 @@ func (bc *BooksController) GetBook(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{"book": book})
+}
+
+// GetBooks godoc
+// @Summary Get all books
+// @Description Get all books
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} []models.Book
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /books [get]
+func (bc *BooksController) GetBooks(ctx *gin.Context) {
+    books, err := bc.bookService.GetBooks()
+    if err != nil {
+        errors.SendError(ctx, errors.NewErrGettingBooks(err))
+        return
+    }
+    ctx.JSON(http.StatusAccepted, gin.H{"books": books})
 }
 
 func (bc *BooksController) RateBook(ctx *gin.Context) {

@@ -39,6 +39,7 @@ var (
 type BooksDatabase interface {
 	SaveBook(*models.NewBookRequest)(*models.Book, error)
 	GetBookById(id uuid.UUID) (*models.Book, error)
+    GetBooks() ([]*models.Book, error)
 	GetBookByName(name string) (*models.Book, error)
 	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error
 	DeleteRating(bookId uuid.UUID, userId uuid.UUID) error

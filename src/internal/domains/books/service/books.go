@@ -40,6 +40,14 @@ func (bs *BooksService) GetBook(id uuid.UUID) (*models.Book, error) {
 	return book, nil
 }
 
+func (bs *BooksService) GetBooks() ([]*models.Book, error) {
+    books, err := bs.booksRepository.GetBooks()
+    if err != nil {
+        return nil, err
+    }
+    return books, nil
+}
+
 func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount int) error {
 
 	if rateAmount < 1 || rateAmount > 5 {

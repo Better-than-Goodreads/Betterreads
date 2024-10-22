@@ -150,6 +150,26 @@ func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error)
     return book, nil
 }
 
+func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
+    var books []*models.BookDb
+    query := `SELECT * FROM books;`
+    if err := r.c.Select(&books, query); err != nil {
+        if err == sql.ErrNoRows {
+            return nil, fmt.Errorf("No books found")
+        }
+        return nil, fmt.Errorf("failed to get books: %w", err)
+    }
+    res := []*models.Book{}
+    for _, book := range books {
+        genres, err := r.getGenresForBook(book.Id)
+        if err != nil {
+            return nil, fmt.Errorf("failed to get books: %w", err)
+        }
+        res = append(res, utils.MapBookDbToBook(book, genres))
+    }
+    return res, nil
+} 
+
 
 func (r *PostgresBookRepository) GetBookByName(name string) (*models.Book, error) {
 	bookdb := &models.BookDb{}

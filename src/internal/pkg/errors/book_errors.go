@@ -39,6 +39,14 @@ func NewErrBookNotFound() *ErrorDetails {
 	return errBookNotFound
 }
 
+func NewErrNotAuthor() *ErrorDetails {
+    errNotAuthor := NewErrorDetails(
+        "not an author",
+        "User is not an author",
+        http.StatusUnauthorized,
+    )
+    return errNotAuthor
+}
 
 func NewErrRatingBook(err error) *ErrorDetails {
     errRatingBook := NewErrorDetails(
@@ -48,6 +56,15 @@ func NewErrRatingBook(err error) *ErrorDetails {
 	)
 
 	return errRatingBook
+}
+
+func NewErrGettingBooks(err error) *ErrorDetails {
+    errGettingBooks := NewErrorDetails(
+        "failed to get books",
+        "Error when getting books: " + err.Error(),
+        http.StatusInternalServerError,
+    )
+    return errGettingBooks
 }
 
 func NewErrInvalidBookId(id string) *ErrorDetails {
