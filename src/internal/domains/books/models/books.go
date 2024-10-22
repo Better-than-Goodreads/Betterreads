@@ -43,7 +43,6 @@ type Rating	struct {
 // REQUESTS 
 type NewBookRequest struct {
 	Title           string   `json:"title" binding:"required"`
-	Author          string   `json:"author" binding:"required"`
 	Description     string   `json:"description" binding:"required"`
 	AmountOfPages   int   `json:"amount_of_pages" binding:"required"`
 	PublicationDate string   `json:"publication_date" binding:"required"`

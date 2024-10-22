@@ -116,13 +116,22 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 	}
 	bs := booksService.NewBooksService(booksRepo)
 	bc := booksController.NewBooksController(bs)
+    
+    public := r.engine.Group("/books")
+    {
+       public.GET("/", bc.GetBooks)
+       public.GET("/:id", bc.GetBook)
+       public.GET("/ratings", bc.GetRatings)
+    }
 
-	r.engine.POST("/books", bc.PublishBook)
-    r.engine.GET("/books", bc.GetBooks)
-	r.engine.GET("/books/:id", bc.GetBook)
-	r.engine.POST("/books/rate", bc.RateBook)
-	r.engine.DELETE("/books/rate", bc.DeleteRating)
-	r.engine.GET("/books/ratings", bc.GetRatings)
+    private := r.engine.Group("/books")
+    private.Use(middlewares.AuthMiddleware)
+    {
+        private.POST("/", bc.PublishBook)
+        private.POST("/rate", bc.RateBook)
+        private.DELETE("/rate", bc.DeleteRating)
+    }
+
 }
 
 func (r *Router) Run() {

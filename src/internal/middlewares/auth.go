@@ -31,6 +31,7 @@ func AuthMiddleware(c *gin.Context) {
     }
     
     c.Set("userId", claims.UserId)
+    c.Set("IsAuthor", claims.IsAuthor)
 
     c.Next()
     

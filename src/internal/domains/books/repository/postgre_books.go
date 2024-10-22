@@ -83,14 +83,14 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 	return &PostgresBookRepository{c}, nil
 }
 
-func (r *PostgresBookRepository) SaveBook (book *models.NewBookRequest) (*models.Book, error) {
+func (r *PostgresBookRepository) SaveBook (book *models.NewBookRequest, author string) (*models.Book, error) {
     bookRecord := &models.BookDb{}
     query := `INSERT INTO books (title, author, description,  amount_of_pages,
                     publication_date, language)
                     VALUES ($1, $2, $3, $4, $5, $6)
                     RETURNING id, title, author, description, amount_of_pages, publication_date, language;`
 
-    args := []interface{}{book.Title, book.Author, book.Description, book.AmountOfPages, book.PublicationDate, book.Language}
+    args := []interface{}{book.Title, author, book.Description, book.AmountOfPages, book.PublicationDate, book.Language}
 
     if err := r.c.Get(bookRecord, query, args...); err != nil {
         return nil , fmt.Errorf("failed to create book: %w", err)
@@ -110,7 +110,7 @@ func (r *PostgresBookRepository) SaveBook (book *models.NewBookRequest) (*models
         }
     }
 
-    res := utils.MapBookRequestToBookRecord(book, bookRecord.Id)
+    res := utils.MapBookRequestToBookRecord(book, bookRecord.Id, author)
 
     return &res, nil
 }

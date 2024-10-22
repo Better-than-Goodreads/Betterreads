@@ -446,7 +446,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "amount_of_pages",
-                "author",
                 "description",
                 "genres",
                 "language",
@@ -456,9 +455,6 @@ const docTemplate = `{
             "properties": {
                 "amount_of_pages": {
                     "type": "integer"
-                },
-                "author": {
-                    "type": "string"
                 },
                 "description": {
                     "type": "string"

@@ -71,8 +71,6 @@ definitions:
     properties:
       amount_of_pages:
         type: integer
-      author:
-        type: string
       description:
         type: string
       genres:
@@ -87,7 +85,6 @@ definitions:
         type: string
     required:
     - amount_of_pages
-    - author
     - description
     - genres
     - language

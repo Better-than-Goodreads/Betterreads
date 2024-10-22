@@ -17,12 +17,12 @@ func NewBooksService(booksRepository repository.BooksDatabase) *BooksService {
 	return &BooksService{booksRepository: booksRepository}
 }
 
-func (bs *BooksService) PublishBook(req *models.NewBookRequest) (*models.BookResponse, error) {
+func (bs *BooksService) PublishBook(req *models.NewBookRequest, author string) (*models.BookResponse, error) {
 	if len(req.Genres) == 0 {
 		return nil, errors.New("at least one genre is required")
     }
 
-    book ,err := bs.booksRepository.SaveBook(req)
+    book ,err := bs.booksRepository.SaveBook(req, author)
     if err != nil {
        return nil, err
     }

@@ -7,8 +7,7 @@ import (
 	"github.com/betterreads/internal/domains/books/service"
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
-    "github.com/google/uuid"
-
+	"github.com/google/uuid"
 )
 
 type BooksController struct {
@@ -21,7 +20,7 @@ func NewBooksController(bookService *service.BooksService) *BooksController {
 
 // PublishBook godoc
 // @Summary publish a book
-// @Description publishes a book 
+// @Description publishes a book
 // @Tags books
 // @Accept  json
 // @Produce  json
@@ -31,19 +30,23 @@ func NewBooksController(bookService *service.BooksService) *BooksController {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books [post]
 func (bc *BooksController) PublishBook(ctx *gin.Context) {
-    // Validates if the user is an author through jwt
-    // isAuthor, _ := ctx.Get("IsAuthor")
-    // if isAuthor != true {
-    //     errors.SendError(ctx, errors.NewErrNotAuthor())
-    // }
-    //
+	isAuthor, res1 := ctx.Get("IsAuthor")
+	isAuthor = isAuthor.(bool)
+	author, res2 := ctx.Get("userId")
+	authorstr := author.(string)
+
+	if isAuthor == false || res1 == false || res2 == false {
+		errors.SendError(ctx, errors.NewErrNotAuthor())
+		return
+	}
+
 	var newBookRequest models.NewBookRequest
 	if err := ctx.ShouldBindJSON(&newBookRequest); err != nil {
 		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
 		return
 	}
-    book , err := bc.bookService.PublishBook(&newBookRequest)
-    if err != nil {
+	book, err := bc.bookService.PublishBook(&newBookRequest, authorstr)
+	if err != nil {
 		errors.SendError(ctx, errors.NewErrPublishingBook(err))
 		return
 	}
@@ -52,7 +55,7 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 }
 
 // GetBook godoc
-// @Summary Get book by id 
+// @Summary Get book by id
 // @Description Get book id, note that its a UUID
 // @Tags books
 // @Param id path string true "Book Id"
@@ -92,12 +95,12 @@ func (bc *BooksController) GetBook(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books [get]
 func (bc *BooksController) GetBooks(ctx *gin.Context) {
-    books, err := bc.bookService.GetBooks()
-    if err != nil {
-        errors.SendError(ctx, errors.NewErrGettingBooks(err))
-        return
-    }
-    ctx.JSON(http.StatusAccepted, gin.H{"books": books})
+	books, err := bc.bookService.GetBooks()
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrGettingBooks(err))
+		return
+	}
+	ctx.JSON(http.StatusAccepted, gin.H{"books": books})
 }
 
 func (bc *BooksController) RateBook(ctx *gin.Context) {
@@ -119,7 +122,7 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 
 	message := "book rated "
 
-	ctx.JSON(200, gin.H{"message": message,})
+	ctx.JSON(200, gin.H{"message": message})
 }
 
 func (bc *BooksController) DeleteRating(ctx *gin.Context) {

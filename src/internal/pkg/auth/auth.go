@@ -35,12 +35,13 @@ func VerifyPassword(hashedPassword, password string) bool {
 }
 
 type Claims struct {
-    isAuthor bool `json:"is_author"`
+    IsAuthor bool `json:"is_author"`
     UserId    string `json:"user_id"`
     jwt.RegisteredClaims
 }
 
 func GenerateToken(userId string, isAuthor bool) (string, error) {
+    fmt.Printf("is author: %v", isAuthor)
 	if jwtSecret == "" {
 		return "", fmt.Errorf("JWT_SECRET environment variable is not set")
 	}
@@ -49,7 +50,7 @@ func GenerateToken(userId string, isAuthor bool) (string, error) {
 	}
 
 	claims := Claims{
-        isAuthor: isAuthor,
+        IsAuthor: isAuthor,
 		UserId:    userId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(jwtExpirationHours) * time.Hour)),
