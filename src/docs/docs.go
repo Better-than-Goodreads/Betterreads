@@ -84,7 +84,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/register-first": {
+        "/users/register/basic": {
             "post": {
                 "description": "Register first step",
                 "consumes": [
@@ -130,7 +130,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/register-second": {
+        "/users/register/{id}/additional-info": {
             "post": {
                 "description": "Register second step",
                 "consumes": [
@@ -145,7 +145,7 @@ const docTemplate = `{
                 "summary": "Register second step",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User register id",
                         "name": "id",
                         "in": "path",
@@ -297,6 +297,12 @@ const docTemplate = `{
                 },
                 "location": {
                     "type": "string"
+                },
+                "profile_picture": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
