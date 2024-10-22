@@ -118,7 +118,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 	bc := booksController.NewBooksController(bs)
 
 	r.engine.POST("/books", bc.PublishBook)
-	r.engine.GET("/books/:book-name", bc.GetBook)
+	r.engine.GET("/books/:id", bc.GetBook)
 	r.engine.POST("/books/rate", bc.RateBook)
 	r.engine.DELETE("/books/rate", bc.DeleteRating)
 	r.engine.GET("/books/ratings", bc.GetRatings)

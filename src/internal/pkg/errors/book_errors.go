@@ -39,6 +39,7 @@ func NewErrBookNotFound() *ErrorDetails {
 	return errBookNotFound
 }
 
+
 func NewErrRatingBook(err error) *ErrorDetails {
     errRatingBook := NewErrorDetails(
 		"failed to rate book",
@@ -52,7 +53,7 @@ func NewErrRatingBook(err error) *ErrorDetails {
 func NewErrInvalidBookId(id string) *ErrorDetails {
     errInvalidBookId := NewErrorDetails(
 		"failed to parse book id",
-		"value of id should be a number: " + "Id: " + id,
+		"value of id should be a uuid: " + "Id: " + id,
 		http.StatusBadRequest,
 	)
 

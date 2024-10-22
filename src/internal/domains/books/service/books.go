@@ -2,9 +2,11 @@ package service
 
 import (
 	"errors"
+
 	"github.com/betterreads/internal/domains/books/models"
 	"github.com/betterreads/internal/domains/books/repository"
 	"github.com/betterreads/internal/domains/books/utils"
+	"github.com/google/uuid"
 )
 
 type BooksService struct {
@@ -15,20 +17,22 @@ func NewBooksService(booksRepository repository.BooksDatabase) *BooksService {
 	return &BooksService{booksRepository: booksRepository}
 }
 
-func (bs *BooksService) PublishBook(req *models.NewBookRequest) error {
+func (bs *BooksService) PublishBook(req *models.NewBookRequest) (*models.BookResponse, error) {
 	if len(req.Genres) == 0 {
-		return errors.New("at least one genre is required")
-	}
+		return nil, errors.New("at least one genre is required")
+    }
 
-	var newBook = utils.MapBookRequestToBookRecord(req)
-	if err := bs.booksRepository.SaveBook(newBook); err != nil {
-		return err
-	}
-	return nil
+    book ,err := bs.booksRepository.SaveBook(req)
+    if err != nil {
+       return nil, err
+    }
+
+    bookRes := utils.MapBookToBookResponse(book)
+	return bookRes, nil
 }
 
-func (bs *BooksService) GetBook(name string) (*repository.Book, error) {
-	book, err := bs.booksRepository.GetBookByName(name)
+func (bs *BooksService) GetBook(id uuid.UUID) (*models.Book, error) {
+	book, err := bs.booksRepository.GetBookById(id)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +40,7 @@ func (bs *BooksService) GetBook(name string) (*repository.Book, error) {
 	return book, nil
 }
 
-func (bs *BooksService) RateBook(bookId int, userId int, rateAmount int) error {
+func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount int) error {
 
 	if rateAmount < 1 || rateAmount > 5 {
 		return errors.New("rating must be between 1 and 5")
@@ -49,7 +53,7 @@ func (bs *BooksService) RateBook(bookId int, userId int, rateAmount int) error {
 	return nil
 }
 
-func (bs *BooksService) DeleteRating(bookId int, userId int) error {
+func (bs *BooksService) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
 	
 	err := bs.booksRepository.DeleteRating(bookId, userId)
 	if err != nil {
@@ -58,7 +62,7 @@ func (bs *BooksService) DeleteRating(bookId int, userId int) error {
 	return nil
 }
 
-func (bs *BooksService) GetRatings(bookId int, userId int) (int, error) {
+func (bs *BooksService) GetRatings(bookId uuid.UUID, userId uuid.UUID) (int, error) {
 	rating, err := bs.booksRepository.GetRatings(bookId, userId)
 	if err != nil {
 		return -1, err

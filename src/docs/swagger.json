@@ -9,6 +9,93 @@
     "host": "localhost:8080",
     "basePath": "/",
     "paths": {
+        "/books": {
+            "post": {
+                "description": "publishes a book",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "publish a book",
+                "parameters": [
+                    {
+                        "description": "Book Request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewBookRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Book"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{id}": {
+            "get": {
+                "description": "Get book id, note that its a UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Get book by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Book Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Book"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "description": "Get all users",
@@ -277,6 +364,86 @@
                 }
             }
         },
+        "models.Book": {
+            "type": "object",
+            "required": [
+                "amount_of_pages",
+                "author",
+                "description",
+                "genres",
+                "id",
+                "language",
+                "publication_date",
+                "title"
+            ],
+            "properties": {
+                "amount_of_pages": {
+                    "type": "integer"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "publication_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.NewBookRequest": {
+            "type": "object",
+            "required": [
+                "amount_of_pages",
+                "author",
+                "description",
+                "genres",
+                "language",
+                "publication_date",
+                "title"
+            ],
+            "properties": {
+                "amount_of_pages": {
+                    "type": "integer"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "language": {
+                    "type": "string"
+                },
+                "publication_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "models.UserAdditionalRequest": {
             "type": "object",
             "properties": {
@@ -344,6 +511,12 @@
                 },
                 "location": {
                     "type": "string"
+                },
+                "profile_picture": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "username": {
                     "type": "string"

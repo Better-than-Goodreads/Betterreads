@@ -7,6 +7,7 @@ import (
 	"github.com/betterreads/internal/domains/books/service"
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
+    "github.com/google/uuid"
 
 )
 
@@ -18,25 +19,51 @@ func NewBooksController(bookService *service.BooksService) *BooksController {
 	return &BooksController{bookService: bookService}
 }
 
+// PublishBook godoc
+// @Summary publish a book
+// @Description publishes a book 
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Param user body models.NewBookRequest true "Book Request"
+// @Success 201 {object} models.Book
+// @Failure 400 {object} errors.ErrorDetailsWithParams
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /books [post]
 func (bc *BooksController) PublishBook(ctx *gin.Context) {
 	var newBookRequest models.NewBookRequest
 	if err := ctx.ShouldBindJSON(&newBookRequest); err != nil {
 		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
 		return
 	}
-
-	if err := bc.bookService.PublishBook(&newBookRequest); err != nil {
+    book , err := bc.bookService.PublishBook(&newBookRequest)
+    if err != nil {
 		errors.SendError(ctx, errors.NewErrPublishingBook(err))
 		return
 	}
 
-	ctx.JSON(200, gin.H{"message": "book published"})
+	ctx.JSON(http.StatusCreated, gin.H{"book": book})
 }
 
+// GetBook godoc
+// @Summary Get book by id 
+// @Description Get book id, note that its a UUID
+// @Tags books
+// @Param id path string true "Book Id"
+// @Produce  json
+// @Success 200 {object} models.Book
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Router /books/{id} [get]
 func (bc *BooksController) GetBook(ctx *gin.Context) {
+	id := ctx.Param("id")
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrInvalidBookId(id))
+		return
+	}
 
-	bookName := ctx.Param("book-name")
-	book, err := bc.bookService.GetBook(bookName)
+	book, err := bc.bookService.GetBook(uuid)
 	if err != nil {
 		errors.SendError(ctx, errors.NewErrGettingBook(err))
 		return
@@ -56,6 +83,7 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
 		return
 	}
+
 	rateAmount := newBookRating.Rating
 	bookId := newBookRating.BookId
 	userId := newBookRating.UserId

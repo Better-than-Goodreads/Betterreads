@@ -1,46 +1,47 @@
 package repository
 
 import (
+    "errors"
     "github.com/google/uuid"
+	"github.com/betterreads/internal/domains/books/models"
 )
 
-type Book struct {
-	Title           string   `json:"title" binding:"required"`
-	Author          string   `json:"author" binding:"required"`
-	Description     string   `json:"description" binding:"required"`
-	PhotoId         string   `json:"photo_id" binding:"required"`
-	AmountOfPages   string   `json:"amount_of_pages" binding:"required"`
-	PublicationDate string   `json:"publication_date" binding:"required"`
-	Language        string   `json:"language" binding:"required"`
-	Genres          []string `json:"genres" binding:"required"`
-	Ratings         map[int]int    `json:"ratings"` //Tal vez haya que modificar esto mas adelante
-	// El id de un rating es IdBookIdUser, los 2 numeros concatenados
+var genresDict = map[int]string{
+    1:  "Fiction",
+    2:  "Non-fiction",
+    3:  "Fantasy",
+    4:  "Science Fiction",
+    5:  "Mystery",
+    6:  "Horror",
+    7:  "Romance",
+    8:  "Thriller",
+    9:  "Historical",
+    10: "Biography",
+    11: "Autobiography",
+    12: "Self-help",
+    13: "Travel",
+    14: "Guide",
+    15: "Poetry",
+    16: "Drama",
+    17: "Satire",
+    18: "Anthology",
+    19: "Encyclopedia",
+    20: "Dictionary",
+    21: "Comic",
+    22: "Art",
+    23: "Cookbook",
 }
 
-type BookDb struct {
-	Id 				uuid.UUID      `json:"id" db:"id"`
-	Title           string   `json:"title" db:"title"`
-	Author          string   `json:"author" db:"author"`
-	Description     string   `json:"description" db:"description"`
-	AmountOfPages   string   `json:"amount_of_pages" db:"amount_of_pages"`
-	
-	// Ratings         map[int]int    `json:"ratings"` //Tal vez haya que modificar esto mas adelante
-	// El id de un rating es IdBookIdUser, los 2 numeros concatenados
-}
-
-type Rating	struct {
-	UserId 			uuid.UUID      `json:"user_id" db:"user_id"`
-	BookId 			uuid.UUID      `json:"book_id" db:"book_id"`
-	Rating 			int            `json:"rating" db:"rating"`
-}
-
+var (
+    ErrGenreNotFound = errors.New("genre not found")
+)
 
 type BooksDatabase interface {
-	SaveBook(book Book) error
-	GetBookById(id int) (*Book, error)
-	GetBookByName(name string) (*Book, error)
-	RateBook(bookId int, userId int, rating int) error
-	DeleteRating(bookId int, userId int) error
-	GetRatings(bookId int, userId int) (*Rating, error)
+	SaveBook(*models.NewBookRequest)(*models.Book, error)
+	GetBookById(id uuid.UUID) (*models.Book, error)
+	GetBookByName(name string) (*models.Book, error)
+	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error
+	DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
+	GetRatings(bookId uuid.UUID, userId uuid.UUID) (*models.Rating, error)
 }
 

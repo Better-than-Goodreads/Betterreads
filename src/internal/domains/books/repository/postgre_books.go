@@ -3,13 +3,25 @@ package repository
 import (
 	"database/sql"
 
-	"github.com/jmoiron/sqlx"
 	"fmt"
-	"strings"
+
+	"github.com/betterreads/internal/domains/books/models"
+	 "github.com/betterreads/internal/domains/books/utils"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type PostgresBookRepository struct {
 	c *sqlx.DB
+}
+
+func getGenreById(genre string) (int, error) {
+    for key, value := range genresDict {
+        if value == genre {
+            return key, nil
+        }
+    }
+    return -1 , ErrGenreNotFound
 }
 
 func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
@@ -24,18 +36,24 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 			title VARCHAR(255) NOT NULL,
 			author VARCHAR(255) NOT NULL,
 			description VARCHAR(255) NOT NULL,
-			photo_id VARCHAR(255),
 			amount_of_pages INTEGER NOT NULL,
 			publication_date VARCHAR(255) NOT NULL,
-			language VARCHAR(255),
-			genres VARCHAR(255)
-			);			
-			`			
+            language VARCHAR(255) NOT NULL
+			);
+			`
 			// CREATE UNIQUE INDEX IF NOT EXISTS idx_books_title_author ON books(title, author);
 			// ratings_table UUID
 			// FOREIGN KEY (ratings_table) REFERENCES ratings(id)
-	
+    
 
+    schemaGendersBooks := `
+        CREATE TABLE IF NOT EXISTS genres_books (
+            book_id UUID,
+            genre_id INT,
+            PRIMARY KEY (book_id, genre_id),
+            FOREIGN KEY (book_id) REFERENCES books(id)
+        );
+    `
 	schemaRatings := `
 		CREATE TABLE IF NOT EXISTS ratings (
 			user_id UUID,
@@ -59,27 +77,82 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
 
+    if _, err := c.Exec(schemaGendersBooks); err != nil {
+        return nil, fmt.Errorf("failed to create table: %w", err)
+    }
 	return &PostgresBookRepository{c}, nil
 }
 
-func (r *PostgresBookRepository) SaveBook(book Book) error {
-	query := `INSERT INTO books (title, author, description, amount_of_pages, publication_date, language, genres)
-	VALUES ($1, $2, $3, $4, $5, $6, $7)
-	`
-	args := []interface{}{book.Title, book.Author, book.Description, book.AmountOfPages, book.PublicationDate, book.Language, strings.Join(book.Genres,",")}
+func (r *PostgresBookRepository) SaveBook (book *models.NewBookRequest) (*models.Book, error) {
+    bookRecord := &models.BookDb{}
+    query := `INSERT INTO books (title, author, description,  amount_of_pages,
+                    publication_date, language)
+                    VALUES ($1, $2, $3, $4, $5, $6)
+                    RETURNING id, title, author, description, amount_of_pages, publication_date, language;`
 
-	_, err := r.c.Exec(query, args...)
-	if err != nil {
-		return fmt.Errorf("failed to create book: %w", err)
-	}
+    args := []interface{}{book.Title, book.Author, book.Description, book.AmountOfPages, book.PublicationDate, book.Language}
 
-	return nil
+    if err := r.c.Get(bookRecord, query, args...); err != nil {
+        return nil , fmt.Errorf("failed to create book: %w", err)
+    }
+    
+    query = `INSERT INTO genres_books (book_id, genre_id)
+             VALUES ($1, $2);`
+
+    for _, genre := range book.Genres {
+        genreid, err := getGenreById(genre)
+        if err != nil {
+            return nil, fmt.Errorf("failed to create book: %w", err)
+        }
+        args = []interface{}{bookRecord.Id, genreid}
+        if _, err := r.c.Exec(query, args...); err != nil {
+            return nil, fmt.Errorf("failed to create book: %w", err)
+        }
+    }
+
+    res := utils.MapBookRequestToBookRecord(book, bookRecord.Id)
+
+    return &res, nil
 }
-func (r *PostgresBookRepository) GetBookById(id int) (*Book, error) {
-	return nil, nil
+
+func (r *PostgresBookRepository) getGenresForBook(book_id uuid.UUID) ([]string, error) {
+    var genres_ids []int
+    query := `SELECT genre_id FROM genres_books WHERE book_id = $1;`
+    if err := r.c.Select(&genres_ids, query, book_id); err != nil {
+        return nil, fmt.Errorf("failed to get genres: %w", err)
+    }
+
+    genres := []string{}
+    for _, genre_id := range genres_ids {
+        genres = append(genres, genresDict[genre_id])
+    }
+    
+    return genres, nil
+
 }
-func (r *PostgresBookRepository) GetBookByName(name string) (*Book, error) {
-	bookdb := &BookDb{}
+
+func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error) {
+    bookdb := &models.BookDb{}
+    query := `SELECT * FROM books WHERE id = $1;`
+    if err := r.c.Get(bookdb, query, id); err != nil {
+        if err == sql.ErrNoRows {
+            return nil, fmt.Errorf("book with id %s not found", id)
+        }
+        return nil, fmt.Errorf("failed to get book: %w", err)
+    }
+    genres, err := r.getGenresForBook(id)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get book: %w", err)
+    }
+    
+    book := utils.MapBookDbToBook(bookdb, genres)
+
+    return book, nil
+}
+
+
+func (r *PostgresBookRepository) GetBookByName(name string) (*models.Book, error) {
+	bookdb := &models.BookDb{}
 
 	// Ratings         map[int]int    `json:"ratings"` //Tal vez haya que modificar esto mas adelante
 	// El id de un rating es IdBookIdUser, los 2 numeros concatenados
@@ -93,18 +166,18 @@ func (r *PostgresBookRepository) GetBookByName(name string) (*Book, error) {
 		return nil, fmt.Errorf("failed to get the book: %w", err)
 	}
 
-	book := &Book{
-		
-		Title: bookdb.Title,
-		Author: bookdb.Author,
-		Description: bookdb.Description,
-		AmountOfPages: bookdb.Id.String(),
-
+	book := &models.Book{
+		//
+		// Title: bookdb.Title,
+		// Author: bookdb.Author,
+		// Description: bookdb.Description,
+		// AmountOfPages: bookdb.Id.String(),
+		//
 	}
 
 	return book, nil
 }
-func (r *PostgresBookRepository) RateBook(bookId int, userId int, rating int) error {
+func (r *PostgresBookRepository) RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error {
 	query := `INSERT INTO ratings (user_id, book_id, rating)
 	VALUES ($1, $2, $3)
 	`
@@ -116,7 +189,7 @@ func (r *PostgresBookRepository) RateBook(bookId int, userId int, rating int) er
 	}
 	return nil
 }
-func (r *PostgresBookRepository) DeleteRating(bookId int, userId int) error {
+func (r *PostgresBookRepository) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
 	
 	query := `DELETE FROM ratings WHERE user_id = $1 AND book_id = $2;`
 	
@@ -127,8 +200,8 @@ func (r *PostgresBookRepository) DeleteRating(bookId int, userId int) error {
 	return nil
 }
 
-func (r *PostgresBookRepository) GetRatings(bookId int, userId int) (*Rating, error) {
-	var ratings *Rating
+func (r *PostgresBookRepository) GetRatings(bookId uuid.UUID, userId uuid.UUID) (*models.Rating, error) {
+	var ratings *models.Rating
 	query := `SELECT * FROM ratings WHERE book_id = $1 AND user_id = $2;`
 	args := []interface{}{bookId, userId}
 

@@ -37,6 +37,63 @@ definitions:
       reason:
         type: string
     type: object
+  models.Book:
+    properties:
+      amount_of_pages:
+        type: integer
+      author:
+        type: string
+      description:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      language:
+        type: string
+      publication_date:
+        type: string
+      title:
+        type: string
+    required:
+    - amount_of_pages
+    - author
+    - description
+    - genres
+    - id
+    - language
+    - publication_date
+    - title
+    type: object
+  models.NewBookRequest:
+    properties:
+      amount_of_pages:
+        type: integer
+      author:
+        type: string
+      description:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      language:
+        type: string
+      publication_date:
+        type: string
+      title:
+        type: string
+    required:
+    - amount_of_pages
+    - author
+    - description
+    - genres
+    - language
+    - publication_date
+    - title
+    type: object
   models.UserAdditionalRequest:
     properties:
       about_me:
@@ -82,6 +139,10 @@ definitions:
         type: string
       location:
         type: string
+      profile_picture:
+        items:
+          type: integer
+        type: array
       username:
         type: string
     type: object
@@ -128,6 +189,63 @@ info:
   title: BetterReads API
   version: "1.0"
 paths:
+  /books:
+    post:
+      consumes:
+      - application/json
+      description: publishes a book
+      parameters:
+      - description: Book Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewBookRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: publish a book
+      tags:
+      - books
+  /books/{id}:
+    get:
+      description: Get book id, note that its a UUID
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get book by id
+      tags:
+      - books
   /users:
     get:
       consumes:
