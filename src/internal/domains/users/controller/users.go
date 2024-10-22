@@ -1,11 +1,12 @@
 package controller
 
 import (
+    "errors"
 	"net/http"
 
 	"github.com/betterreads/internal/domains/users/models"
 	"github.com/betterreads/internal/domains/users/service"
-	"github.com/betterreads/internal/pkg/errors"
+	er "github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -31,7 +32,7 @@ func NewUsersController(us *service.UsersService) *UsersController {
 func (u *UsersController) GetUsers(c *gin.Context) {
 	Users, err := u.us.GetUsers()
 	if err != nil {
-		errors.SendError(c, errors.NewErrFetchUsers(err))
+		er.SendError(c, er.NewErrFetchUsers(err))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"users": Users})
@@ -51,13 +52,13 @@ func (u *UsersController) GetUser(c *gin.Context) {
 	id := c.Param("id")
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		errors.SendError(c, errors.NewErrInvalidUserID(id))
+		er.SendError(c, er.NewErrInvalidUserID(id))
 	}
 
 	user, err := u.us.GetUser(uuid)
 
 	if err != nil {
-		errors.SendError(c, errors.NewErrUserNotFoundById(err))
+		er.SendError(c, er.NewErrUserNotFoundById(err))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"user": user})
@@ -79,14 +80,14 @@ func (u *UsersController) LogIn(c *gin.Context) {
 	var user *models.UserLoginRequest
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
+		er.SendErrorWithParams(c, er.NewErrParsingRequest(err))
 		return
 	}
 
 	userResponse, token, err := u.us.LogInUser(user)
 
 	if err != nil {
-		errors.SendError(c, errors.NewErrLogInUser(err))
+		er.SendError(c, er.NewErrLogInUser(err))
 		return
 	}
 
@@ -115,14 +116,19 @@ func (u *UsersController) Welcome(c *gin.Context) {
 func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 	var user *models.UserStageRequest
 	if err := c.ShouldBindJSON(&user); err != nil {
-		errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
+		er.SendErrorWithParams(c, er.NewErrParsingRequest(err))
 		return
 	}
 
 	userStageResponse, err := u.us.RegisterFirstStep(user)
 
 	if err != nil {
-		errors.SendError(c, errors.NewErrRegisterUser(err))
+        if errors.Is(err, service.ErrUsernameTaken) || errors.Is(err, service.ErrEmailTaken) {
+            er.SendErrorWithParams(c, er.NewErrUserNotUnique(err))
+            return
+        } else {
+            er.SendError(c, er.NewErrRegisterUser(err))
+        }
 		return
 	}
 
@@ -146,18 +152,18 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
 	id := c.Param("id")
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		errors.SendError(c, errors.NewErrInvalidRegisterId(id))
+		er.SendError(c, er.NewErrInvalidRegisterId(id))
 		return
 	}
 	var user *models.UserAdditionalRequest
 	if err := c.ShouldBindJSON(&user); err != nil {
-		errors.SendErrorWithParams(c, errors.NewErrParsingRequest(err))
+		er.SendErrorWithParams(c, er.NewErrParsingRequest(err))
 		return
 	}
 
 	userResponse, err := u.us.RegisterSecondStep(user, uuid)
 	if err != nil {
-		errors.SendError(c, errors.NewErrRegisterUser(err))
+		er.SendError(c, er.NewErrRegisterUser(err))
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"user": userResponse})

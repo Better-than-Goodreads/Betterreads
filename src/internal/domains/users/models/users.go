@@ -18,6 +18,7 @@ type UserRecord struct {
     IsAuthor  bool `json:"is_author" db:"is_author"`
 	Id        uuid.UUID    `json:"id" db:"id"`
 	Age       int    `json:"age" db:"age"`
+    ProfilePicture []byte `json:"profile_picture" db:"profile_picture"`
 }
 
 type UserStageRecord struct {
@@ -52,6 +53,7 @@ type UserResponse struct {
     IsAuthor  bool `json:"is_author"`
 	Id        uuid.UUID    `json:"id" db:"id"`
 	Age       int    `json:"age"`
+    ProfilePicture []byte `json:"profile_picture"`
 }
 
 // REQUESTS
@@ -76,5 +78,6 @@ type UserAdditionalRequest struct {
     Gender string `json:"gender"`
     AboutMe string `json:"about_me"`
     Age int `json:"age"`
+    ProfilePicture []byte `json:"profile_picture"`
 }
 

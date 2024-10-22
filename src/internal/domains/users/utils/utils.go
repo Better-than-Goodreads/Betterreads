@@ -25,6 +25,7 @@ func MapUserRecordToUserResponse(user *models.UserRecord) *models.UserResponse {
 		Age:       user.Age,
 		AboutMe:   user.AboutMe,
         IsAuthor:  user.IsAuthor,
+        ProfilePicture: user.ProfilePicture,
 	}
 }
 

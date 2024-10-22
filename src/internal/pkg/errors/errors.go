@@ -17,7 +17,6 @@ var (
 	)
 )
 
-
 // Follows RFC 7807: https://datatracker.ietf.org/doc/html/rfc7807
 type ErrorDetails struct {
 	Type     string `json:"type"`
@@ -40,64 +39,69 @@ func NewErrorDetails(title string, detail string, status int) *ErrorDetails {
 	}
 }
 
-type ErrorDetailsWithParams struct{
-    Type string `json:"type"`
-    Title string `json:"title"`
-    Detail string `json:"detail"`
-    Instance string `json:"instance"`
-    Params []ErrorParam `json:"validation_errors"`
-    Status int `json:"status"`
+type ErrorDetailsWithParams struct {
+	Type     string       `json:"type"`
+	Title    string       `json:"title"`
+	Detail   string       `json:"detail"`
+	Instance string       `json:"instance"`
+	Params   []ErrorParam `json:"validation_errors"`
+	Status   int          `json:"status"`
 }
 
 type ErrorParam struct {
-    Name string `json:"field"`
-    Reason string `json:"reason"`
+	Name   string `json:"field"`
+	Reason string `json:"reason"`
+}
+
+func (e ErrorParam) Error() string {
+	return e.Reason
 }
 
 func parseParameters(err error) []ErrorParam {
-    var errors []ErrorParam
-    if  unmarshalErr, ok := err.(*json.UnmarshalTypeError); ok{
-        errors = append(errors, ErrorParam{
-            Name: unmarshalErr.Field,
-            Reason: unmarshalErr.Type.String(),
-        })
-    } else if validationErrors, ok := err.(validator.ValidationErrors); ok {
-        for _, err := range validationErrors {
-            fmt.Println(err)
-            errors = append(errors, ErrorParam{
-                Name: err.Field(),
-                Reason: err.Tag(),
-            })
-        }
-    } else {
-        errors = append(errors, ErrorParam{
-            Name: "unknown",
-            Reason: err.Error(),
-        })
-    }
+	var errors []ErrorParam
 
-    
-    return errors
+	if errParam, ok := err.(ErrorParam); ok {
+		errors = append(errors, errParam)
+	} else if unmarshalErr, ok := err.(*json.UnmarshalTypeError); ok {
+		errors = append(errors, ErrorParam{
+			Name:   unmarshalErr.Field,
+			Reason: unmarshalErr.Type.String(),
+		})
+	} else if validationErrors, ok := err.(validator.ValidationErrors); ok {
+		for _, err := range validationErrors {
+			fmt.Println(err)
+			errors = append(errors, ErrorParam{
+				Name:   err.Field(),
+				Reason: err.Tag(),
+			})
+		}
+	} else {
+		errors = append(errors, ErrorParam{
+			Name:   "unknown",
+			Reason: err.Error(),
+		})
+	}
+	return errors
 }
 
 func NewErrorDetailsWithParams(title string, detail string, status int, err error) *ErrorDetailsWithParams {
-    return &ErrorDetailsWithParams{
-        Type: "about:blank",
-        Title: title,
-        Detail: detail,
-        Status: status,
-        Params: parseParameters(err),
-    }
+	return &ErrorDetailsWithParams{
+		Type:   "about:blank",
+		Title:  title,
+		Detail: detail,
+		Status: status,
+		Params: parseParameters(err),
+	}
 }
 
 func NewErrParsingRequest(err error) *ErrorDetailsWithParams {
-    errorDetails := NewErrorDetailsWithParams(
-        ErrParsingRequest.Title,
-        ErrParsingRequest.Detail,
-        ErrParsingRequest.Status,
-        err,
-    )
-    return errorDetails
+	errorDetails := NewErrorDetailsWithParams(
+		ErrParsingRequest.Title,
+		ErrParsingRequest.Detail,
+		ErrParsingRequest.Status,
+		err,
+	)
+	return errorDetails
 }
 
 func SendError(c *gin.Context, err *ErrorDetails) {
@@ -106,8 +110,6 @@ func SendError(c *gin.Context, err *ErrorDetails) {
 }
 
 func SendErrorWithParams(c *gin.Context, err *ErrorDetailsWithParams) {
-    err.Instance = c.Request.RequestURI
-    c.JSON(err.Status, err)
+	err.Instance = c.Request.RequestURI
+	c.JSON(err.Status, err)
 }
-
-

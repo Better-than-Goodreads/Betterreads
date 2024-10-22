@@ -2,13 +2,26 @@ package service
 
 import (
 	"errors"
-    "github.com/google/uuid"
+
+	"github.com/google/uuid"
 
 	"github.com/betterreads/internal/domains/users/models"
 	rs "github.com/betterreads/internal/domains/users/repository"
-    "github.com/betterreads/internal/pkg/auth"
 	"github.com/betterreads/internal/domains/users/utils"
+	"github.com/betterreads/internal/pkg/auth"
+	er "github.com/betterreads/internal/pkg/errors"
+)
 
+var (
+	ErrUsernameTaken = er.ErrorParam{
+		Name: "username",
+		Reason:  "username already taken",
+	}
+
+	ErrEmailTaken = er.ErrorParam {
+		Name: "email",
+		Reason: "email already taken",
+	}
 )
 
 type UsersService struct {
@@ -29,7 +42,11 @@ func NewUsersService(rp rs.UsersDatabase) *UsersService {
 
 func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error) {
     if err := u.rp.CheckUserExists(user); err != nil {
-        return nil, err
+		if errors.Is(err, rs.ErrUsernameAlreadyTaken) {
+			return nil, ErrUsernameTaken	
+		} else if errors.Is(err, rs.ErrEmailAlreadyTaken) {
+			return nil, ErrEmailTaken
+		}
     }
 
 	hashedPassword, err := auth.HashPassword(user.Password)
@@ -68,12 +85,12 @@ func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserRes
 		return nil,"",  ErrWrongPassword
 	}
 
-	UserResponse := utils.MapUserRecordToUserResponse(userRecord)
-    token, err := auth.GenerateToken(user.Username)
+	userResponse := utils.MapUserRecordToUserResponse(userRecord)
+    token, err := auth.GenerateToken(userResponse.Id.String())
     if err != nil {
         return nil,"", err
     }
-	return UserResponse, token, nil
+	return userResponse, token, nil
 }
 
 func (u *UsersService) GetUsers() ([]*models.UserResponse, error) {

@@ -20,6 +20,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+
+	middlewares "github.com/betterreads/internal/middlewares"
 )
 
 type Router struct {
@@ -91,14 +93,19 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 	us := usersService.NewUsersService(userRepo)
 	uc := usersController.NewUsersController(us)
 
-	r.engine.POST("/users/register/basic", uc.RegisterFirstStep)
-	r.engine.POST("/users/register/:id/additional-info", uc.RegisterSecondStep)
-	r.engine.POST("/users/login", uc.LogIn)
-	r.engine.GET("/users", uc.GetUsers)
-	r.engine.GET("/users/:id", uc.GetUser)
-
-	// Authenticated routes
-	r.engine.GET("/users/welcome", authMiddleware, uc.Welcome)
+	public := r.engine.Group("/users")
+	{
+		public.POST("/register/basic", uc.RegisterFirstStep)
+		public.POST("/register/:id/additional-info", uc.RegisterSecondStep)
+		public.POST("/login", uc.LogIn)
+	}
+	
+	private := r.engine.Group("/users")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.GET("/", uc.GetUsers)
+		private.GET("/:id", uc.GetUser)
+	}
 }
 
 func addBooksHandlers(r *Router, conn *sqlx.DB) {

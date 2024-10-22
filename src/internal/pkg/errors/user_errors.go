@@ -19,10 +19,21 @@ func NewErrRegisterUser(err error) *ErrorDetails {
     errRegisterUser := NewErrorDetails(
 		"failed to register user",
 		"Error when registering user: " + err.Error(),
-		http.StatusBadRequest,
+		http.StatusInternalServerError,
 	)
 	
 	return errRegisterUser 
+}
+
+func NewErrUserNotUnique(err error) *ErrorDetailsWithParams{
+	errUserNotUnique := NewErrorDetailsWithParams(
+		"failed to register user",
+		"Error when registering user: " + err.Error(),
+		http.StatusBadRequest,
+		err,
+	)
+
+	return errUserNotUnique
 }
 
 func NewErrLogInUser(err error) *ErrorDetails {
