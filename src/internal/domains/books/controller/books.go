@@ -87,3 +87,21 @@ func (bc *BooksController) DeleteRating(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{"message": "rating deleted"})
 }
+
+func (bc *BooksController) GetRatings(ctx *gin.Context) {
+	var newBookRating models.NewBookRating
+	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
+		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+		return
+	}
+	bookId := newBookRating.BookId
+	userId := newBookRating.UserId
+
+	ratings, err := bc.bookService.GetRatings(bookId, userId)
+	if err != nil {
+		//errors.SendError(ctx, errors.NewErrGettingRatings(err))
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"ratings": ratings})
+}

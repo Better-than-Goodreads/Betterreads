@@ -28,10 +28,19 @@ type BookDb struct {
 	// El id de un rating es IdBookIdUser, los 2 numeros concatenados
 }
 
+type Rating	struct {
+	UserId 			uuid.UUID      `json:"user_id" db:"user_id"`
+	BookId 			uuid.UUID      `json:"book_id" db:"book_id"`
+	Rating 			int            `json:"rating" db:"rating"`
+}
+
+
 type BooksDatabase interface {
 	SaveBook(book Book) error
 	GetBookById(id int) (*Book, error)
 	GetBookByName(name string) (*Book, error)
 	RateBook(bookId int, userId int, rating int) error
 	DeleteRating(bookId int, userId int) error
+	GetRatings(bookId int, userId int) (*Rating, error)
 }
+

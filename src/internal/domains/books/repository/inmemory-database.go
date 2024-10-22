@@ -1,76 +1,76 @@
 package repository
 
-import (
-	// "fmt"
+// import (
+// 	// "fmt"
 
-)
+// )
 
-type InmemoryBooksDatabase struct {
-	books map[int]Book
-	newId int
-}
+// type InmemoryBooksDatabase struct {
+// 	books map[int]Book
+// 	newId int
+// }
 
-func NewInmemoryBooksDatabase() BooksDatabase {
-	inmemoryBooksDatabase := new(InmemoryBooksDatabase)
-	inmemoryBooksDatabase.books = make(map[int]Book)
-	inmemoryBooksDatabase.newId = 1
-	return inmemoryBooksDatabase
-}
+// func NewInmemoryBooksDatabase() BooksDatabase {
+// 	inmemoryBooksDatabase := new(InmemoryBooksDatabase)
+// 	inmemoryBooksDatabase.books = make(map[int]Book)
+// 	inmemoryBooksDatabase.newId = 1
+// 	return inmemoryBooksDatabase
+// }
 
-func (db *InmemoryBooksDatabase) SaveBook(book Book) error {
-	db.books[db.GenerateBookId()] = book
-	return nil
-}
+// func (db *InmemoryBooksDatabase) SaveBook(book Book) error {
+// 	db.books[db.GenerateBookId()] = book
+// 	return nil
+// }
 
-func (db *InmemoryBooksDatabase) GetBookById(id int) (*Book, error) {
-	if len(db.books) == 0 {
-		return nil, nil
-	}
+// func (db *InmemoryBooksDatabase) GetBookById(id int) (*Book, error) {
+// 	if len(db.books) == 0 {
+// 		return nil, nil
+// 	}
 
-	book, ok := db.books[id]
+// 	book, ok := db.books[id]
 
-	if !ok {
-		return nil, nil
-	}
+// 	if !ok {
+// 		return nil, nil
+// 	}
 
-	return &book, nil
+// 	return &book, nil
 	
-}
+// }
 
-func (db *InmemoryBooksDatabase) GetBookByName(name string) (*Book, error) {
-	if len(db.books) == 0 {
-		return nil, nil
-	}
-	for _, book := range db.books {
-		if book.Title == name {
-			return &book, nil
-		}
-	}
-	return nil, nil
-}
+// func (db *InmemoryBooksDatabase) GetBookByName(name string) (*Book, error) {
+// 	if len(db.books) == 0 {
+// 		return nil, nil
+// 	}
+// 	for _, book := range db.books {
+// 		if book.Title == name {
+// 			return &book, nil
+// 		}
+// 	}
+// 	return nil, nil
+// }
 
-func (db *InmemoryBooksDatabase) GenerateBookId() int {
-	id := db.newId
-	db.newId++
-	return id
-}
+// func (db *InmemoryBooksDatabase) GenerateBookId() int {
+// 	id := db.newId
+// 	db.newId++
+// 	return id
+// }
 
-func (db *InmemoryBooksDatabase) RateBook(bookId int, userId int, rating int) error {
-	var book = db.books[bookId]
+// func (db *InmemoryBooksDatabase) RateBook(bookId int, userId int, rating int) error {
+// 	var book = db.books[bookId]
 	
-	book.Ratings[userId] = rating
+// 	book.Ratings[userId] = rating
 
-	db.books[bookId] = book
+// 	db.books[bookId] = book
 
-	return nil
-}
+// 	return nil
+// }
 
-func (db *InmemoryBooksDatabase) DeleteRating(bookId int, userId int) error {
-	var book = db.books[bookId]
+// func (db *InmemoryBooksDatabase) DeleteRating(bookId int, userId int) error {
+// 	var book = db.books[bookId]
 	
-	delete(book.Ratings, userId)
+// 	delete(book.Ratings, userId)
 
-	db.books[bookId] = book
-	return nil
-}
+// 	db.books[bookId] = book
+// 	return nil
+// }
 

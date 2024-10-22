@@ -57,3 +57,13 @@ func (bs *BooksService) DeleteRating(bookId int, userId int) error {
 	}
 	return nil
 }
+
+func (bs *BooksService) GetRatings(bookId int, userId int) (int, error) {
+	rating, err := bs.booksRepository.GetRatings(bookId, userId)
+	if err != nil {
+		return -1, err
+	}
+
+
+	return rating.Rating, nil
+}
