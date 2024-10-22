@@ -135,7 +135,7 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 // @Tags users
 // @Accept  json
 // @Produce  json
-// @Param id path int true "User register id"
+// @Param id path string true "User register id"
 // @Param user body models.UserAdditionalRequest true "User additional request"
 // @Success 201 {object} models.UserResponse
 // @Failure 400 {object} errors.ErrorDetails
