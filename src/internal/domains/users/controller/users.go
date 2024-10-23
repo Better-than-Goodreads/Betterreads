@@ -91,9 +91,10 @@ func (u *UsersController) LogIn(c *gin.Context) {
 		return
 	}
 
-	c.Header("Authorization", token)
-
-	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
+	c.JSON(http.StatusCreated, gin.H{
+		"user": userResponse,
+		"token": token,
+	})
 }
 
 func (u *UsersController) Welcome(c *gin.Context) {
