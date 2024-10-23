@@ -1,13 +1,16 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/betterreads/internal/domains/books/models"
 	"github.com/betterreads/internal/domains/books/service"
 	"github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -43,11 +46,32 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 		return
 	}
 
-	var newBookRequest models.NewBookRequest
-	if err := ctx.ShouldBindJSON(&newBookRequest); err != nil {
+	file, _, err := ctx.Request.FormFile("file")
+	if err != nil {
 		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
 		return
 	}
+	defer file.Close()
+
+	data := ctx.PostForm("data")
+	var newBookRequest models.NewBookRequest
+	if err := json.Unmarshal([]byte(data), &newBookRequest); err != nil {
+		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(fmt.Errorf("error parsing JSON request: %w", err)))
+		return
+	}
+
+	newBookRequest.Picture, err = io.ReadAll(file)
+	if err != nil {
+		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(fmt.Errorf("error reading file: %w", err)))
+		return
+	}
+
+	validator := validator.New()
+	if err := validator.Struct(newBookRequest); err != nil {
+		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+		return
+	}
+
 	book, err := bc.bookService.PublishBook(&newBookRequest, userId)
 	if err != nil {
 		errors.SendError(ctx, errors.NewErrPublishingBook(err))
@@ -57,7 +81,7 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{"book": book})
 }
 
-// GetBook godoc
+// GetBookInfo godoc
 // @Summary Get book by id
 // @Description Get book id, note that its a UUID
 // @Tags books
@@ -66,8 +90,8 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 // @Success 200 {object} models.Book
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
-// @Router /books/{id} [get]
-func (bc *BooksController) GetBook(ctx *gin.Context) {
+// @Router /books/{id}/info [get]
+func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 	id := ctx.Param("id")
 	uuid, err := uuid.Parse(id)
 	if err != nil {
@@ -75,7 +99,7 @@ func (bc *BooksController) GetBook(ctx *gin.Context) {
 		return
 	}
 
-	book, err := bc.bookService.GetBook(uuid)
+	book, err := bc.bookService.GetBookInfo(uuid)
 	if err != nil {
 		errors.SendError(ctx, errors.NewErrGettingBook(err))
 		return
@@ -88,7 +112,38 @@ func (bc *BooksController) GetBook(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{"book": book})
 }
 
-// GetBooks godoc
+// GetBookPicture godoc
+// @Summary Get book picture by id
+// @Description Get book id, note that its a UUID
+// @Tags books
+// @Param id path string true "Book Id"
+// @Produce  json
+// @Success 200 {object} {picture: string}
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Router /books/{id}/picture [get]
+func (bc *BooksController) GetBookPicture(ctx *gin.Context) {
+	id := ctx.Param("id")
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrInvalidBookId(id))
+		return
+	}
+
+	book, err := bc.bookService.GetBookPicture(uuid)
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrGettingBook(err))
+		return
+	}
+
+	if book == nil {
+		errors.SendError(ctx, errors.NewErrBookNotFound())
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"picture": book})
+}
+
+// GetBooksInfo godoc
 // @Summary Get all books
 // @Description Get all books
 // @Tags books
@@ -97,8 +152,8 @@ func (bc *BooksController) GetBook(ctx *gin.Context) {
 // @Success 200 {object} []models.Book
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books [get]
-func (bc *BooksController) GetBooks(ctx *gin.Context) {
-	books, err := bc.bookService.GetBooks()
+func (bc *BooksController) GetBooksInfo(ctx *gin.Context) {
+	books, err := bc.bookService.GetBooksInfo()
 	if err != nil {
 		errors.SendError(ctx, errors.NewErrGettingBooks(err))
 		return
@@ -199,7 +254,7 @@ func (bc *BooksController) GetRatingUser(ctx *gin.Context) {
 		errors.SendError(ctx, errors.NewErrNotLogged())
 		return
 	}
-	
+
 	ratings, err := bc.bookService.GetRatingUser(bookId, userId)
 	if err != nil {
 		if err == service.ErrRatingNotFound {

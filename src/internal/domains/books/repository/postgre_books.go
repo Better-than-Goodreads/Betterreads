@@ -42,10 +42,6 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 			FOREIGN KEY (author) REFERENCES users(id)
 			);
 			`
-	// CREATE UNIQUE INDEX IF NOT EXISTS idx_books_title_author ON books(title, author);
-	// ratings_table UUID
-	// FOREIGN KEY (ratings_table) REFERENCES ratings(id)
-
 	schemaGendersBooks := `
         CREATE TABLE IF NOT EXISTS genres_books (
             book_id UUID NOT NULL,
@@ -63,12 +59,16 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 			FOREIGN KEY (book_id) REFERENCES books(id)			
 			);
 			`
-	// FOREIGN KEY (user_id) REFERENCES users(id),
 
-	// schemaBooks := `
-	// 	DROP TABLE books
-	// `
-
+	schemaPictures := `
+		CREATE TABLE IF NOT EXISTS pictures (
+			book_id UUID,
+			picture BYTEA,
+			FOREIGN KEY (book_id) REFERENCES books(id),
+			PRIMARY KEY (book_id)
+		);
+		`
+	
 	if _, err := c.Exec(schemaBooks); err != nil {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
@@ -80,6 +80,10 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 	if _, err := c.Exec(schemaGendersBooks); err != nil {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
+	if _, err := c.Exec(schemaPictures); err != nil {
+		return nil, fmt.Errorf("failed to create table: %w", err)
+	}
+
 	return &PostgresBookRepository{c}, nil
 }
 
@@ -108,6 +112,15 @@ func (r *PostgresBookRepository) SaveBook(book *models.NewBookRequest, author uu
 		if _, err := r.c.Exec(query, args...); err != nil {
 			return nil, fmt.Errorf("failed to create book: %w", err)
 		}
+	}
+
+	query = `INSERT INTO pictures (book_id, picture)
+			VAlUES ($1, $2);`
+
+	args = []interface{}{bookRecord.Id, book.Picture}
+
+	if _, err := r.c.Exec(query, args...); err != nil {
+		return nil, fmt.Errorf("failed to create book: %w", err)
 	}
 
 	res := utils.MapBookRequestToBookRecord(book, bookRecord.Id, author)
@@ -165,6 +178,18 @@ func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error)
 	book := utils.MapBookDbToBook(bookdb, genres, ratings)
 
 	return book, nil
+}
+
+func (r *PostgresBookRepository) GetBookPictureById(id uuid.UUID) ([]byte, error) {
+	var picture []byte
+	query := `SELECT picture FROM pictures WHERE book_id = $1;`
+	if err := r.c.Get(&picture, query, id); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrBookNotFound
+		}
+		return nil, fmt.Errorf("failed to get book: %w", err)
+	}
+	return picture, nil
 }
 
 func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {

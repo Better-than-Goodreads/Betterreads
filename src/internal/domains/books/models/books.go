@@ -46,12 +46,13 @@ type Ratings struct {
 
 // REQUESTS
 type NewBookRequest struct {
-	Title           string   `json:"title" binding:"required"`
-	Description     string   `json:"description" binding:"required"`
-	AmountOfPages   int      `json:"amount_of_pages" binding:"required"`
-	PublicationDate string   `json:"publication_date" binding:"required"`
-	Language        string   `json:"language" binding:"required"`
-	Genres          []string `json:"genres" binding:"required"`
+	Title           string   `json:"title" validate:"required"`
+	Description     string   `json:"description" validate:"required"`
+	AmountOfPages   int      `json:"amount_of_pages" validate:"required"`
+	PublicationDate string   `json:"publication_date" validate:"required"`
+	Language        string   `json:"language" validate:"required"`
+	Genres          []string `json:"genres" validate:"required"`
+	Picture		 	[]byte	 `json:"picture"`
 }
 
 type NewRatingRequest struct {

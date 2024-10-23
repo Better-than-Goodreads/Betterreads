@@ -36,11 +36,13 @@ var (
     ErrGenreNotFound = errors.New("genre not found")
     ErrRatingNotFound = errors.New("rating not found")
     ErrAuthorNotFound = errors.New("author not found")
+    ErrBookNotFound = errors.New("book not found")
 )
 
 type BooksDatabase interface {
 	SaveBook(*models.NewBookRequest, uuid.UUID)(*models.Book, error)
 	GetBookById(id uuid.UUID) (*models.Book, error)
+    GetBookPictureById(id uuid.UUID) ([]byte, error)
     GetBooks() ([]*models.Book, error)
 	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error
 	DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
