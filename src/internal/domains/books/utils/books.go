@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func MapBookRequestToBookRecord(req *models.NewBookRequest, id uuid.UUID, author string) models.Book {
+func MapBookRequestToBookRecord(req *models.NewBookRequest, id uuid.UUID, author uuid.UUID) models.Book {
 	return models.Book{
         Title:   req.Title,
         Author: author,
@@ -19,21 +19,23 @@ func MapBookRequestToBookRecord(req *models.NewBookRequest, id uuid.UUID, author
 }
 
 
-func MapBookToBookResponse(book *models.Book) *models.BookResponse {
+func MapBookToBookResponse(book *models.Book, author_name string) *models.BookResponse {
     return &models.BookResponse{
         Title: book.Title,
-        Author: book.Author,
+        Author: author_name, 
         Description: book.Description,
         PublicationDate: book.PublicationDate,
         Language: book.Language,
         Genres: book.Genres,
         AmountOfPages: book.AmountOfPages,
         Id: book.Id,
+        TotalRatings: book.TotalRatings,
+        AverageRating: book.AverageRating,
     }
 }
 
 
-func MapBookDbToBook(book *models.BookDb, genres []string) *models.Book{
+func MapBookDbToBook(book *models.BookDb, genres []string, ratings *models.Ratings ) *models.Book{
     return &models.Book{
         Title: book.Title,
         Author: book.Author,
@@ -43,5 +45,15 @@ func MapBookDbToBook(book *models.BookDb, genres []string) *models.Book{
         Genres: genres,
         AmountOfPages: book.AmountOfPages,
         Id: book.Id,
+        TotalRatings: ratings.Total_ratings,
+        AverageRating: ratings.Avg_ratings,
+    }
+}
+
+
+func MapRatingToRatingResponse (rating *models.Rating) *models.RatingResponse{
+    return &models.RatingResponse{
+        BookId: rating.BookId,
+        Rating: rating.Rating,
     }
 }

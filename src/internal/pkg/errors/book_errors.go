@@ -86,3 +86,29 @@ func NewErrInvalidRating(rate string) *ErrorDetails {
     return errorDetails
 }
 
+func NewErrRatingNotFound() *ErrorDetails {
+	errRatingNotFound := NewErrorDetails(
+		"rating not found",
+		"Rating not found",
+		http.StatusNotFound,
+	)
+	return errRatingNotFound
+}
+
+func NewErrGettingRating(err error) *ErrorDetails {
+	errGettingRating := NewErrorDetails(
+		"failed to get rating",
+		"Error when getting rating: " + err.Error(),
+		http.StatusInternalServerError,
+	)
+	return errGettingRating
+}
+
+func NewErrDeletingRating(err error) *ErrorDetails {
+	errDeletingRating := NewErrorDetails(
+		"failed to delete rating",
+		"Error when deleting rating: " + err.Error(),
+		http.StatusInternalServerError,
+	)
+	return errDeletingRating
+}

@@ -31,11 +31,11 @@ func NewBooksController(bookService *service.BooksService) *BooksController {
 // @Router /books [post]
 func (bc *BooksController) PublishBook(ctx *gin.Context) {
 	isAuthor, res1 := ctx.Get("IsAuthor")
-	isAuthor = isAuthor.(bool)
-	author, res2 := ctx.Get("userId")
-	authorstr := author.(string)
+	isAuthor = isAuthor.(bool) // Cast any to bool
 
-	if isAuthor == false || res1 == false || res2 == false {
+	author, res2 := getUserId(ctx)
+
+	if isAuthor == false || !res1 || !res2 {
 		errors.SendError(ctx, errors.NewErrNotAuthor())
 		return
 	}
@@ -45,7 +45,7 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
 		return
 	}
-	book, err := bc.bookService.PublishBook(&newBookRequest, authorstr)
+	book, err := bc.bookService.PublishBook(&newBookRequest, author)
 	if err != nil {
 		errors.SendError(ctx, errors.NewErrPublishingBook(err))
 		return
@@ -103,60 +103,115 @@ func (bc *BooksController) GetBooks(ctx *gin.Context) {
 	ctx.JSON(http.StatusAccepted, gin.H{"books": books})
 }
 
+// RateBook godoc
+// @Summary Rate a book
+// @Description Rate a book
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Book Id"
+// @Param user body models.NewRatingRequest true "Rating Request"
+// @Success 200 {object} string
+// @Failure 400 {object} errors.ErrorDetailsWithParams
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /books/{id}/rating [post]
 func (bc *BooksController) RateBook(ctx *gin.Context) {
+	userId, res := getUserId(ctx)
+	if !res {
+		errors.SendError(ctx, errors.NewErrNotLogged())
+		return
+	}
 
-	var newBookRating models.NewBookRating
+	var newBookRating models.NewRatingRequest
 	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
 		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
 		return
 	}
 
+	bookId, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrInvalidBookId(ctx.Param("id")))
+		return
+	}
+
 	rateAmount := newBookRating.Rating
-	bookId := newBookRating.BookId
-	userId := newBookRating.UserId
 
 	if err := bc.bookService.RateBook(bookId, userId, rateAmount); err != nil {
 		errors.SendError(ctx, errors.NewErrRatingBook(err))
 		return
 	}
 
-	message := "book rated "
-
-	ctx.JSON(200, gin.H{"message": message})
+	ctx.JSON(200, gin.H{"raing": rateAmount})
 }
 
+// DeleteRating godoc
+// @Summary Delete rating of a book
+// @Description Delete rating of a book
+// @Tags books
+// @Param id path string true "Book Id"
+// @Produce  json
+// @Success 204 {object} string
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /books/{id}/rating [delete]
 func (bc *BooksController) DeleteRating(ctx *gin.Context) {
-
-	var newBookRating models.NewBookRating
-	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
-		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+	userId, res := getUserId(ctx)
+	if !res {
+		errors.SendError(ctx, errors.NewErrNotLogged())
 		return
 	}
-	bookId := newBookRating.BookId
-	userId := newBookRating.UserId
+	bookId, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrInvalidBookId(ctx.Param("id")))
+		return
+	}
 
 	if err := bc.bookService.DeleteRating(bookId, userId); err != nil {
-		//errors.SendError(ctx, errors.NewErrDeletingRating(err))
+		errors.SendError(ctx, errors.NewErrDeletingRating(err))
 		return
 	}
 
-	ctx.JSON(200, gin.H{"message": "rating deleted"})
+	ctx.JSON(http.StatusNoContent, nil)
 }
 
-func (bc *BooksController) GetRatings(ctx *gin.Context) {
-	var newBookRating models.NewBookRating
-	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
-		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
-		return
-	}
-	bookId := newBookRating.BookId
-	userId := newBookRating.UserId
-
-	ratings, err := bc.bookService.GetRatings(bookId, userId)
+// GetRatingUser godoc
+// @Summary Get rating of a book by user
+// @Description Get rating of a book by user
+// @Tags books
+// @Param id path string true "Book Id"
+// @Produce  json
+// @Success 200 {object} models.RatingResponse
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Router /books/{id}/rating [get]
+func (bc *BooksController) GetRatingUser(ctx *gin.Context) {
+	bookId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		//errors.SendError(ctx, errors.NewErrGettingRatings(err))
+		errors.SendError(ctx, errors.NewErrInvalidBookId(ctx.Param("id")))
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"ratings": ratings})
+	userId, res := getUserId(ctx)
+	if !res {
+		errors.SendError(ctx, errors.NewErrNotLogged())
+		return
+	}
+
+	ratings, err := bc.bookService.GetRatingUser(bookId, userId)
+	if err != nil {
+		if err == service.ErrRatingNotFound {
+			errors.SendError(ctx, errors.NewErrRatingNotFound())
+		} else {
+			errors.SendError(ctx, errors.NewErrGettingRating(err))
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"ratings": ratings})
+}
+
+func getUserId(ctx *gin.Context) (uuid.UUID, bool) {
+	_userId, res := ctx.Get("userId")
+	userId := uuid.MustParse(_userId.(string))
+	return userId, res
 }

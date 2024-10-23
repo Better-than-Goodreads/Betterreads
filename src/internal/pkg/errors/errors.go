@@ -104,6 +104,15 @@ func NewErrParsingRequest(err error) *ErrorDetailsWithParams {
 	return errorDetails
 }
 
+func NewErrNotLogged() *ErrorDetails {
+	errNotLogged := NewErrorDetails(
+		"not logged",
+		"User is not logged",
+		http.StatusUnauthorized,
+	)
+	return errNotLogged
+}
+
 func SendError(c *gin.Context, err *ErrorDetails) {
 	err.Instance = c.Request.RequestURI
 	c.JSON(err.Status, err)

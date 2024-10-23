@@ -34,15 +34,17 @@ var genresDict = map[int]string{
 
 var (
     ErrGenreNotFound = errors.New("genre not found")
+    ErrRatingNotFound = errors.New("rating not found")
+    ErrAuthorNotFound = errors.New("author not found")
 )
 
 type BooksDatabase interface {
-	SaveBook(*models.NewBookRequest, string)(*models.Book, error)
+	SaveBook(*models.NewBookRequest, uuid.UUID)(*models.Book, error)
 	GetBookById(id uuid.UUID) (*models.Book, error)
     GetBooks() ([]*models.Book, error)
-	GetBookByName(name string) (*models.Book, error)
 	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error
 	DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
-	GetRatings(bookId uuid.UUID, userId uuid.UUID) (*models.Rating, error)
+	GetRatingUser(bookId uuid.UUID, userId uuid.UUID) (*models.Rating, error)
+    GetAuthorName(id uuid.UUID) (string, error)
 }
 

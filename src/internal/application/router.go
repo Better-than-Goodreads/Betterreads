@@ -78,7 +78,7 @@ func NewRouter(port string) *Router {
 
 func addCorsConfiguration(r *Router) {
 	config := cors.DefaultConfig()
-    config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 	config.AllowAllOrigins = true
 	config.AllowCredentials = true
 	r.engine.Use(cors.New(config))
@@ -100,7 +100,7 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 		public.POST("/register/:id/additional-info", uc.RegisterSecondStep)
 		public.POST("/login", uc.LogIn)
 	}
-	
+
 	private := r.engine.Group("/users")
 	private.Use(middlewares.AuthMiddleware)
 	{
@@ -116,21 +116,21 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 	}
 	bs := booksService.NewBooksService(booksRepo)
 	bc := booksController.NewBooksController(bs)
-    
-    public := r.engine.Group("/books")
-    {
-       public.GET("/", bc.GetBooks)
-       public.GET("/:id", bc.GetBook)
-       public.GET("/ratings", bc.GetRatings)
-    }
 
-    private := r.engine.Group("/books")
-    private.Use(middlewares.AuthMiddleware)
-    {
-        private.POST("/", bc.PublishBook)
-        private.POST("/rate", bc.RateBook)
-        private.DELETE("/rate", bc.DeleteRating)
-    }
+	public := r.engine.Group("/books")
+	{
+		public.GET("/", bc.GetBooks)
+		public.GET("/:id", bc.GetBook)
+	}
+
+	private := r.engine.Group("/books")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.POST("/", bc.PublishBook)
+		private.GET("/:id/rating/", bc.GetRatingUser)
+		private.POST("/:id/rating", bc.RateBook)
+		private.DELETE("/:id/rating/", bc.DeleteRating)
+	}
 
 }
 
