@@ -123,13 +123,13 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 	{
 		private.GET("/info", bc.GetBooksInfo)
 		private.GET("/:id/info", bc.GetBookInfo)
-		private.GET("/:id/picture", bc.GetBookPicture)
 		private.POST("/", bc.PublishBook)
 		private.GET("/:id/rating/", bc.GetRatingUser)
 		private.POST("/:id/rating", bc.RateBook)
 		private.DELETE("/:id/rating/", bc.DeleteRating)
 	}
 
+	r.engine.GET("/books/:id/picture", bc.GetBookPicture)
 }
 
 func (r *Router) Run() {
