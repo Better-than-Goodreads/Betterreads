@@ -79,6 +79,7 @@ func NewRouter(port string) *Router {
 func addCorsConfiguration(r *Router) {
 	config := cors.DefaultConfig()
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	config.AllowAllOrigins = true
 	config.AllowCredentials = true
 	r.engine.Use(cors.New(config))

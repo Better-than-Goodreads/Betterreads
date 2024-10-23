@@ -130,17 +130,17 @@ func (bc *BooksController) GetBookPicture(ctx *gin.Context) {
 		return
 	}
 
-	book, err := bc.bookService.GetBookPicture(uuid)
+	base64Bytes, err := bc.bookService.GetBookPicture(uuid)
 	if err != nil {
 		errors.SendError(ctx, errors.NewErrGettingBook(err))
 		return
 	}
 
-	if book == nil {
+	if base64Bytes == nil {
 		errors.SendError(ctx, errors.NewErrBookNotFound())
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"picture": book})
+	ctx.Data(http.StatusCreated, "image/jpeg", base64Bytes)
 }
 
 // GetBooksInfo godoc
