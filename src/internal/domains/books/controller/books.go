@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/betterreads/internal/domains/books/models"
@@ -30,12 +31,14 @@ func NewBooksController(bookService *service.BooksService) *BooksController {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books [post]
 func (bc *BooksController) PublishBook(ctx *gin.Context) {
-	isAuthor, res1 := ctx.Get("IsAuthor")
-	isAuthor = isAuthor.(bool) // Cast any to bool
+	isAuthor := ctx.GetBool("IsAuthor")
+	userId, err := getUserId(ctx)
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrNotLogged())
+		return
+	}
 
-	author, res2 := getUserId(ctx)
-
-	if isAuthor == false || !res1 || !res2 {
+	if isAuthor == false {
 		errors.SendError(ctx, errors.NewErrNotAuthor())
 		return
 	}
@@ -45,7 +48,7 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
 		return
 	}
-	book, err := bc.bookService.PublishBook(&newBookRequest, author)
+	book, err := bc.bookService.PublishBook(&newBookRequest, userId)
 	if err != nil {
 		errors.SendError(ctx, errors.NewErrPublishingBook(err))
 		return
@@ -116,8 +119,8 @@ func (bc *BooksController) GetBooks(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/{id}/rating [post]
 func (bc *BooksController) RateBook(ctx *gin.Context) {
-	userId, res := getUserId(ctx)
-	if !res {
+	userId, err := getUserId(ctx)
+	if err != nil {
 		errors.SendError(ctx, errors.NewErrNotLogged())
 		return
 	}
@@ -155,8 +158,8 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/{id}/rating [delete]
 func (bc *BooksController) DeleteRating(ctx *gin.Context) {
-	userId, res := getUserId(ctx)
-	if !res {
+	userId, err := getUserId(ctx)
+	if err != nil {
 		errors.SendError(ctx, errors.NewErrNotLogged())
 		return
 	}
@@ -191,12 +194,12 @@ func (bc *BooksController) GetRatingUser(ctx *gin.Context) {
 		return
 	}
 
-	userId, res := getUserId(ctx)
-	if !res {
+	userId, err := getUserId(ctx)
+	if err != nil {
 		errors.SendError(ctx, errors.NewErrNotLogged())
 		return
 	}
-
+	
 	ratings, err := bc.bookService.GetRatingUser(bookId, userId)
 	if err != nil {
 		if err == service.ErrRatingNotFound {
@@ -210,8 +213,14 @@ func (bc *BooksController) GetRatingUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"ratings": ratings})
 }
 
-func getUserId(ctx *gin.Context) (uuid.UUID, bool) {
-	_userId, res := ctx.Get("userId")
-	userId := uuid.MustParse(_userId.(string))
-	return userId, res
+func getUserId(ctx *gin.Context) (uuid.UUID, error) {
+	_userId := ctx.GetString("userId")
+	if _userId == "" {
+		return uuid.UUID{}, fmt.Errorf("user not logged")
+	}
+	userId, err := uuid.Parse(_userId)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("invalid user id")
+	}
+	return userId, nil
 }
