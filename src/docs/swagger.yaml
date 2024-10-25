@@ -83,6 +83,10 @@ definitions:
         type: array
       language:
         type: string
+      picture:
+        items:
+          type: integer
+        type: array
       publication_date:
         type: string
       title:
@@ -205,26 +209,6 @@ info:
   version: "1.0"
 paths:
   /books:
-    get:
-      consumes:
-      - application/json
-      description: Get all books
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.Book'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.ErrorDetails'
-      summary: Get all books
-      tags:
-      - books
     post:
       consumes:
       - application/json
@@ -254,7 +238,7 @@ paths:
       summary: publish a book
       tags:
       - books
-  /books/{id}:
+  /books/{id}/info:
     get:
       description: Get book id, note that its a UUID
       parameters:
@@ -279,6 +263,33 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Get book by id
+      tags:
+      - books
+  /books/{id}/picture:
+    get:
+      description: Get book id, note that its a UUID
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get book picture by id
       tags:
       - books
   /books/{id}/rating:
@@ -366,6 +377,27 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Rate a book
+      tags:
+      - books
+  /books/info:
+    get:
+      consumes:
+      - application/json
+      description: Get all books
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get all books
       tags:
       - books
   /users:

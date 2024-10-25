@@ -118,7 +118,7 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 // @Tags books
 // @Param id path string true "Book Id"
 // @Produce  json
-// @Success 200 {object} {picture: string}
+// @Success 200 {file} []byte
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
 // @Router /books/{id}/picture [get]
@@ -151,7 +151,7 @@ func (bc *BooksController) GetBookPicture(ctx *gin.Context) {
 // @Produce  json
 // @Success 200 {object} []models.Book
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /books [get]
+// @Router /books/info [get]
 func (bc *BooksController) GetBooksInfo(ctx *gin.Context) {
 	books, err := bc.bookService.GetBooksInfo()
 	if err != nil {
