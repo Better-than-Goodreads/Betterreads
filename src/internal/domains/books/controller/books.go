@@ -279,3 +279,43 @@ func getUserId(ctx *gin.Context) (uuid.UUID, error) {
 	}
 	return userId, nil
 }
+
+
+// AddReview godoc
+// @Summary Add review to a book
+// @Description Add review to a book
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Book Id"
+// @Param user body models.NewReviewRequest true "Review Request"
+// @Success 200 {object} string
+// @Failure 400 {object} errors.ErrorDetailsWithParams
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /books/{id}/review [post]
+func (bc *BooksController) AddReview(ctx *gin.Context) {
+	userId, err := getUserId(ctx)
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrNotLogged())
+		return
+	}
+
+	var newReview models.NewReviewRequest
+	if err := ctx.ShouldBindJSON(&newReview); err != nil {
+		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+		return
+	}
+
+	bookId, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		errors.SendError(ctx, errors.NewErrInvalidBookId(ctx.Param("id")))
+		return
+	}
+
+	if err := bc.bookService.AddReview(bookId, userId, newReview.Review); err != nil {
+		errors.SendError(ctx, errors.NewErrAddingReview(err))
+		return
+	}
+
+	ctx.JSON(200, gin.H{"review": newReview.Review})
+}

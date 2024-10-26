@@ -112,3 +112,12 @@ func NewErrDeletingRating(err error) *ErrorDetails {
 	)
 	return errDeletingRating
 }
+
+func NewErrAddingReview(err error) *ErrorDetails {
+	errAddingReview := NewErrorDetails(
+		"failed to add review",
+		"Error when adding review: " + err.Error(),
+		http.StatusInternalServerError,
+	)
+	return errAddingReview
+}

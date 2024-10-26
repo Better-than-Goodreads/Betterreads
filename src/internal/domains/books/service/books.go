@@ -132,3 +132,12 @@ func (bs *BooksService) addAuthor(book *models.Book, author uuid.UUID) (*models.
 	bookRes := utils.MapBookToBookResponse(book, author_name)
 	return bookRes, nil
 }
+
+
+func (bs *BooksService) AddReview(bookId uuid.UUID, userId uuid.UUID, review string) error {
+	err := bs.booksRepository.AddReview(bookId, userId, review)
+	if err != nil {
+		return err
+	}
+	return nil
+}

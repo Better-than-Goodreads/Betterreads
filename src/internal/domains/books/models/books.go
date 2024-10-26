@@ -59,6 +59,10 @@ type NewRatingRequest struct {
 	Rating int `json:"rating" binding:"required"`
 }
 
+type NewReviewRequest struct {
+	Review string `json:"review" binding:"required"`
+}
+
 // RESPONSES
 type BookResponse struct {
 	Title           string    `json:"title"`

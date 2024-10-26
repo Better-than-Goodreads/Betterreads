@@ -48,5 +48,6 @@ type BooksDatabase interface {
 	DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
 	GetRatingUser(bookId uuid.UUID, userId uuid.UUID) (*models.Rating, error)
     GetAuthorName(id uuid.UUID) (string, error)
+    AddReview(bookId uuid.UUID, userId uuid.UUID, review string) error
 }
 

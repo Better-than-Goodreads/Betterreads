@@ -60,6 +60,16 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 			);
 			`
 
+		schemaReviews := `
+			CREATE TABLE IF NOT EXISTS reviews (
+				user_id UUID,
+				book_id UUID,
+				review VARCHAR (255),
+				PRIMARY KEY (user_id, book_id),
+				FOREIGN KEY (book_id) REFERENCES books(id)			
+				);
+				`
+		
 	schemaPictures := `
 		CREATE TABLE IF NOT EXISTS pictures (
 			book_id UUID,
@@ -74,6 +84,10 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 	}
 
 	if _, err := c.Exec(schemaRatings); err != nil {
+		return nil, fmt.Errorf("failed to create table: %w", err)
+	}
+
+	if _, err := c.Exec(schemaReviews); err != nil {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
 
@@ -197,7 +211,7 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
 	query := `SELECT * FROM books;`
 	if err := r.c.Select(&books, query); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("No books found")
+			return nil, fmt.Errorf("no books found")
 		}
 		return nil, fmt.Errorf("failed to get books: %w", err)
 	}
@@ -300,3 +314,13 @@ func (r *PostgresBookRepository) GetAuthorName(authorId uuid.UUID) (string, erro
 }
 
 
+func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, review string) error {
+	query := `INSERT INTO reviews (user_id, book_id, review)
+			  VALUES ($1, $2, $3);`
+	args := []interface{}{userId, bookId, review}
+
+	if _, err := r.c.Exec(query, args...); err != nil {
+		return fmt.Errorf("failed to add review: %w", err)
+	}
+	return nil
+}

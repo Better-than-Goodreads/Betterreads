@@ -132,6 +132,8 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 		private.GET("/:id/rating/", bc.GetRatingUser)
 		private.POST("/:id/rating", bc.RateBook)
 		private.DELETE("/:id/rating/", bc.DeleteRating)
+
+		private.POST("/:id/review", bc.AddReview)
 	}
 
 }
