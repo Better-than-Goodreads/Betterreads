@@ -101,6 +101,44 @@
                 }
             }
         },
+        "/books/info/search": {
+            "get": {
+                "description": "Get books by name, if no books found returns an empty array",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Get books by name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Book Name",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Book"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
         "/books/{id}/info": {
             "get": {
                 "description": "Get book id, note that its a UUID",
@@ -748,9 +786,6 @@
         "models.RatingResponse": {
             "type": "object",
             "properties": {
-                "book_id": {
-                    "type": "string"
-                },
                 "rating": {
                     "type": "integer"
                 }

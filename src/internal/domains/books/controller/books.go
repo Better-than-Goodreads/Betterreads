@@ -108,7 +108,7 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 // @Produce  json
 // @Success 200 {object} []models.Book
 // @Failure 400 {object} errors.ErrorDetails
-// @Router /books [get]
+// @Router /books/info/search [get]
 func (bc *BooksController) GetBooksInfoByName(ctx *gin.Context) {
     name := ctx.Query("name")
     books, err := bc.bookService.GetBooksByName(name)

@@ -115,8 +115,6 @@ definitions:
     type: object
   models.RatingResponse:
     properties:
-      book_id:
-        type: string
       rating:
         type: integer
     type: object
@@ -452,6 +450,31 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Get all books
+      tags:
+      - books
+  /books/info/search:
+    get:
+      description: Get books by name, if no books found returns an empty array
+      parameters:
+      - description: Book Name
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get books by name
       tags:
       - books
   /users:
