@@ -32,8 +32,9 @@ func NewUsersController(us *service.UsersService) *UsersController {
 func (u *UsersController) GetUsers(c *gin.Context) {
 	Users, err := u.us.GetUsers()
 	if err != nil {
-		er.SendError(c, er.NewErrFetchUsers(err))
-		return
+        err := er.NewErrFetchUsers(err)
+        c.AbortWithError(err.Status, err)
+        return
 	}
 	c.JSON(http.StatusOK, gin.H{"users": Users})
 }
@@ -52,15 +53,19 @@ func (u *UsersController) GetUser(c *gin.Context) {
 	id := c.Param("id")
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		er.SendError(c, er.NewErrInvalidUserID(id))
+        err := er.NewErrInvalidUserID(id)
+        c.AbortWithError(err.Status, err)
+        return
 	}
 
 	user, err := u.us.GetUser(uuid)
 
 	if err != nil {
-		er.SendError(c, er.NewErrUserNotFoundById(err))
+        err := er.NewErrUserNotFoundById(err)
+        c.AbortWithError(err.Status, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
@@ -80,14 +85,16 @@ func (u *UsersController) LogIn(c *gin.Context) {
 	var user *models.UserLoginRequest
 
 	if err := c.ShouldBindJSON(&user); err != nil {
-		er.SendErrorWithParams(c, er.NewErrParsingRequest(err))
+        err := er.NewErrParsingRequest(err)
+        c.AbortWithError(err.Status, err)
 		return
 	}
 
 	userResponse, token, err := u.us.LogInUser(user)
 
 	if err != nil {
-		er.SendError(c, er.NewErrLogInUser(err))
+        err := er.NewErrLogInUser(err)
+        c.AbortWithError(err.Status, err)
 		return
 	}
 
@@ -97,11 +104,6 @@ func (u *UsersController) LogIn(c *gin.Context) {
 	})
 }
 
-func (u *UsersController) Welcome(c *gin.Context) {
-	username, _ := c.Get("username")
-	msg := "Welcome to BetterReads: " + username.(string)
-	c.JSON(http.StatusOK, gin.H{"message": msg})
-}
 
 // RegisterBasic godoc
 // @Summary Register first step
@@ -117,7 +119,8 @@ func (u *UsersController) Welcome(c *gin.Context) {
 func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 	var user *models.UserStageRequest
 	if err := c.ShouldBindJSON(&user); err != nil {
-		er.SendErrorWithParams(c, er.NewErrParsingRequest(err))
+        err := er.NewErrParsingRequest(err)
+        c.AbortWithError(err.Status, err)
 		return
 	}
 
@@ -125,10 +128,11 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 
 	if err != nil {
         if errors.Is(err, service.ErrUsernameTaken) || errors.Is(err, service.ErrEmailTaken) {
-            er.SendErrorWithParams(c, er.NewErrUserNotUnique(err))
-            return
+            err := er.NewErrUserNotUnique(err)
+            c.AbortWithError(err.Status, err)
         } else {
-            er.SendError(c, er.NewErrRegisterUser(err))
+            err := er.NewErrRegisterUser(err)
+            c.AbortWithError(err.Status, err)
         }
 		return
 	}
@@ -153,18 +157,21 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
 	id := c.Param("id")
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		er.SendError(c, er.NewErrInvalidRegisterId(id))
+        err := er.NewErrInvalidRegisterId(id)
+        c.AbortWithError(err.Status, err)
 		return
 	}
 	var user *models.UserAdditionalRequest
 	if err := c.ShouldBindJSON(&user); err != nil {
-		er.SendErrorWithParams(c, er.NewErrParsingRequest(err))
+        err := er.NewErrParsingRequest(err)
+        c.AbortWithError(err.Status, err)
 		return
 	}
 
 	userResponse, err := u.us.RegisterSecondStep(user, uuid)
 	if err != nil {
-		er.SendError(c, er.NewErrRegisterUser(err))
+        err := er.NewErrRegisterUser(err)
+        c.AbortWithError(err.Status, err)
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"user": userResponse})

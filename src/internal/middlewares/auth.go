@@ -5,12 +5,13 @@ import (
     "strings"
 	"github.com/betterreads/internal/pkg/auth"
 	"github.com/gin-gonic/gin"
+    er "github.com/betterreads/internal/pkg/errors"
 )
 
 func AuthMiddleware(c *gin.Context) {
     authHeader := c.Request.Header.Get("Authorization")
     if authHeader == ""{
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized request"})
+		er.SendError(c, er.NewErrNotLogged())
         c.Abort()
         return
     }
@@ -25,7 +26,7 @@ func AuthMiddleware(c *gin.Context) {
     tokenString := bearerToken[1]
     claims, err := auth.ValidateToken(tokenString)
     if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized request"})
+		er.SendError(c, er.NewErrNotLogged())
         c.Abort()
         return
     }

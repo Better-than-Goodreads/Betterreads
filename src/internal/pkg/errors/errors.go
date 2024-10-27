@@ -26,7 +26,7 @@ type ErrorDetails struct {
 	Status   int    `json:"status"`
 }
 
-func (e *ErrorDetails) Error() string {
+func (e ErrorDetails) Error() string {
 	return e.Detail
 }
 
@@ -46,6 +46,10 @@ type ErrorDetailsWithParams struct {
 	Instance string       `json:"instance"`
 	Params   []ErrorParam `json:"validation_errors"`
 	Status   int          `json:"status"`
+}
+
+func (e ErrorDetailsWithParams) Error() string {
+    return e.Detail
 }
 
 type ErrorParam struct {

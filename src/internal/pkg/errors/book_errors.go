@@ -121,3 +121,20 @@ func NewErrAddingReview(err error) *ErrorDetails {
 	)
 	return errAddingReview
 }
+
+func NewErrNoPicture() *ErrorDetailsWithParams{
+    err := ErrorParam{
+        Name: "picture",
+        Reason: "picture not found",
+    }
+    errNoPicture := NewErrorDetailsWithParams(
+        "failed to get book picture",
+        "Book picture not found",
+        http.StatusNotFound,
+        err,
+    )
+    return errNoPicture
+}
+
+
+

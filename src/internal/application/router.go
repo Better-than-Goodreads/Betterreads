@@ -38,11 +38,17 @@ func createRouterFromConfig(cfg *Config) *Router {
 	// gin.DefaultErrorWriter = io.Discard
 	// logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	// slog.SetDefault(logger)
+    
+    engine := gin.New()
+    engine.Use(gin.Recovery())
+    engine.Use(middlewares.ErrorMiddleware)
+    // engine.Use(middlewares.RequestLogger())
 
 	router := &Router{
-		engine:  gin.Default(),
+		engine:  engine,
 		address: cfg.Host + ":" + cfg.Port,
 	}
+
 
 	// router.Engine.Use(middleware.RequestLogger())
 	// router.Engine.Use(middleware.ErrorHandler())

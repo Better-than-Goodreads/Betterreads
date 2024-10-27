@@ -39,12 +39,14 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 	isAuthor := ctx.GetBool("IsAuthor")
 	userId, err := getUserId(ctx)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrNotLogged())
+        err := errors.NewErrNotLogged()
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	if !isAuthor{
-		errors.SendError(ctx, errors.NewErrNotAuthor())
+        err := errors.NewErrNotAuthor()
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
@@ -55,7 +57,8 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
     
 	book, err := bc.bookService.PublishBook(newBookRequest, userId)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrPublishingBook(err))
+        err := errors.NewErrPublishingBook(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
@@ -76,18 +79,22 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 	id := ctx.Param("id")
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrInvalidBookId(id))
+        err := errors.NewErrAddingReview(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	book, err := bc.bookService.GetBookInfo(uuid)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrGettingBook(err))
-		return
+        err := errors.NewErrGettingBook(err)
+        ctx.AbortWithError(err.Status, err)
+        return
 	}
 
 	if book == nil {
-		errors.SendError(ctx, errors.NewErrBookNotFound())
+        err := errors.NewErrBookNotFound()
+        ctx.AbortWithError(err.Status, err)
+        return
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{"book": book})
@@ -107,18 +114,22 @@ func (bc *BooksController) GetBookPicture(ctx *gin.Context) {
 	id := ctx.Param("id")
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrInvalidBookId(id))
+        err := errors.NewErrInvalidBookId(id)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	base64Bytes, err := bc.bookService.GetBookPicture(uuid)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrGettingBook(err))
+        err := errors.NewErrGettingBook(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	if base64Bytes == nil {
-		errors.SendError(ctx, errors.NewErrBookNotFound())
+        err := errors.NewErrBookNotFound()
+        ctx.AbortWithError(err.Status, err)
+        return
 	}
 
 	ctx.Data(http.StatusCreated, "image/jpeg", base64Bytes)
@@ -136,7 +147,8 @@ func (bc *BooksController) GetBookPicture(ctx *gin.Context) {
 func (bc *BooksController) GetBooksInfo(ctx *gin.Context) {
 	books, err := bc.bookService.GetBooksInfo()
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrGettingBooks(err))
+        err := errors.NewErrGettingBooks(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 	ctx.JSON(http.StatusAccepted, gin.H{"books": books})
@@ -157,26 +169,30 @@ func (bc *BooksController) GetBooksInfo(ctx *gin.Context) {
 func (bc *BooksController) RateBook(ctx *gin.Context) {
 	userId, err := getUserId(ctx)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrNotLogged())
+        err := errors.NewErrNotLogged()
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	var newBookRating models.NewRatingRequest
 	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
-		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+        err := errors.NewErrParsingRequest(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	bookId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrInvalidBookId(ctx.Param("id")))
+        err := errors.NewErrInvalidBookId(ctx.Param("id"))
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	rateAmount := newBookRating.Rating
 
 	if err := bc.bookService.RateBook(bookId, userId, rateAmount); err != nil {
-		errors.SendError(ctx, errors.NewErrRatingBook(err))
+        err := errors.NewErrRatingBook(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
@@ -196,17 +212,20 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 func (bc *BooksController) DeleteRating(ctx *gin.Context) {
 	userId, err := getUserId(ctx)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrNotLogged())
+        err := errors.NewErrNotLogged()
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 	bookId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrInvalidBookId(ctx.Param("id")))
+        err := errors.NewErrInvalidBookId(ctx.Param("id"))
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	if err := bc.bookService.DeleteRating(bookId, userId); err != nil {
-		errors.SendError(ctx, errors.NewErrDeletingRating(err))
+        err := errors.NewErrDeletingRating(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
@@ -226,22 +245,26 @@ func (bc *BooksController) DeleteRating(ctx *gin.Context) {
 func (bc *BooksController) GetRatingUser(ctx *gin.Context) {
 	bookId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrInvalidBookId(ctx.Param("id")))
+        err := errors.NewErrInvalidBookId(ctx.Param("id"))
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	userId, err := getUserId(ctx)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrNotLogged())
+        err := errors.NewErrNotLogged()
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	ratings, err := bc.bookService.GetRatingUser(bookId, userId)
 	if err != nil {
 		if err == service.ErrRatingNotFound {
-			errors.SendError(ctx, errors.NewErrRatingNotFound())
+            err := errors.NewErrRatingNotFound()
+            ctx.AbortWithError(err.Status, err)
 		} else {
-			errors.SendError(ctx, errors.NewErrGettingRating(err))
+            err := errors.NewErrGettingRating(err)
+            ctx.AbortWithError(err.Status, err)
 		}
 		return
 	}
@@ -277,27 +300,30 @@ func getUserId(ctx *gin.Context) (uuid.UUID, error) {
 func (bc *BooksController) AddReview(ctx *gin.Context) {
 	userId, err := getUserId(ctx)
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrNotLogged())
+        err := errors.NewErrNotLogged()
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	var newReview models.NewReviewRequest
 	if err := ctx.ShouldBindJSON(&newReview); err != nil {
-		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+        err := errors.NewErrParsingRequest(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	bookId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		errors.SendError(ctx, errors.NewErrInvalidBookId(ctx.Param("id")))
+        err := errors.NewErrInvalidBookId(ctx.Param("id"))
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
 
 	if err := bc.bookService.AddReview(bookId, userId, newReview.Review); err != nil {
-		errors.SendError(ctx, errors.NewErrAddingReview(err))
+        err := errors.NewErrAddingReview(err)
+        ctx.AbortWithError(err.Status, err)
 		return
 	}
-
 	ctx.JSON(200, gin.H{"review": newReview.Review})
 }
 
@@ -321,7 +347,7 @@ func getBookRequest(ctx *gin.Context) *models.NewBookRequest {
 	data := ctx.PostForm("data")
     var newBookRequest models.NewBookRequest
     if err := json.Unmarshal([]byte(data), &newBookRequest); err != nil {
-        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(fmt.Errorf("error parsing JSON request: %w", err)))
+        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
         return nil
     }
 
@@ -341,13 +367,13 @@ func getBookRequest(ctx *gin.Context) *models.NewBookRequest {
 func getPicture (ctx *gin.Context) []byte {
     file, _, err := ctx.Request.FormFile("file")
     if err != nil {
-        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+        errors.SendErrorWithParams(ctx, errors.NewErrNoPicture())
         return nil
     }
     defer file.Close()
     picture, err := io.ReadAll(file)
     if err != nil {
-        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(fmt.Errorf("error reading file: %w", err)))
+        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
         return nil
     }
     return picture
