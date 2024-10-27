@@ -24,11 +24,13 @@ func NewBooksController(bookService *service.BooksService) *BooksController {
 
 // PublishBook godoc
 // @Summary publish a book
-// @Description publishes a book
+// @Description publishes a book, the book data should follow the models.NewBookRequest in JSON
 // @Tags books
-// @Accept  json
+// @Accept  mpfd
 // @Produce  json
-// @Param user body models.NewBookRequest true "Book Request"
+// @Param data formData string true "Book Data" follows model NewBookRequest
+// @Param file formData file true "Book Picture"
+// @Param book body models.NewBookRequest true "Don't need to send this in json, this param is only here to reference NewBookRequest, DONT SEND PICTURE in JSON"
 // @Success 201 {object} models.Book
 // @Failure 400 {object} errors.ErrorDetailsWithParams
 // @Failure 500 {object} errors.ErrorDetails
@@ -41,38 +43,17 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 		return
 	}
 
-	if isAuthor == false {
+	if !isAuthor{
 		errors.SendError(ctx, errors.NewErrNotAuthor())
 		return
 	}
 
-	file, _, err := ctx.Request.FormFile("file")
-	if err != nil {
-		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
-		return
-	}
-	defer file.Close()
-
-	data := ctx.PostForm("data")
-	var newBookRequest models.NewBookRequest
-	if err := json.Unmarshal([]byte(data), &newBookRequest); err != nil {
-		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(fmt.Errorf("error parsing JSON request: %w", err)))
-		return
-	}
-
-	newBookRequest.Picture, err = io.ReadAll(file)
-	if err != nil {
-		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(fmt.Errorf("error reading file: %w", err)))
-		return
-	}
-
-	validator := validator.New()
-	if err := validator.Struct(newBookRequest); err != nil {
-		errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
-		return
-	}
-
-	book, err := bc.bookService.PublishBook(&newBookRequest, userId)
+    newBookRequest := getBookRequest(ctx)
+    if newBookRequest == nil {
+        return
+    }
+    
+	book, err := bc.bookService.PublishBook(newBookRequest, userId)
 	if err != nil {
 		errors.SendError(ctx, errors.NewErrPublishingBook(err))
 		return
@@ -319,3 +300,56 @@ func (bc *BooksController) AddReview(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{"review": newReview.Review})
 }
+
+
+
+
+
+// AUX FUNCTIONS
+
+/*
+* getBookRequest is a helper function that parses the request body and returns a New
+* Book Request struct. It also gets the picture from the request and adds it to the
+* NewBookRequest struct. It also validates the request and automatically sends an error.
+*/
+func getBookRequest(ctx *gin.Context) *models.NewBookRequest {
+    picture := getPicture(ctx)
+    if picture == nil {
+        return nil
+    }
+
+	data := ctx.PostForm("data")
+    var newBookRequest models.NewBookRequest
+    if err := json.Unmarshal([]byte(data), &newBookRequest); err != nil {
+        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(fmt.Errorf("error parsing JSON request: %w", err)))
+        return nil
+    }
+
+    newBookRequest.Picture = picture
+
+
+    validator := validator.New()
+    if err := validator.Struct(newBookRequest); err != nil {
+        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+        return nil
+    }
+
+    return &newBookRequest
+}
+
+
+func getPicture (ctx *gin.Context) []byte {
+    file, _, err := ctx.Request.FormFile("file")
+    if err != nil {
+        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
+        return nil
+    }
+    defer file.Close()
+    picture, err := io.ReadAll(file)
+    if err != nil {
+        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(fmt.Errorf("error reading file: %w", err)))
+        return nil
+    }
+    return picture
+}
+

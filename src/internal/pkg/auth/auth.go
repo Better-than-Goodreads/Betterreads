@@ -41,7 +41,6 @@ type Claims struct {
 }
 
 func GenerateToken(userId string, isAuthor bool) (string, error) {
-    fmt.Printf("is author: %v", isAuthor)
 	if jwtSecret == "" {
 		return "", fmt.Errorf("JWT_SECRET environment variable is not set")
 	}

@@ -54,6 +54,18 @@ type NewBookRequest struct {
 	Genres          []string `json:"genres" validate:"required"`
 	Picture		 	[]byte	 `json:"picture"`
 }
+/*
+{
+  "amount_of_pages": 0,
+  "description": "book for testing",
+  "genres": [
+    "fantasy"
+  ],
+  "language": "english",
+  "publication_date": "12/04/2021",
+  "title": "Test Book 1"
+}
+*/
 
 type NewRatingRequest struct {
 	Rating int `json:"rating" binding:"required"`

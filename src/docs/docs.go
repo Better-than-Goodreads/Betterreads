@@ -17,9 +17,9 @@ const docTemplate = `{
     "paths": {
         "/books": {
             "post": {
-                "description": "publishes a book",
+                "description": "publishes a book, the book data should follow the models.NewBookRequest in JSON",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -30,8 +30,22 @@ const docTemplate = `{
                 "summary": "publish a book",
                 "parameters": [
                     {
-                        "description": "Book Request",
-                        "name": "user",
+                        "type": "string",
+                        "description": "Book Data",
+                        "name": "data",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Book Picture",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "description": "Don't need to send this in json, this param is only here to reference NewBookRequest, DONT SEND PICTURE in JSON",
+                        "name": "book",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -295,6 +309,59 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{id}/review": {
+            "post": {
+                "description": "Add review to a book",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Add review to a book",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Book Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Review Request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewReviewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
                         }
                     },
                     "500": {
@@ -670,6 +737,17 @@ const docTemplate = `{
             "properties": {
                 "rating": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.NewReviewRequest": {
+            "type": "object",
+            "required": [
+                "review"
+            ],
+            "properties": {
+                "review": {
+                    "type": "string"
                 }
             }
         },

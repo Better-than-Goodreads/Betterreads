@@ -106,6 +106,13 @@ definitions:
     required:
     - rating
     type: object
+  models.NewReviewRequest:
+    properties:
+      review:
+        type: string
+    required:
+    - review
+    type: object
   models.RatingResponse:
     properties:
       book_id:
@@ -211,12 +218,24 @@ paths:
   /books:
     post:
       consumes:
-      - application/json
-      description: publishes a book
+      - multipart/form-data
+      description: publishes a book, the book data should follow the models.NewBookRequest
+        in JSON
       parameters:
-      - description: Book Request
+      - description: Book Data
+        in: formData
+        name: data
+        required: true
+        type: string
+      - description: Book Picture
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Don't need to send this in json, this param is only here to reference
+          NewBookRequest, DONT SEND PICTURE in JSON
         in: body
-        name: user
+        name: book
         required: true
         schema:
           $ref: '#/definitions/models.NewBookRequest'
@@ -377,6 +396,41 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Rate a book
+      tags:
+      - books
+  /books/{id}/review:
+    post:
+      consumes:
+      - application/json
+      description: Add review to a book
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Add review to a book
       tags:
       - books
   /books/info:
