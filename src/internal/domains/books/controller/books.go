@@ -50,8 +50,10 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 		return
 	}
 
-    newBookRequest := getBookRequest(ctx)
-    if newBookRequest == nil {
+    newBookRequest , err:= getBookRequest(ctx)
+    if err!= nil {
+        err := errors.NewErrParsingRequest(err)
+        ctx.AbortWithError(err.Status, err)
         return
     }
     
@@ -338,17 +340,16 @@ func (bc *BooksController) AddReview(ctx *gin.Context) {
 * Book Request struct. It also gets the picture from the request and adds it to the
 * NewBookRequest struct. It also validates the request and automatically sends an error.
 */
-func getBookRequest(ctx *gin.Context) *models.NewBookRequest {
-    picture := getPicture(ctx)
-    if picture == nil {
-        return nil
+func getBookRequest(ctx *gin.Context) (*models.NewBookRequest, error) {
+    picture, err := getPicture(ctx)
+    if err != nil {
+        return nil ,err
     }
 
 	data := ctx.PostForm("data")
     var newBookRequest models.NewBookRequest
     if err := json.Unmarshal([]byte(data), &newBookRequest); err != nil {
-        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
-        return nil
+        return nil, err
     }
 
     newBookRequest.Picture = picture
@@ -357,25 +358,23 @@ func getBookRequest(ctx *gin.Context) *models.NewBookRequest {
     validator := validator.New()
     if err := validator.Struct(newBookRequest); err != nil {
         errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
-        return nil
+        return nil, err
     }
 
-    return &newBookRequest
+    return &newBookRequest, nil
 }
 
 
-func getPicture (ctx *gin.Context) []byte {
+func getPicture (ctx *gin.Context) ([]byte, error) {
     file, _, err := ctx.Request.FormFile("file")
     if err != nil {
-        errors.SendErrorWithParams(ctx, errors.NewErrNoPicture())
-        return nil
+        return nil ,err
     }
     defer file.Close()
     picture, err := io.ReadAll(file)
     if err != nil {
-        errors.SendErrorWithParams(ctx, errors.NewErrParsingRequest(err))
-        return nil
+        return nil, err
     }
-    return picture
+    return picture, nil
 }
 
