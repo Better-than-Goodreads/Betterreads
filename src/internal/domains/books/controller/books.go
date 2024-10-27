@@ -127,7 +127,7 @@ func (bc *BooksController) GetBooksInfoByName(ctx *gin.Context) {
 // @Description Get book id, note that its a UUID
 // @Tags books
 // @Param id path string true "Book Id"
-// @Produce  json
+// @Produce jpeg
 // @Success 200 {file} []byte
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
@@ -356,7 +356,6 @@ func (bc *BooksController) AddReview(ctx *gin.Context) {
 
 
 // AUX FUNCTIONS
-
 /*
 * getBookRequest is a helper function that parses the request body and returns a New
 * Book Request struct. It also gets the picture from the request and adds it to the

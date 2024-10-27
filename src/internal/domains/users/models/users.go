@@ -53,7 +53,10 @@ type UserResponse struct {
     IsAuthor  bool `json:"is_author"`
 	Id        uuid.UUID    `json:"id" db:"id"`
 	Age       int    `json:"age"`
-    ProfilePicture []byte `json:"profile_picture"`
+}
+
+type UserPictureResponse struct {
+    Picture []byte `json:"picture"`
 }
 
 // REQUESTS
@@ -78,6 +81,9 @@ type UserAdditionalRequest struct {
     Gender string `json:"gender"`
     AboutMe string `json:"about_me"`
     Age int `json:"age"`
-    ProfilePicture []byte `json:"profile_picture"`
 }
 
+
+type UserPictureRequest struct {
+    Picture []byte `json:"picture" binding:"required" db:"picture"`
+}

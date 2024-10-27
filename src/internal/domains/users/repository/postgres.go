@@ -34,8 +34,7 @@ func NewPostgresUserRepository(c *sqlx.DB) (UsersDatabase, error) {
 			age INTEGER,
 			gender VARCHAR(255),
 			about_me TEXT,
-            is_author BOOLEAN DEFAULT FALSE,
-			profile_picture BYTEA
+            is_author BOOLEAN DEFAULT FALSE
 		);
 		
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -57,6 +56,15 @@ func NewPostgresUserRepository(c *sqlx.DB) (UsersDatabase, error) {
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
 	`
 
+	schemaPictures := `
+		CREATE TABLE IF NOT EXISTS pictures_users (
+			user_id UUID,
+			picture BYTEA,
+			FOREIGN KEY (user_id) REFERENCES users(id),
+			PRIMARY KEY (user_id)
+		);
+		`
+
 	if _, err := c.Exec(schemaUsers); err != nil {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
@@ -64,6 +72,12 @@ func NewPostgresUserRepository(c *sqlx.DB) (UsersDatabase, error) {
 	if _, err := c.Exec(schemaRegistry); err != nil {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
+
+    if _, err := c.Exec(schemaPictures); err != nil {
+        return nil, fmt.Errorf("failed to create table: %w", err)
+    }
+
+    
 
 	return &PostgresUserRepository{c}, nil
 }
@@ -96,6 +110,7 @@ func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAd
     if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+    
 
 	if err := r.deleteStageUser(id); err != nil {
 		return nil, fmt.Errorf("failed to delete stage user: %w", err)
@@ -107,12 +122,12 @@ func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAd
 func (r *PostgresUserRepository) createUser(user *models.UserStageRecord, userAdditional *models.UserAdditionalRequest) (*models.UserRecord, error) {
     userRecord := &models.UserRecord{}
 	query := `INSERT INTO users (email, password, first_name, last_name, username, 
-                    location, gender, about_me, age, is_author, profile_picture)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-                    RETURNING id, email, password, first_name, last_name, username, location, gender,about_me, age, is_author, profile_picture;`
+                    location, gender, about_me, age, is_author)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    RETURNING id, email, password, first_name, last_name, username, location, gender,about_me, age, is_author;`
     
     args := []interface{}{user.Email, user.Password, user.FirstName, user.LastName, user.Username, userAdditional.Location,
-					userAdditional.Gender, userAdditional.AboutMe, userAdditional.Age, user.IsAuthor, userAdditional.ProfilePicture} 
+					userAdditional.Gender, userAdditional.AboutMe, userAdditional.Age, user.IsAuthor} 
     
     err := r.c.Get(userRecord, query, args...)
 	if err != nil {
@@ -184,6 +199,39 @@ func (r *PostgresUserRepository) GetUserByEmail(email string) (*models.UserRecor
 	}
 	return user, nil
 }
+
+func (r *PostgresUserRepository) GetUserPicture(id uuid.UUID) ([]byte, error) {
+	var picture []byte
+	query := `SELECT picture FROM pictures_users WHERE user_id= $1;`
+	if err := r.c.Get(&picture, query, id); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserNotFound 
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	return picture, nil
+}
+
+func (r *PostgresUserRepository) SaveUserPicture(id uuid.UUID, picture []byte) error {
+    exists := false
+    query := `SELECT EXISTS(SELECT 1 FROM pictures_users WHERE user_id = $1);`
+    if err := r.c.Get(&exists, query, id); err != nil {
+        return fmt.Errorf("failed to check if user picture exists: %w", err)
+    }
+
+    if exists {
+        query = `UPDATE pictures_users SET picture = $2 WHERE user_id = $1;`
+
+    } else {
+        query = `INSERT INTO pictures_users (user_id, picture) VALUES ($1, $2);`
+    }
+
+    if _, err := r.c.Exec(query, id, picture); err != nil {
+        return fmt.Errorf("failed to save user picture: %w", err)
+    }
+    return nil
+}
+
 
 func (r *PostgresUserRepository) CheckUserExists(user *models.UserStageRequest) error {
     result_registry_email, result_registry_username , err:= r.checkUserExistsInTable(user , "registry")

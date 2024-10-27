@@ -22,5 +22,7 @@ type UsersDatabase interface {
     GetStageUser(id uuid.UUID) (*models.UserStageRecord, error)
 	GetUserByUsername(username string) (*models.UserRecord, error)
 	GetUserByEmail(email string) (*models.UserRecord, error)
+    GetUserPicture(id uuid.UUID) ([]byte, error)
     CheckUserExists(user *models.UserStageRequest) error
+    SaveUserPicture(id uuid.UUID, picture []byte) error
 }

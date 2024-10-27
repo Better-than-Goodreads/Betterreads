@@ -74,3 +74,37 @@ func NewErrUserNotFoundById(err error) *ErrorDetails {
 
 	return errUserNotFoundById
 }
+
+func NewErrParsingPicture() *ErrorDetailsWithParams {
+    err := ErrorParam {
+        Name: "file",
+        Reason: "file is not a valid picture / file is empty",
+    }
+    errParsingPicture := NewErrorDetailsWithParams(
+        "failed to parse picture",
+        "Error when parsing picture",
+        http.StatusBadRequest,
+        err,
+    )
+    return errParsingPicture
+}
+
+
+func NewErrNoPictureUser() *ErrorDetails{
+    errNoPicture := NewErrorDetails(
+        "failed to get user picture",
+        "user picture not found",
+        http.StatusNotFound,
+    )
+    return errNoPicture
+}
+
+
+func NewErrPostPicture() *ErrorDetails{
+    errPostPicture := NewErrorDetails(
+        "failed to post user picture",
+        "Error when posting user picture",
+        http.StatusInternalServerError,
+    )
+    return errPostPicture
+}

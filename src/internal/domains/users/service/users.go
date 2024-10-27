@@ -120,4 +120,18 @@ func (u *UsersService) GetUser(id uuid.UUID) (*models.UserResponse, error) {
 	return UserResponse, nil
 }
 
+func (u *UsersService) PostUserPicture(id uuid.UUID, picture models.UserPictureRequest) error{
+    err := u.rp.SaveUserPicture(id, picture.Picture)
+    if err != nil {
+        return err
+    }
+    return nil
+}
 
+func (u *UsersService) GetUserPicture(id uuid.UUID) ([]byte, error) {
+    picture, err := u.rp.GetUserPicture(id)
+    if err != nil {
+        return nil, err
+    }
+    return picture, nil
+}

@@ -1,7 +1,9 @@
 package controller
 
 import (
-    "errors"
+    "fmt"
+	"errors"
+	"io"
 	"net/http"
 
 	"github.com/betterreads/internal/domains/users/models"
@@ -76,7 +78,7 @@ func (u *UsersController) GetUser(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param user body models.UserLoginRequest true "User login request"
-// @Success 202 {object} models.UserResponse
+// @Success 200 {object} models.UserResponse
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 400 {object} errors.ErrorDetailsWithParams
 // @Failure 404 {object} errors.ErrorDetails
@@ -98,7 +100,7 @@ func (u *UsersController) LogIn(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"user": userResponse,
 		"token": token,
 	})
@@ -175,4 +177,96 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
+}
+
+
+// PostPicture godoc
+// @Summary Post a picture
+// @Description Post a picture
+// @Tags users
+// @Accept  mpfd
+// @Produce  json
+// @Param file formData file true "User picture"
+// @Success 201
+// @Failure 400 {object} errors.ErrorDetailsWithParams
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /users/picture [post]
+func (u *UsersController) PostPicture(c *gin.Context) {
+    user_id , err:= getUserId(c)
+    if err != nil {
+        err := er.NewErrNotLogged()
+        c.AbortWithError(err.Status, err)
+    }
+
+    file, _, err := c.Request.FormFile("file")
+    if err != nil {
+        err := er.NewErrParsingPicture()
+        c.AbortWithError(err.Status, err)
+        return 
+    }
+
+    defer file.Close()
+
+    picture , err := io.ReadAll(file)
+    if err != nil {
+        err := er.NewErrPostPicture()
+        c.AbortWithError(err.Status, err)
+        return
+    }
+    
+    request := models.UserPictureRequest{ Picture: picture}
+    err = u.us.PostUserPicture(user_id, request)
+    if err != nil {
+        err := er.NewErrPostPicture() //User must exists because he's logged
+        c.AbortWithError(err.Status, err)
+    }
+
+    c.JSON(http.StatusCreated, gin.H{})
+}
+
+// GetPicture godoc
+// @Summary Get user picture
+// @Description Get user picture
+// @Tags users
+// @Param id path string true "User id"
+// @Produce jpeg
+// @Success 200 {file} []byte
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Router /users/{id}/picture [get]
+func (u *UsersController) GetPicture(c *gin.Context) {
+    id := c.Param("id")
+    uuid, err := uuid.Parse(id)
+    if err != nil {
+        err := er.NewErrInvalidUserID(id)
+        c.AbortWithError(err.Status, err)
+        return
+    }
+    base64Bytes, err := u.us.GetUserPicture(uuid)
+    if err != nil {
+        err := er.NewErrUserNotFoundById(err)
+        c.AbortWithError(err.Status, err)
+        return
+    }
+
+    if base64Bytes == nil {
+        err := er.NewErrNoPictureUser()
+        c.AbortWithError(err.Status, err)
+        return
+    }
+
+    c.Data(http.StatusOK, "image/jpeg", base64Bytes)
+}
+
+
+func getUserId(ctx *gin.Context) (uuid.UUID, error) {
+	_userId := ctx.GetString("userId")
+	if _userId == "" {
+		return uuid.UUID{}, fmt.Errorf("user not logged")
+	}
+	userId, err := uuid.Parse(_userId)
+	if err != nil {
+		return uuid.UUID{}, fmt.Errorf("invalid user id")
+	}
+	return userId, nil
 }

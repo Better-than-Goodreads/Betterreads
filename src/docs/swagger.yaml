@@ -128,10 +128,6 @@ definitions:
         type: string
       location:
         type: string
-      profile_picture:
-        items:
-          type: integer
-        type: array
     type: object
   models.UserLoginRequest:
     properties:
@@ -163,10 +159,6 @@ definitions:
         type: string
       location:
         type: string
-      profile_picture:
-        items:
-          type: integer
-        type: array
       username:
         type: string
     type: object
@@ -292,7 +284,7 @@ paths:
         required: true
         type: string
       produces:
-      - application/json
+      - image/jpeg
       responses:
         "200":
           description: OK
@@ -519,6 +511,33 @@ paths:
       summary: Get user by id
       tags:
       - users
+  /users/{id}/picture:
+    get:
+      description: Get user picture
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get user picture
+      tags:
+      - users
   /users/login:
     post:
       consumes:
@@ -534,8 +553,8 @@ paths:
       produces:
       - application/json
       responses:
-        "202":
-          description: Accepted
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/models.UserResponse'
         "400":
@@ -547,6 +566,33 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Log in a user
+      tags:
+      - users
+  /users/picture:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Post a picture
+      parameters:
+      - description: User picture
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Post a picture
       tags:
       - users
   /users/register/{id}/additional-info:

@@ -190,7 +190,7 @@ const docTemplate = `{
             "get": {
                 "description": "Get book id, note that its a UUID",
                 "produces": [
-                    "application/json"
+                    "image/jpeg"
                 ],
                 "tags": [
                     "books"
@@ -459,8 +459,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "202": {
-                        "description": "Accepted",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.UserResponse"
                         }
@@ -473,6 +473,47 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/picture": {
+            "post": {
+                "description": "Post a picture",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Post a picture",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "User picture",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/errors.ErrorDetails"
                         }
@@ -603,6 +644,47 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/picture": {
+            "get": {
+                "description": "Get user picture",
+                "produces": [
+                    "image/jpeg"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user picture",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
                         }
                     },
                     "400": {
@@ -811,12 +893,6 @@ const docTemplate = `{
                 },
                 "location": {
                     "type": "string"
-                },
-                "profile_picture": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
                 }
             }
         },
@@ -864,12 +940,6 @@ const docTemplate = `{
                 },
                 "location": {
                     "type": "string"
-                },
-                "profile_picture": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
                 },
                 "username": {
                     "type": "string"

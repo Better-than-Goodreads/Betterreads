@@ -57,18 +57,19 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 			rating INTEGER,
 			PRIMARY KEY (user_id, book_id),
 			FOREIGN KEY (book_id) REFERENCES books(id)			
-			);
+        );
 			`
 
-		schemaReviews := `
-			CREATE TABLE IF NOT EXISTS reviews (
-				user_id UUID,
-				book_id UUID,
-				review VARCHAR (255),
-				PRIMARY KEY (user_id, book_id),
-				FOREIGN KEY (book_id) REFERENCES books(id)			
-				);
-				`
+    schemaReviews := `
+        CREATE TABLE IF NOT EXISTS reviews (
+            user_id UUID,
+            book_id UUID,
+            review VARCHAR (255),
+            PRIMARY KEY (user_id, book_id),
+            FOREIGN KEY (book_id) REFERENCES books(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        `
 		
 	schemaPictures := `
 		CREATE TABLE IF NOT EXISTS pictures (
@@ -320,14 +321,21 @@ func (r *PostgresBookRepository) GetAuthorName(authorId uuid.UUID) (string, erro
 
 
 func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, review string) error {
-	query := `INSERT INTO reviews (user_id, book_id, review)
-			  VALUES ($1, $2, $3);`
-	args := []interface{}{userId, bookId, review}
+    query := `SELECT EXISTS(SELECT 1 FROM reviews WHERE user_id = $1 and book_id = $2);`
+    args := []interface{}{userId, bookId}
+    var exists bool
+    if err := r.c.Get(&exists, query, args...); err != nil {
+        return fmt.Errorf("failed to add review: %w", err)
+    }
 
-	if _, err := r.c.Exec(query, args...); err != nil {
-		return fmt.Errorf("failed to add review: %w", err)
-	}
-	return nil
+    query = `INSERT INTO reviews (user_id, book_id, review)
+    VALUES ($1, $2, $3);`
+    args = []interface{}{userId, bookId, review}
+
+    if _, err := r.c.Exec(query, args...); err != nil {
+        return fmt.Errorf("failed to add review: %w", err)
+    }
+    return nil
 }
 
 

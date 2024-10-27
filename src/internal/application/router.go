@@ -102,13 +102,15 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 		public.POST("/register/basic", uc.RegisterFirstStep)
 		public.POST("/register/:id/additional-info", uc.RegisterSecondStep)
 		public.POST("/login", uc.LogIn)
+		public.GET("/:id", uc.GetUser)
+        public.GET("/:id/picture", uc.GetPicture)
 	}
 
 	private := r.engine.Group("/users")
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.GET("/", uc.GetUsers)
-		private.GET("/:id", uc.GetUser)
+        private.POST("/picture", uc.PostPicture)
 	}
 }
 
