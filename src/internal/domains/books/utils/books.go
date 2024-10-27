@@ -53,7 +53,6 @@ func MapBookDbToBook(book *models.BookDb, genres []string, ratings *models.Ratin
 
 func MapRatingToRatingResponse (rating *models.Rating) *models.RatingResponse{
     return &models.RatingResponse{
-        BookId: rating.BookId,
         Rating: rating.Rating,
     }
 }

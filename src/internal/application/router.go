@@ -125,6 +125,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 		public.GET("/:id/picture", bc.GetBookPicture)
 		public.GET("/:id/info", bc.GetBookInfo)
 		public.GET("/info", bc.GetBooksInfo)
+        public.GET("/info/search", bc.GetBooksInfoByName)
 	}
 	
 	private := r.engine.Group("/books")

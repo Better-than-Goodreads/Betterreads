@@ -179,19 +179,28 @@ func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error)
 		}
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
-	genres, err := r.getGenresForBook(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get book: %w", err)
-	}
-
-	ratings, err := r.getRatingsForBook(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get book: %w", err)
-	}
-
-	book := utils.MapBookDbToBook(bookdb, genres, ratings)
-
+    book, err := r.getBookInfo(bookdb)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get book: %w", err)
+    }
 	return book, nil
+}
+
+func (r *PostgresBookRepository) GetBooksByName(name string) ([]*models.Book, error) {
+    books := &[]*models.BookDb{}
+    query := `SELECT * FROM books WHERE LOWER(title) LIKE LOWER('%'||$1||'%');`
+    if err := r.c.Select(books, query, name); err != nil {
+        return nil, fmt.Errorf("failed to get book: %w", err)
+    }
+    res := []*models.Book{}
+    for _, book := range *books {
+        Bookres, err := r.getBookInfo(book)
+        if err != nil {
+            return nil, fmt.Errorf("failed to get book: %w", err)
+        }
+        res = append(res, Bookres)
+    }
+    return res, nil
 }
 
 func (r *PostgresBookRepository) GetBookPictureById(id uuid.UUID) ([]byte, error) {
@@ -216,17 +225,13 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
 		return nil, fmt.Errorf("failed to get books: %w", err)
 	}
 	res := []*models.Book{}
-	for _, book := range books {
-		genres, err := r.getGenresForBook(book.Id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get books: %w", err)
-		}
-		ratings, err := r.getRatingsForBook(book.Id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get book: %w", err)
-		}
-		res = append(res, utils.MapBookDbToBook(book, genres, ratings))
-	}
+    for _, book := range books {
+        Bookres, err := r.getBookInfo(book)
+        if err != nil {
+            return nil, fmt.Errorf("failed to get book: %w", err)
+        }
+        res = append(res, Bookres)
+    }
 	return res, nil
 }
 
@@ -323,4 +328,17 @@ func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, r
 		return fmt.Errorf("failed to add review: %w", err)
 	}
 	return nil
+}
+
+
+func (r *PostgresBookRepository) getBookInfo(book *models.BookDb) (*models.Book, error) {
+    genres, err := r.getGenresForBook(book.Id)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get books: %w", err)
+    }
+    ratings, err := r.getRatingsForBook(book.Id)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get book: %w", err)
+    }
+    return utils.MapBookDbToBook(book, genres, ratings), nil
 }

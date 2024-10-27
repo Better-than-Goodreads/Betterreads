@@ -122,6 +122,16 @@ func NewErrAddingReview(err error) *ErrorDetails {
 	return errAddingReview
 }
 
+
+func NewErrBookNotFoundByName(name string) *ErrorDetails {
+    err := NewErrorDetails(
+        "failed to get book",
+        "Book not found with name " + name,
+        http.StatusNotFound,
+    )
+    return err
+}
+
 func NewErrNoPicture() *ErrorDetailsWithParams{
     err := ErrorParam{
         Name: "picture",

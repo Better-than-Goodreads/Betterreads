@@ -79,6 +79,5 @@ type BookResponse struct {
 }
 
 type RatingResponse struct {
-	BookId uuid.UUID `json:"book_id"`
 	Rating int       `json:"rating"`
 }

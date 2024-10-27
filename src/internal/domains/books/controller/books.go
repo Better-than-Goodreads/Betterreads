@@ -18,9 +18,7 @@ type BooksController struct {
 	bookService *service.BooksService
 }
 
-func NewBooksController(bookService *service.BooksService) *BooksController {
-	return &BooksController{bookService: bookService}
-}
+func NewBooksController(bookService *service.BooksService) *BooksController { return &BooksController{bookService: bookService} }
 
 // PublishBook godoc
 // @Summary publish a book
@@ -101,6 +99,28 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, gin.H{"book": book})
 }
+
+// GetBooksByName
+// @Summary Get books by name
+// @Description Get books by name, if no books found returns an empty array
+// @Tags books
+// @Param name query string true "Book Name"
+// @Produce  json
+// @Success 200 {object} []models.Book
+// @Failure 400 {object} errors.ErrorDetails
+// @Router /books [get]
+func (bc *BooksController) GetBooksInfoByName(ctx *gin.Context) {
+    name := ctx.Query("name")
+    books, err := bc.bookService.GetBooksByName(name)
+    if err != nil {
+        err := errors.NewErrGettingBooks(err)
+        ctx.AbortWithError(err.Status, err)
+        return
+    }
+    ctx.JSON(http.StatusOK, gin.H{"books": books})
+}
+
+
 
 // GetBookPicture godoc
 // @Summary Get book picture by id
@@ -197,8 +217,10 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
         ctx.AbortWithError(err.Status, err)
 		return
 	}
+    
+    ratingResponse := models.RatingResponse{ Rating: rateAmount}
 
-	ctx.JSON(200, gin.H{"raing": rateAmount})
+	ctx.JSON(200, ratingResponse)
 }
 
 // DeleteRating godoc

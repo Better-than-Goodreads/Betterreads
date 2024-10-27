@@ -62,6 +62,31 @@ func (bs *BooksService) GetBookInfo(id uuid.UUID) (*models.BookResponse, error) 
 	return bookRes, nil
 }
 
+func (bs *BooksService) GetBooksByName(name string) ([]*models.BookResponse, error) {
+    books, err := bs.booksRepository.GetBooksByName(name)
+    if err != nil {
+        fmt.Println(err)
+        if errors.Is(err, repository.ErrNoBooksFound) {
+            return []*models.BookResponse{}, nil
+        } else {
+            return nil, err
+        }
+    }
+
+    fmt.Printf("Books: %v\n", books)
+
+    booksResponses := []*models.BookResponse{}
+    for _ , book  := range books {
+        bookRes, err := bs.addAuthor(book, book.Author)
+        booksResponses = append(booksResponses, bookRes)
+        if err != nil {
+            return nil, err
+        }
+    }
+
+    return booksResponses, nil
+}
+
 func (bs *BooksService) GetBookPicture(id uuid.UUID) ([]byte, error) {
 	book, err := bs.booksRepository.GetBookPictureById(id)
 	if err != nil {
