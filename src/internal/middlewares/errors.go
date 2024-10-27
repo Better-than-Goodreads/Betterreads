@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
     er "github.com/betterreads/internal/pkg/errors"
     "log"
-)
+) 
 
 func ErrorMiddleware(c *gin.Context){
     logger := log.New(log.Writer(), "[Error] ", log.LstdFlags)
@@ -16,9 +16,8 @@ func ErrorMiddleware(c *gin.Context){
         switch e := err.Err.(type) {
         case *er.ErrorDetails:
             if e.Status == http.StatusInternalServerError {
-            c.JSON(e.Status, gin.H{"error": "Internal Server Error"}) 
-            logger.Print(e.Error())
-            // LOG
+                c.JSON(e.Status, gin.H{"error": "Internal Server Error"}) 
+                logger.Print(e.Error())
             } else {
                 er.SendError(c, e)
             }
@@ -26,12 +25,12 @@ func ErrorMiddleware(c *gin.Context){
             if e.Status == http.StatusInternalServerError {
                 c.JSON(e.Status, gin.H{"error": "Internal Server Error"}) 
                 logger.Print(e.Error())
-                // LOG
             } else {
                 er.SendErrorWithParams(c, e)
             }
         default: 
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+            logger.Print(err.Error())
         }
     }
 }

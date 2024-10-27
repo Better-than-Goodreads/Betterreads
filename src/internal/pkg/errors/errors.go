@@ -2,7 +2,6 @@ package errors
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	gin "github.com/gin-gonic/gin"
@@ -73,7 +72,6 @@ func parseParameters(err error) []ErrorParam {
 		})
 	} else if validationErrors, ok := err.(validator.ValidationErrors); ok {
 		for _, err := range validationErrors {
-			fmt.Println(err)
 			errors = append(errors, ErrorParam{
 				Name:   err.Field(),
 				Reason: err.Tag(),

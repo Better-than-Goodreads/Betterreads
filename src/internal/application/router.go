@@ -42,16 +42,12 @@ func createRouterFromConfig(cfg *Config) *Router {
     engine := gin.New()
     engine.Use(gin.Recovery())
     engine.Use(middlewares.ErrorMiddleware)
-    // engine.Use(middlewares.RequestLogger())
+    engine.Use(middlewares.RequestLogger)
 
 	router := &Router{
 		engine:  engine,
 		address: cfg.Host + ":" + cfg.Port,
 	}
-
-
-	// router.Engine.Use(middleware.RequestLogger())
-	// router.Engine.Use(middleware.ErrorHandler())
 
 	return router
 }
