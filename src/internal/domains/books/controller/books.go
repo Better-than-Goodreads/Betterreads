@@ -35,7 +35,7 @@ func NewBooksController(bookService *service.BooksService) *BooksController { re
 // @Router /books [post]
 func (bc *BooksController) PublishBook(ctx *gin.Context) {
 	isAuthor := ctx.GetBool("IsAuthor")
-	userId, err := getUserId(ctx)
+	userId, err := getLoggedUserId(ctx)
 	if err != nil {
         err := errors.NewErrNotLogged()
         ctx.AbortWithError(err.Status, err)
@@ -188,40 +188,40 @@ func (bc *BooksController) GetBooksInfo(ctx *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetailsWithParams
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/{id}/rating [post]
-func (bc *BooksController) RateBook(ctx *gin.Context) {
-	userId, err := getUserId(ctx)
-	if err != nil {
-        err := errors.NewErrNotLogged()
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-
-	var newBookRating models.NewRatingRequest
-	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
-        err := errors.NewErrParsingRequest(err)
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-
-	bookId, err := uuid.Parse(ctx.Param("id"))
-	if err != nil {
-        err := errors.NewErrInvalidBookId(ctx.Param("id"))
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-
-	rateAmount := newBookRating.Rating
-
-	if err := bc.bookService.RateBook(bookId, userId, rateAmount); err != nil {
-        err := errors.NewErrRatingBook(err)
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-    
-    ratingResponse := models.RatingResponse{ Rating: rateAmount}
-
-	ctx.JSON(200, ratingResponse)
-}
+// func (bc *BooksController) RateBook(ctx *gin.Context) {
+// 	userId, err := getLoggedUserId(ctx)
+// 	if err != nil {
+//         err := errors.NewErrNotLogged()
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+//
+// 	var newBookRating models.NewRatingRequest
+// 	if err := ctx.ShouldBindJSON(&newBookRating); err != nil {
+//         err := errors.NewErrParsingRequest(err)
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+//
+// 	bookId, err := uuid.Parse(ctx.Param("id"))
+// 	if err != nil {
+//         err := errors.NewErrInvalidBookId(ctx.Param("id"))
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+//
+// 	rateAmount := newBookRating.Rating
+//
+// 	if err := bc.bookService.RateBook(bookId, userId, rateAmount); err != nil {
+//         err := errors.NewErrRatingBook(err)
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+//
+//     ratingResponse := models.RatingResponse{ Rating: rateAmount}
+//
+// 	ctx.JSON(200, ratingResponse)
+// }
 
 // DeleteRating godoc
 // @Summary Delete rating of a book
@@ -233,28 +233,28 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/{id}/rating [delete]
-func (bc *BooksController) DeleteRating(ctx *gin.Context) {
-	userId, err := getUserId(ctx)
-	if err != nil {
-        err := errors.NewErrNotLogged()
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-	bookId, err := uuid.Parse(ctx.Param("id"))
-	if err != nil {
-        err := errors.NewErrInvalidBookId(ctx.Param("id"))
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-
-	if err := bc.bookService.DeleteRating(bookId, userId); err != nil {
-        err := errors.NewErrDeletingRating(err)
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-
-	ctx.JSON(http.StatusNoContent, nil)
-}
+// func (bc *BooksController) DeleteRating(ctx *gin.Context) {
+// 	userId, err := getLoggedUserId(ctx)
+// 	if err != nil {
+//         err := errors.NewErrNotLogged()
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+// 	bookId, err := uuid.Parse(ctx.Param("id"))
+// 	if err != nil {
+//         err := errors.NewErrInvalidBookId(ctx.Param("id"))
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+//
+// 	if err := bc.bookService.DeleteRating(bookId, userId); err != nil {
+//         err := errors.NewErrDeletingRating(err)
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+//
+// 	ctx.JSON(http.StatusNoContent, nil)
+// }
 
 // GetRatingUser godoc
 // @Summary Get rating of a book by user
@@ -266,37 +266,37 @@ func (bc *BooksController) DeleteRating(ctx *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
 // @Router /books/{id}/rating [get]
-func (bc *BooksController) GetRatingUser(ctx *gin.Context) {
-	bookId, err := uuid.Parse(ctx.Param("id"))
-	if err != nil {
-        err := errors.NewErrInvalidBookId(ctx.Param("id"))
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
+// func (bc *BooksController) GetRatingUser(ctx *gin.Context) {
+// 	bookId, err := uuid.Parse(ctx.Param("id"))
+// 	if err != nil {
+//         err := errors.NewErrInvalidBookId(ctx.Param("id"))
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+//
+// 	userId, err := getLoggedUserId(ctx)
+// 	if err != nil {
+//         err := errors.NewErrNotLogged()
+//         ctx.AbortWithError(err.Status, err)
+// 		return
+// 	}
+//
+// 	ratings, err := bc.bookService.GetRatingUser(bookId, userId)
+// 	if err != nil {
+// 		if err == service.ErrRatingNotFound {
+//             err := errors.NewErrRatingNotFound()
+//             ctx.AbortWithError(err.Status, err)
+// 		} else {
+//             err := errors.NewErrGettingRating(err)
+//             ctx.AbortWithError(err.Status, err)
+// 		}
+// 		return
+// 	}
+//
+// 	ctx.JSON(http.StatusOK, gin.H{"ratings": ratings})
+// }
 
-	userId, err := getUserId(ctx)
-	if err != nil {
-        err := errors.NewErrNotLogged()
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-
-	ratings, err := bc.bookService.GetRatingUser(bookId, userId)
-	if err != nil {
-		if err == service.ErrRatingNotFound {
-            err := errors.NewErrRatingNotFound()
-            ctx.AbortWithError(err.Status, err)
-		} else {
-            err := errors.NewErrGettingRating(err)
-            ctx.AbortWithError(err.Status, err)
-		}
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"ratings": ratings})
-}
-
-func getUserId(ctx *gin.Context) (uuid.UUID, error) {
+func getLoggedUserId(ctx *gin.Context) (uuid.UUID, error) {
 	_userId := ctx.GetString("userId")
 	if _userId == "" {
 		return uuid.UUID{}, fmt.Errorf("user not logged")
@@ -322,16 +322,9 @@ func getUserId(ctx *gin.Context) (uuid.UUID, error) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/{id}/review [post]
 func (bc *BooksController) AddReview(ctx *gin.Context) {
-	userId, err := getUserId(ctx)
+	userId, err := getLoggedUserId(ctx)
 	if err != nil {
         err := errors.NewErrNotLogged()
-        ctx.AbortWithError(err.Status, err)
-		return
-	}
-
-	var newReview models.NewReviewRequest
-	if err := ctx.ShouldBindJSON(&newReview); err != nil {
-        err := errors.NewErrParsingRequest(err)
         ctx.AbortWithError(err.Status, err)
 		return
 	}
@@ -343,7 +336,15 @@ func (bc *BooksController) AddReview(ctx *gin.Context) {
 		return
 	}
 
-	if err := bc.bookService.AddReview(bookId, userId, newReview.Review); err != nil {
+	var newReview models.NewReviewRequest
+	if err := ctx.ShouldBindJSON(&newReview); err != nil {
+        err := errors.NewErrParsingRequest(err)
+        ctx.AbortWithError(err.Status, err)
+		return
+	}
+
+
+	if err := bc.bookService.AddReview(bookId, userId, newReview); err != nil {
         err := errors.NewErrAddingReview(err)
         ctx.AbortWithError(err.Status, err)
 		return

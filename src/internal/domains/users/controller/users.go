@@ -192,7 +192,7 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/picture [post]
 func (u *UsersController) PostPicture(c *gin.Context) {
-    user_id , err:= getUserId(c)
+    user_id , err:= getLoggedUserId(c)
     if err != nil {
         err := er.NewErrNotLogged()
         c.AbortWithError(err.Status, err)
@@ -259,7 +259,7 @@ func (u *UsersController) GetPicture(c *gin.Context) {
 }
 
 
-func getUserId(ctx *gin.Context) (uuid.UUID, error) {
+func getLoggedUserId(ctx *gin.Context) (uuid.UUID, error) {
 	_userId := ctx.GetString("userId")
 	if _userId == "" {
 		return uuid.UUID{}, fmt.Errorf("user not logged")

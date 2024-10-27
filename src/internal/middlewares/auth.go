@@ -37,3 +37,31 @@ func AuthMiddleware(c *gin.Context) {
     c.Next()
     
 }
+
+// Middleware to authenticate users in public routes. If it finds a token it sets it in the context. Else it leaves it empty.
+func AuthPublicMiddleware(c *gin.Context) {
+    authHeader := c.Request.Header.Get("Authorization")
+    if authHeader == ""{
+        c.Next()
+        return
+    }
+    
+    bearerToken := strings.Split(authHeader, " ")
+    if len(bearerToken) != 2 || strings.ToLower(bearerToken[0]) != "bearer" {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header"})
+        c.Abort()
+        return
+    }
+    tokenString := bearerToken[1]
+    claims, err := auth.ValidateToken(tokenString)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization header"})
+        c.Abort()
+        return
+    }
+    
+    c.Set("userId", claims.UserId)
+    c.Set("IsAuthor", claims.IsAuthor)
+    c.Next()
+    
+}

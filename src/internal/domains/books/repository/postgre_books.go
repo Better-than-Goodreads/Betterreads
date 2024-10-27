@@ -50,26 +50,18 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
             FOREIGN KEY (book_id) REFERENCES books(id)
         );
     `
-	schemaRatings := `
-		CREATE TABLE IF NOT EXISTS ratings (
-			user_id UUID,
-			book_id UUID,
-			rating INTEGER,
-			PRIMARY KEY (user_id, book_id),
-			FOREIGN KEY (book_id) REFERENCES books(id)			
-        );
-			`
-
+    
     schemaReviews := `
         CREATE TABLE IF NOT EXISTS reviews (
             user_id UUID,
             book_id UUID,
+            rating INTEGER,
             review VARCHAR (255),
             PRIMARY KEY (user_id, book_id),
             FOREIGN KEY (book_id) REFERENCES books(id),
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
-        `
+    `
 		
 	schemaPictures := `
 		CREATE TABLE IF NOT EXISTS pictures (
@@ -81,10 +73,6 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 		`
 	
 	if _, err := c.Exec(schemaBooks); err != nil {
-		return nil, fmt.Errorf("failed to create table: %w", err)
-	}
-
-	if _, err := c.Exec(schemaRatings); err != nil {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
 
@@ -160,8 +148,7 @@ func (r *PostgresBookRepository) getGenresForBook(book_id uuid.UUID) ([]string, 
 
 func (r *PostgresBookRepository) getRatingsForBook(book_id uuid.UUID) (*models.Ratings, error) {
 	ratings := &models.Ratings{}
-	query := `SELECT COUNT(*) as total_ratings, COALESCE(AVG(rating), 0) as avg_ratings FROM ratings WHERE book_id = $1;
-`
+	query := `SELECT COUNT(*) as total_ratings, COALESCE(AVG(rating), 0) as avg_ratings FROM reviews WHERE book_id = $1;`
 	if err := r.c.Get(ratings, query, book_id); err != nil {
 		if err == sql.ErrNoRows {
 			return ratings, nil
@@ -236,36 +223,36 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
 	return res, nil
 }
 
-func (r *PostgresBookRepository) RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error {
-	exists, err := checkIfRatingExists(r.c, bookId, userId)
-	if err != nil {
-		return fmt.Errorf("failed to check rating: %w", err)
-	}
+// func (r *PostgresBookRepository) RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error {
+// 	exists, err := checkIfRatingExists(r.c, bookId, userId)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to check rating: %w", err)
+// 	}
+//
+// 	if !exists {
+// 		query := `INSERT INTO ratings (user_id, book_id, rating)
+// 				  VALUES ($1, $2, $3);`
+// 		args := []interface{}{userId, bookId, rating}
+//
+// 		_, err := r.c.Exec(query, args...)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to rate book: %w", err)
+// 		}
+//
+// 		return nil
+// 	} else {
+// 		query := `UPDATE ratings SET rating = $1 WHERE user_id = $2 AND book_id = $3;`
+// 		args := []interface{}{rating, userId, bookId}
+// 		_, err := r.c.Exec(query, args...)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to rate book: %w", err)
+// 		}
+// 		return nil
+// 	}
+// }
 
-	if !exists {
-		query := `INSERT INTO ratings (user_id, book_id, rating)
-				  VALUES ($1, $2, $3);`
-		args := []interface{}{userId, bookId, rating}
-
-		_, err := r.c.Exec(query, args...)
-		if err != nil {
-			return fmt.Errorf("failed to rate book: %w", err)
-		}
-
-		return nil
-	} else {
-		query := `UPDATE ratings SET rating = $1 WHERE user_id = $2 AND book_id = $3;`
-		args := []interface{}{rating, userId, bookId}
-		_, err := r.c.Exec(query, args...)
-		if err != nil {
-			return fmt.Errorf("failed to rate book: %w", err)
-		}
-		return nil
-	}
-}
-
-func checkIfRatingExists(c *sqlx.DB, bookId uuid.UUID, userId uuid.UUID) (bool, error) {
-	query := `SELECT EXISTS(SELECT 1 FROM ratings WHERE user_id = $1 AND book_id = $2);`
+func checkIfReviewExists(c *sqlx.DB, bookId uuid.UUID, userId uuid.UUID) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM reviews WHERE user_id = $1 AND book_id = $2);`
 	var exists bool
 	if err := c.Get(&exists, query, userId, bookId); err != nil {
 		return false, err
@@ -274,28 +261,28 @@ func checkIfRatingExists(c *sqlx.DB, bookId uuid.UUID, userId uuid.UUID) (bool, 
 	}
 }
 
-func (r *PostgresBookRepository) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
-	exists, err := checkIfRatingExists(r.c, bookId, userId)
-	if err != nil {
-		return fmt.Errorf("failed to check rating: %w", err)
-	}
-
-	if exists {
-		query := `DELETE FROM ratings WHERE user_id = $1 AND book_id = $2;`
-
-		if _, err := r.c.Exec(query, userId, bookId); err != nil {
-			return fmt.Errorf("failed to delete rating: %w", err)
-		}
-
-		return nil
-	} else {
-		return ErrRatingNotFound
-	}
-}
+// func (r *PostgresBookRepository) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
+// 	exists, err := checkIfRatingExists(r.c, bookId, userId)
+// 	if err != nil {
+// 		return fmt.Errorf("failed to check rating: %w", err)
+// 	}
+//
+// 	if exists {
+// 		query := `DELETE FROM ratings WHERE user_id = $1 AND book_id = $2;`
+//
+// 		if _, err := r.c.Exec(query, userId, bookId); err != nil {
+// 			return fmt.Errorf("failed to delete rating: %w", err)
+// 		}
+//
+// 		return nil
+// 	} else {
+// 		return ErrRatingNotFound
+// 	}
+// }
 
 func (r *PostgresBookRepository) GetRatingUser(bookId uuid.UUID, userId uuid.UUID) (*models.Rating, error) {
 	var ratings models.Rating
-	query := `SELECT * FROM ratings WHERE book_id = $1 AND user_id = $2;`
+	query := `SELECT * FROM reviews WHERE book_id = $1 AND user_id = $2;`
 	args := []interface{}{bookId, userId}
 
 	if err := r.c.Get(&ratings, query, args...); err != nil {
@@ -320,7 +307,7 @@ func (r *PostgresBookRepository) GetAuthorName(authorId uuid.UUID) (string, erro
 }
 
 
-func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, review string) error {
+func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error {
     query := `SELECT EXISTS(SELECT 1 FROM reviews WHERE user_id = $1 and book_id = $2);`
     args := []interface{}{userId, bookId}
     var exists bool
@@ -328,13 +315,17 @@ func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, r
         return fmt.Errorf("failed to add review: %w", err)
     }
 
-    query = `INSERT INTO reviews (user_id, book_id, review)
-    VALUES ($1, $2, $3);`
-    args = []interface{}{userId, bookId, review}
+    query = `INSERT INTO reviews (user_id, book_id, review, rating)
+    VALUES ($1, $2, $3, $4);`
+    args = []interface{}{userId, bookId, review, rating}
 
     if _, err := r.c.Exec(query, args...); err != nil {
         return fmt.Errorf("failed to add review: %w", err)
     }
+    return nil
+}
+
+func (r *PostgresBookRepository) DeleteReview(bookId uuid.UUID, userId uuid.UUID) error {
     return nil
 }
 

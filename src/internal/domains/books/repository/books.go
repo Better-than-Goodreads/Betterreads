@@ -46,10 +46,10 @@ type BooksDatabase interface {
     GetBookPictureById(id uuid.UUID) ([]byte, error)
     GetBooks() ([]*models.Book, error)
     GetBooksByName(name string) ([]*models.Book, error)
-	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error
-	DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
+	// RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error
+	// DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
 	GetRatingUser(bookId uuid.UUID, userId uuid.UUID) (*models.Rating, error)
     GetAuthorName(id uuid.UUID) (string, error)
-    AddReview(bookId uuid.UUID, userId uuid.UUID, review string) error
+    AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error
 }
 

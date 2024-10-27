@@ -99,55 +99,64 @@ func (bs *BooksService) GetBookPicture(id uuid.UUID) ([]byte, error) {
 	return book, nil
 }
 
-func (bs *BooksService) GetBooksInfo() ([]*models.BookResponse, error) {
+func (bs *BooksService) GetBooksInfo(userId uuid.UUID) ([]*models.BookResponseWithReview, error) {
 	books, err := bs.booksRepository.GetBooks()
 	if err != nil {
 		return nil, err
 	}
 
-	booksResponses := []*models.BookResponse{}
+	booksResponses := []*models.BookResponseWithReview{}
 	for _, book := range books {
-		bookResponse, err := bs.addAuthor(book, book.Author)
-		booksResponses = append(booksResponses, bookResponse)
+        bookResponse := &models.BookResponseWithReview{}
+        if userId != uuid.Nil {
+            *bookResponse.Review, err = bs.booksRepository.GetBookReviewOfUser(book.Id, userId)
+            if err != nil {
+                return nil, err
+            }
+        }
+		bookResponseBook, err := bs.addAuthor(book, book.Author)
 		if err != nil {
 			return nil, err
 		}
+        bookResponse.Book = bookResponseBook
+		booksResponses = append(booksResponses, bookResponse)
+
 	}
 	return booksResponses, nil
 }
 
-func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount int) error {
+// func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount int) error {
+//
+// 	if rateAmount < 1 || rateAmount > 5 {
+// 		return ErrRatingAmount
+// 	}
+//
+// 	err := bs.booksRepository.RateBook(bookId, userId, rateAmount)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-	if rateAmount < 1 || rateAmount > 5 {
-		return ErrRatingAmount
-	}
+// func (bs *BooksService) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
+// 	err := bs.booksRepository.DeleteRating(bookId, userId)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-	err := bs.booksRepository.RateBook(bookId, userId, rateAmount)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (bs *BooksService) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
-	err := bs.booksRepository.DeleteRating(bookId, userId)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (bs *BooksService) GetRatingUser(bookId uuid.UUID, userId uuid.UUID) (*models.RatingResponse, error) {
-	rating, err := bs.booksRepository.GetRatingUser(bookId, userId)
-	if err != nil {
-		if errors.Is(err, repository.ErrRatingNotFound) {
-			return nil, ErrRatingNotFound
-		}
-		return nil, err
-	}
-	ratingResponse := utils.MapRatingToRatingResponse(rating)
-	return ratingResponse, nil
-}
+// func (bs *BooksService) GetRatingUser(bookId uuid.UUID, userId uuid.UUID) (*models.RatingResponse, error) {
+// 	rating, err := bs.booksRepository.GetRatingUser(bookId, userId)
+// 	if err != nil {
+// 		if errors.Is(err, repository.ErrRatingNotFound) {
+// 			return nil, ErrRatingNotFound
+// 		}
+// 		return nil, err
+// 	}
+// 	ratingResponse := utils.MapRatingToRatingResponse(rating)
+// 	return ratingResponse, nil
+// }
 
 func (bs *BooksService) addAuthor(book *models.Book, author uuid.UUID) (*models.BookResponse, error) {
 	author_name, err := bs.booksRepository.GetAuthorName(author)
@@ -159,9 +168,11 @@ func (bs *BooksService) addAuthor(book *models.Book, author uuid.UUID) (*models.
 }
 
 
-func (bs *BooksService) AddReview(bookId uuid.UUID, userId uuid.UUID, review string) error {
-    
-	err := bs.booksRepository.AddReview(bookId, userId, review)
+func (bs *BooksService) AddReview(bookId uuid.UUID, userId uuid.UUID, review models.NewReviewRequest) error {
+    if review.Rating < 1 || review.Rating > 5 {
+        return ErrRatingAmount
+    }
+	err := bs.booksRepository.AddReview(bookId, userId, review.Review, review.Rating)
 	if err != nil {
 		return err
 	}

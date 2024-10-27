@@ -44,6 +44,11 @@ type Ratings struct {
 	Avg_ratings   float64 `json:"avg_ratings" db:"avg_ratings"`
 }
 
+type Review struct {
+    Text string `json:"review" db:"review"`
+    Rating int `json:"rating" db:"rating"`
+}
+
 // REQUESTS
 type NewBookRequest struct {
 	Title           string   `json:"title" validate:"required"`
@@ -61,7 +66,8 @@ type NewRatingRequest struct {
 }
 
 type NewReviewRequest struct {
-	Review string `json:"review" binding:"required"`
+	Review string `json:"review"`
+    Rating int    `json:"rating" binding:"required"`
 }
 
 // RESPONSES
@@ -78,6 +84,8 @@ type BookResponse struct {
 	Id              uuid.UUID `json:"id"`
 }
 
-type RatingResponse struct {
-	Rating int       `json:"rating"`
+
+type BookResponseWithReview struct {
+    Book *BookResponse      `json:"book"`
+    Review *Review`json:"review,omitempty"`
 }
