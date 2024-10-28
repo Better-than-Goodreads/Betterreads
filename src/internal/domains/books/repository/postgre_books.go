@@ -236,10 +236,10 @@ func (r *PostgresBookRepository) RateBook(bookId uuid.UUID, userId uuid.UUID, ra
 	return &ratingRecord, nil
 }
 
-func checkIfReviewExists(c *sqlx.DB, bookId uuid.UUID, userId uuid.UUID) (bool, error) {
+func (r *PostgresBookRepository) CheckIfRatingExists(bookId uuid.UUID, userId uuid.UUID) (bool, error) {
 	query := `SELECT EXISTS(SELECT 1 FROM reviews WHERE user_id = $1 AND book_id = $2);`
 	var exists bool
-	if err := c.Get(&exists, query, userId, bookId); err != nil {
+	if err := r.c.Get(&exists, query, userId, bookId); err != nil {
 		return false, err
 	} else {
 		return exists, nil
@@ -247,18 +247,18 @@ func checkIfReviewExists(c *sqlx.DB, bookId uuid.UUID, userId uuid.UUID) (bool, 
 }
 
 // func (r *PostgresBookRepository) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
-// 	exists, err := checkIfRatingExists(r.c, bookId, userId)
+// 	exists, err := r.checkIfRatingExists(bookId, userId)
 // 	if err != nil {
 // 		return fmt.Errorf("failed to check rating: %w", err)
 // 	}
-//
+
 // 	if exists {
 // 		query := `DELETE FROM ratings WHERE user_id = $1 AND book_id = $2;`
-//
+
 // 		if _, err := r.c.Exec(query, userId, bookId); err != nil {
 // 			return fmt.Errorf("failed to delete rating: %w", err)
 // 		}
-//
+
 // 		return nil
 // 	} else {
 // 		return ErrRatingNotFound

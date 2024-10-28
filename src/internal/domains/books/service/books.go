@@ -128,11 +128,19 @@ func (bs *BooksService) mapBooksToBooksResponseWithReview(books []*models.Book, 
 }
 
 func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount int) (*models.Rating, error) {
-
 	if rateAmount < 1 || rateAmount > 5 {
 		return nil, ErrRatingAmount
 	}
 
+	if exists, err := bs.booksRepository.CheckIfRatingExists(bookId, userId); err != nil {
+		return nil, err
+	} else if exists {
+		return nil, er.ErrorParam{
+			Name:   "rating",
+			Reason: "rating already exists",
+		}
+	}
+	
 	bookRating, err := bs.booksRepository.RateBook(bookId, userId, rateAmount)
 	if err != nil {
 		return nil, err
@@ -146,18 +154,6 @@ func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount 
 // 		return err
 // 	}
 // 	return nil
-// }
-
-// func (bs *BooksService) GetRatingUser(bookId uuid.UUID, userId uuid.UUID) (*models.RatingResponse, error) {
-// 	rating, err := bs.booksRepository.GetRatingUser(bookId, userId)
-// 	if err != nil {
-// 		if errors.Is(err, repository.ErrRatingNotFound) {
-// 			return nil, ErrRatingNotFound
-// 		}
-// 		return nil, err
-// 	}
-// 	ratingResponse := utils.MapRatingToRatingResponse(rating)
-// 	return ratingResponse, nil
 // }
 
 func (bs *BooksService) addAuthor(book *models.Book, author uuid.UUID) (*models.BookResponse, error) {

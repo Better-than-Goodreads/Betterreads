@@ -47,6 +47,7 @@ type BooksDatabase interface {
     GetBooks() ([]*models.Book, error)
     GetBooksByName(name string) ([]*models.Book, error)
 	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) (*models.Rating, error)
+    CheckIfRatingExists(bookId uuid.UUID, userId uuid.UUID) (bool, error)
 	// DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
 	GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error)
     GetAuthorName(id uuid.UUID) (string, error)

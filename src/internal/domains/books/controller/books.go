@@ -258,45 +258,6 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 // 	ctx.JSON(http.StatusNoContent, nil)
 // }
 
-// GetRatingUser godoc
-// @Summary Get rating of a book by user
-// @Description Get rating of a book by user
-// @Tags books
-// @Param id path string true "Book Id"
-// @Produce  json
-// @Success 200 {object} models.RatingResponse
-// @Failure 400 {object} errors.ErrorDetails
-// @Failure 404 {object} errors.ErrorDetails
-// @Router /books/{id}/rating [get]
-// func (bc *BooksController) GetRatingUser(ctx *gin.Context) {
-// 	bookId, err := uuid.Parse(ctx.Param("id"))
-// 	if err != nil {
-//         err := errors.NewErrInvalidBookId(ctx.Param("id"))
-//         ctx.AbortWithError(err.Status, err)
-// 		return
-// 	}
-//
-// 	userId, err := getLoggedUserId(ctx)
-// 	if err != nil {
-//         err := errors.NewErrNotLogged()
-//         ctx.AbortWithError(err.Status, err)
-// 		return
-// 	}
-//
-// 	ratings, err := bc.bookService.GetRatingUser(bookId, userId)
-// 	if err != nil {
-// 		if err == service.ErrRatingNotFound {
-//             err := errors.NewErrRatingNotFound()
-//             ctx.AbortWithError(err.Status, err)
-// 		} else {
-//             err := errors.NewErrGettingRating(err)
-//             ctx.AbortWithError(err.Status, err)
-// 		}
-// 		return
-// 	}
-//
-// 	ctx.JSON(http.StatusOK, gin.H{"ratings": ratings})
-// }
 
 // AddReview godoc
 // @Summary Add review to a book
