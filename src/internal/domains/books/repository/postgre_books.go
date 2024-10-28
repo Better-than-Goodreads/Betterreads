@@ -223,33 +223,18 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
 	return res, nil
 }
 
-// func (r *PostgresBookRepository) RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) error {
-// 	exists, err := checkIfRatingExists(r.c, bookId, userId)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to check rating: %w", err)
-// 	}
-//
-// 	if !exists {
-// 		query := `INSERT INTO ratings (user_id, book_id, rating)
-// 				  VALUES ($1, $2, $3);`
-// 		args := []interface{}{userId, bookId, rating}
-//
-// 		_, err := r.c.Exec(query, args...)
-// 		if err != nil {
-// 			return fmt.Errorf("failed to rate book: %w", err)
-// 		}
-//
-// 		return nil
-// 	} else {
-// 		query := `UPDATE ratings SET rating = $1 WHERE user_id = $2 AND book_id = $3;`
-// 		args := []interface{}{rating, userId, bookId}
-// 		_, err := r.c.Exec(query, args...)
-// 		if err != nil {
-// 			return fmt.Errorf("failed to rate book: %w", err)
-// 		}
-// 		return nil
-// 	}
-// }
+func (r *PostgresBookRepository) RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) (*models.Rating, error) {
+	var ratingRecord models.Rating
+	query := `INSERT INTO reviews (user_id, book_id, rating)
+			VALUES ($1, $2, $3)
+			RETURNING user_id, book_id, rating;`
+	args := []interface{}{userId, bookId, rating}
+
+	if err := r.c.Get(&ratingRecord, query, args...); err != nil {
+		return nil, fmt.Errorf("failed to rate book: %w", err)
+	}
+	return &ratingRecord, nil
+}
 
 func checkIfReviewExists(c *sqlx.DB, bookId uuid.UUID, userId uuid.UUID) (bool, error) {
 	query := `SELECT EXISTS(SELECT 1 FROM reviews WHERE user_id = $1 AND book_id = $2);`
@@ -280,8 +265,8 @@ func checkIfReviewExists(c *sqlx.DB, bookId uuid.UUID, userId uuid.UUID) (bool, 
 // 	}
 // }
 
-func (r *PostgresBookRepository) GetRatingUser(bookId uuid.UUID, userId uuid.UUID) (*models.Rating, error) {
-	var ratings models.Rating
+func (r *PostgresBookRepository) GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error) {
+	var ratings models.Review
 	query := `SELECT * FROM reviews WHERE book_id = $1 AND user_id = $2;`
 	args := []interface{}{bookId, userId}
 

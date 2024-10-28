@@ -38,11 +38,11 @@ func createRouterFromConfig(cfg *Config) *Router {
 	// gin.DefaultErrorWriter = io.Discard
 	// logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	// slog.SetDefault(logger)
-    
-    engine := gin.New()
-    engine.Use(gin.Recovery())
-    engine.Use(middlewares.ErrorMiddleware)
-    engine.Use(middlewares.RequestLogger)
+
+	engine := gin.New()
+	engine.Use(gin.Recovery())
+	engine.Use(middlewares.ErrorMiddleware)
+	engine.Use(middlewares.RequestLogger)
 
 	router := &Router{
 		engine:  engine,
@@ -103,14 +103,14 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 		public.POST("/register/:id/additional-info", uc.RegisterSecondStep)
 		public.POST("/login", uc.LogIn)
 		public.GET("/:id", uc.GetUser)
-        public.GET("/:id/picture", uc.GetPicture)
+		public.GET("/:id/picture", uc.GetPicture)
 	}
 
 	private := r.engine.Group("/users")
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.GET("/", uc.GetUsers)
-        private.POST("/picture", uc.PostPicture)
+		private.POST("/picture", uc.PostPicture)
 	}
 }
 
@@ -121,23 +121,22 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 	}
 	bs := booksService.NewBooksService(booksRepo)
 	bc := booksController.NewBooksController(bs)
-	
+
 	public := r.engine.Group("/books")
-    public.Use(middlewares.AuthPublicMiddleware)
+	public.Use(middlewares.AuthPublicMiddleware)
 	{
 		public.GET("/:id/picture", bc.GetBookPicture)
-		public.GET("/:id/info", bc.GetBookInfo) // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
-		public.GET("/info", bc.GetBooksInfo) // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
-        public.GET("/info/search", bc.GetBooksInfoByName)  // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
+		public.GET("/:id/info", bc.GetBookInfo)              // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
+		public.GET("/info", bc.GetBooksInfo)                 // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
+		public.GET("/info/search", bc.SearchBooksInfoByName) // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
 	}
 
-
-	
 	private := r.engine.Group("/books")
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.POST("/", bc.PublishBook)
-		private.POST("/:id/review", bc.AddReview)
+		private.POST("/:id/review", bc.ReviewBook)
+		private.POST("/:id/rating", bc.RateBook)
 	}
 
 }
