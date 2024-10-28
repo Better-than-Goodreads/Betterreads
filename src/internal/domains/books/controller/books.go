@@ -377,9 +377,9 @@ func (bc *BooksController) ReviewBook(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{"review": newReview.Review})
 }
 
-// UpdateReview godoc
-// @Summary Update review of a book
-// @Description Update review of a book
+// GetBooksReviews godoc
+// @Summary Gets reviews of a book
+// @Description Get reviews of a book
 // @Tags books
 // @Param id path string true "Book Id"
 // @Produce  json
@@ -387,6 +387,7 @@ func (bc *BooksController) ReviewBook(ctx *gin.Context) {
 // @Success 200 {object} []models.Review
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetailsWithParams
+// @router /books/{id}/review [get]
 func (bc *BooksController) GetBookReviews (ctx *gin.Context) {
     bookId, err := uuid.Parse(ctx.Param("id"))
     if err != nil {
