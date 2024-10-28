@@ -34,10 +34,14 @@ var genresDict = map[int]string{
 
 var (
     ErrGenreNotFound = errors.New("genre not found")
-    ErrRatingNotFound = errors.New("rating not found")
+    ErrRatingNotFound = errors.New("review not found")
     ErrAuthorNotFound = errors.New("author not found")
     ErrBookNotFound = errors.New("book not found")
     ErrNoBooksFound = errors.New("no books found")
+    ErrRatingAlreadyExists = errors.New("rating already exists")
+    ErrReviewAlreadyExists = errors.New("review already exists")
+    ErrReviewNotFound = errors.New("review not found")
+    ErrReviewEmpty = errors.New("review is empty")
 )
 
 type BooksDatabase interface {
@@ -46,11 +50,19 @@ type BooksDatabase interface {
     GetBookPictureById(id uuid.UUID) ([]byte, error)
     GetBooks() ([]*models.Book, error)
     GetBooksByName(name string) ([]*models.Book, error)
+    CheckIfBookExists(bookId uuid.UUID) bool
+    // RATE
 	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) (*models.Rating, error)
+    UpdateRating(bookId uuid.UUID, userId uuid.UUID, rating int) (error)
     CheckIfRatingExists(bookId uuid.UUID, userId uuid.UUID) (bool, error)
+    GetBookReviews(bookID uuid.UUID) ([]*models.Review, error)
 	// DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
-	GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error)
+
     GetAuthorName(id uuid.UUID) (string, error)
+
     AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error
+    CheckifReviewExists(bookId uuid.UUID, userId uuid.UUID) (bool, error)
+	GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error)
+    EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) (error)
 }
 

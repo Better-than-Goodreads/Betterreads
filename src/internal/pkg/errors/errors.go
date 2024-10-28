@@ -22,7 +22,7 @@ type ErrorDetails struct {
 	Title    string `json:"title"`
 	Detail   string `json:"detail"`
 	Instance string `json:"instance"`
-	Status   int    `json:"status"`
+	Status   int    `json:"status"` // ESTE NO IRIA MAS
 }
 
 func (e ErrorDetails) Error() string {
@@ -34,8 +34,26 @@ func NewErrorDetails(title string, detail string, status int) *ErrorDetails {
 		Type:   "about:blank",
 		Title:  title,
 		Detail: detail,
-		Status: status,
+		Status: status, // ESTE TMP 
 	}
+}
+
+type HttpErrorDetails struct {
+    Type    string `json:"type"`
+    Title   string `json:"title"`
+    Detail string `json:"detail"`
+    Instance string `json:"instance"`
+    Status int `json:"status"`
+}
+
+func NewHttpErrorDetails(err *ErrorDetails, status int) *HttpErrorDetails {
+    return &HttpErrorDetails{
+        Type: err.Type,
+        Title: err.Title,
+        Detail: err.Detail,
+        Instance: err.Instance,
+        Status: status,
+    }
 }
 
 type ErrorDetailsWithParams struct {

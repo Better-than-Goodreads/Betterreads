@@ -126,17 +126,19 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 	public.Use(middlewares.AuthPublicMiddleware)
 	{
 		public.GET("/:id/picture", bc.GetBookPicture)
-		public.GET("/:id/info", bc.GetBookInfo)              // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
-		public.GET("/info", bc.GetBooksInfo)                 // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
-		public.GET("/info/search", bc.SearchBooksInfoByName) // MANDAR RATING DEL USUARIO SI ESTA LOGEADO
+		public.GET("/:id/info", bc.GetBookInfo)
+		public.GET("/info", bc.GetBooksInfo)
+		public.GET("/info/search", bc.SearchBooksInfoByName)
+        public.GET("/:id/reviews", bc.GetBookReviews)
 	}
 
 	private := r.engine.Group("/books")
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.POST("/", bc.PublishBook)
-		private.POST("/:id/review", bc.ReviewBook)
+		private.POST("/:id/reviews", bc.ReviewBook)
 		private.POST("/:id/rating", bc.RateBook)
+        private.PUT("/:id/rating", bc.UpdateRatingOfBook)
 	}
 
 }

@@ -15,11 +15,15 @@ var (
 	ErrGenreNotFound  = errors.New("genre not found")
 	ErrRatingNotFound = errors.New("rating not found")
 	ErrBookNotFound   = errors.New("book not found")
+    ErrRatingAlreadyExists = errors.New("rating already exists")
+    ErrReviewAlreadyExists = errors.New("review already exists")
+    ErrReviewNotFound = errors.New("review not found")
 
 	ErrRatingAmount = er.ErrorParam{
 		Name:   "rating",
 		Reason: "rating must be between 1 and 5",
 	}
+
 )
 
 type BooksService struct {
@@ -54,18 +58,11 @@ func (bs *BooksService) GetBookInfo(bookId uuid.UUID, userId uuid.UUID) (*models
 		return nil, err
 	}
 
-	bookRes := &models.BookResponseWithReview{}
-	if userId != uuid.Nil {
-		bookRes.Review, err = bs.booksRepository.GetBookReviewOfUser(book.Id, userId)
-		if err != nil {
-			return nil, err
-		}
-	}
+	bookRes, err := bs.mapBookToBookResponseWithReview(book, userId)
 
-	bookRes.Book, err = bs.addAuthor(book, book.Author)
-	if err != nil {
-		return nil, err
-	}
+    if err != nil {
+        return nil, err
+    }
 
 	return bookRes, nil
 }
@@ -73,14 +70,11 @@ func (bs *BooksService) GetBookInfo(bookId uuid.UUID, userId uuid.UUID) (*models
 func (bs *BooksService) SearchBooksByName(name string, userId uuid.UUID) ([]*models.BookResponseWithReview, error) {
 	books, err := bs.booksRepository.GetBooksByName(name)
 	if err != nil {
-		fmt.Println(err)
 		if errors.Is(err, repository.ErrNoBooksFound) {
 			return []*models.BookResponseWithReview{}, nil
 		}
 		return nil, err
 	}
-
-	fmt.Printf("Books: %v\n", books)
 
 	return bs.mapBooksToBooksResponseWithReview(books, userId)
 }
@@ -107,38 +101,55 @@ func (bs *BooksService) GetBooksInfo(userId uuid.UUID) ([]*models.BookResponseWi
 }
 
 func (bs *BooksService) mapBooksToBooksResponseWithReview(books []*models.Book, userId uuid.UUID) ([]*models.BookResponseWithReview, error) {
-	var err error
 	booksResponses := []*models.BookResponseWithReview{}
 
 	for _, book := range books {
-		bookResponse := &models.BookResponseWithReview{}
-		if userId != uuid.Nil {
-			bookResponse.Review, err = bs.booksRepository.GetBookReviewOfUser(book.Id, userId)
-			if err != nil {
-				return nil, err
-			}
-		}
-		bookResponse.Book, err = bs.addAuthor(book, book.Author)
-		if err != nil {
-			return nil, err
-		}
+		bookResponse , err:= bs.mapBookToBookResponseWithReview(book, userId)
+        if err != nil {
+            return nil, err
+        }
 		booksResponses = append(booksResponses, bookResponse)
 	}
 	return booksResponses, nil
+}
+
+func (bs *BooksService) mapBookToBookResponseWithReview(book *models.Book, userId uuid.UUID) (*models.BookResponseWithReview, error) {
+    var err error
+    bookRes := &models.BookResponseWithReview{}
+    if userId != uuid.Nil {
+        bookRes.Review, err = bs.booksRepository.GetBookReviewOfUser(book.Id, userId)
+        if err != nil {
+            if errors.Is(err, repository.ErrRatingNotFound) {
+                bookRes.Review = nil
+            } else {
+                return nil, err
+            }
+        }
+    }
+
+    bookRes.Book, err = bs.addAuthor(book, book.Author)
+    if err != nil {
+        return nil, err
+    }
+
+    return bookRes, nil
 }
 
 func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount int) (*models.Rating, error) {
 	if rateAmount < 1 || rateAmount > 5 {
 		return nil, ErrRatingAmount
 	}
+    
+    bookExists := bs.booksRepository.CheckIfBookExists(bookId) 
+    if !bookExists {
+        return nil, ErrBookNotFound
+    }
+
 
 	if exists, err := bs.booksRepository.CheckIfRatingExists(bookId, userId); err != nil {
 		return nil, err
 	} else if exists {
-		return nil, er.ErrorParam{
-			Name:   "rating",
-			Reason: "rating already exists",
-		}
+        return nil, ErrRatingAlreadyExists
 	}
 	
 	bookRating, err := bs.booksRepository.RateBook(bookId, userId, rateAmount)
@@ -148,6 +159,25 @@ func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount 
 	return bookRating, nil
 }
 
+func (bs *BooksService) UpdateRating(bookId uuid.UUID, userId uuid.UUID, rateAmount int) (error){
+    if rateAmount < 1 || rateAmount > 5 {
+        return  ErrRatingAmount
+    }
+
+    if exists, err := bs.booksRepository.CheckIfRatingExists(bookId, userId); err != nil {
+		return  err
+	} else if !exists {
+        return  ErrRatingNotFound
+	}
+
+    err := bs.booksRepository.UpdateRating(bookId, userId, rateAmount)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
 // func (bs *BooksService) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
 // 	err := bs.booksRepository.DeleteRating(bookId, userId)
 // 	if err != nil {
@@ -155,6 +185,15 @@ func (bs *BooksService) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount 
 // 	}
 // 	return nil
 // }
+//
+//
+func (bs *BooksService) GetBookReviews(bookId uuid.UUID) ([]*models.Review, error){
+    reviews, err := bs.booksRepository.GetBookReviews(bookId)
+    if err != nil {
+        return nil, err
+    }
+    return reviews, nil
+}
 
 func (bs *BooksService) addAuthor(book *models.Book, author uuid.UUID) (*models.BookResponse, error) {
 	author_name, err := bs.booksRepository.GetAuthorName(author)
@@ -169,9 +208,30 @@ func (bs *BooksService) AddReview(bookId uuid.UUID, userId uuid.UUID, review mod
 	if review.Rating < 1 || review.Rating > 5 {
 		return ErrRatingAmount
 	}
-	err := bs.booksRepository.AddReview(bookId, userId, review.Review, review.Rating)
-	if err != nil {
-		return err
-	}
+
+    bookExists := bs.booksRepository.CheckIfBookExists(bookId) 
+    if !bookExists {
+        return ErrBookNotFound
+    }
+    exists , err := bs.booksRepository.CheckifReviewExists(bookId, userId)
+    if err != repository.ErrReviewEmpty && err != nil {
+        return err
+    }
+    if exists {
+        return ErrReviewAlreadyExists
+    }
+    
+    
+    if err == repository.ErrReviewEmpty {
+        err = bs.booksRepository.EditReview(bookId, userId, review.Rating , review.Review)
+        if err != nil {
+            return err
+        }
+    } else {
+        err = bs.booksRepository.AddReview(bookId, userId, review.Review, review.Rating)
+        if err != nil {
+            return err
+        }
+    }
 	return nil
 }

@@ -44,6 +44,13 @@ type Ratings struct {
 	Avg_ratings   float64 `json:"avg_ratings" db:"avg_ratings"`
 }
 
+type ReviewDb struct {
+    UserId uuid.UUID `json:"user_id" db:"user_id"`
+    BookId uuid.UUID `json:"book_id" db:"book_id"`
+    Review string `json:"review" db:"review"`
+    Rating int `json:"rating" db:"rating"`
+}
+
 type Review struct {
     Text string `json:"review" db:"review"`
     Rating int `json:"rating" db:"rating"`

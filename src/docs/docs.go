@@ -94,7 +94,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Book"
+                                "$ref": "#/definitions/models.BookResponseWithReview"
                             }
                         }
                     },
@@ -132,7 +132,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Book"
+                                "$ref": "#/definitions/models.BookResponseWithReview"
                             }
                         }
                     },
@@ -168,7 +168,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Book"
+                            "$ref": "#/definitions/models.BookResponseWithReview"
                         }
                     },
                     "400": {
@@ -228,15 +228,15 @@ const docTemplate = `{
             }
         },
         "/books/{id}/rating": {
-            "get": {
-                "description": "Get rating of a book by user",
+            "put": {
+                "description": "Update rating of a book",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "books"
                 ],
-                "summary": "Get rating of a book by user",
+                "summary": "Update rating of a book",
                 "parameters": [
                     {
                         "type": "string",
@@ -244,13 +244,22 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Rating Request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewRatingRequest"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.RatingResponse"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -261,6 +270,12 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/errors.ErrorDetails"
                         }
@@ -308,45 +323,6 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/errors.ErrorDetailsWithParams"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete rating of a book",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "books"
-                ],
-                "summary": "Delete rating of a book",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Book Id",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
                         }
                     },
                     "500": {
@@ -714,6 +690,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
+                    "description": "ESTE NO IRIA MAS",
                     "type": "integer"
                 },
                 "title": {
@@ -809,6 +786,55 @@ const docTemplate = `{
                 }
             }
         },
+        "models.BookResponse": {
+            "type": "object",
+            "properties": {
+                "amount_of_pages": {
+                    "type": "integer"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "avg_rating": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "publication_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_ratings": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.BookResponseWithReview": {
+            "type": "object",
+            "properties": {
+                "book": {
+                    "$ref": "#/definitions/models.BookResponse"
+                },
+                "review": {
+                    "$ref": "#/definitions/models.Review"
+                }
+            }
+        },
         "models.NewBookRequest": {
             "type": "object",
             "required": [
@@ -863,19 +889,25 @@ const docTemplate = `{
         "models.NewReviewRequest": {
             "type": "object",
             "required": [
-                "review"
+                "rating"
             ],
             "properties": {
+                "rating": {
+                    "type": "integer"
+                },
                 "review": {
                     "type": "string"
                 }
             }
         },
-        "models.RatingResponse": {
+        "models.Review": {
             "type": "object",
             "properties": {
                 "rating": {
                     "type": "integer"
+                },
+                "review": {
+                    "type": "string"
                 }
             }
         },

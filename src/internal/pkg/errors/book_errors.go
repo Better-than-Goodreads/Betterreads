@@ -30,6 +30,15 @@ func NewErrGettingBook(err error) *ErrorDetails {
     return errGettingBooks
 }
 
+func NewErrGettingBookReviews(err error) *ErrorDetails {
+    errGettingReviews := NewErrorDetails(
+        "failed to get reviews",
+        "Error when getting reviews: " + err.Error(),
+        http.StatusInternalServerError,
+    )
+    return errGettingReviews
+}
+
 func NewErrBookNotFound() *ErrorDetails {
 	errBookNotFound := NewErrorDetails(
 		"book not found",
@@ -48,13 +57,13 @@ func NewErrNotAuthor() *ErrorDetails {
     return errNotAuthor
 }
 
-func NewErrRatingBook(err error) *ErrorDetails {
-    errRatingBook := NewErrorDetails(
+func NewErrInvalidRatingBook(err error) *ErrorDetailsWithParams {
+    errRatingBook := NewErrorDetailsWithParams(
 		"failed to rate book",
-		"Rate must be between 1 and 5 (inclusive): "+ err.Error(),
+		"Rate value invalid",
 		http.StatusBadRequest,
+        err,
 	)
-
 	return errRatingBook
 }
 
@@ -146,5 +155,32 @@ func NewErrNoPicture() *ErrorDetailsWithParams{
     return errNoPicture
 }
 
+func NewErrRatingAlreadyExists() *ErrorDetails {
+    err := NewErrorDetails(
+        "failed to rate book",
+        "Rating already exists",
+        http.StatusBadRequest,
+    )
+    return err
+}
 
+
+func NewErrRating(err error) *ErrorDetailsWithParams {
+    errUpdatingRating := NewErrorDetailsWithParams(
+        "failed to rate",
+        "Error when rating: " + err.Error(),
+        http.StatusInternalServerError,
+        err,
+    )
+    return errUpdatingRating
+}
+
+func NewErrReviewAlreadyExists() *ErrorDetails {
+    err := NewErrorDetails(
+        "failed to add review",
+        "Review already exists",
+        http.StatusBadRequest,
+    )
+    return err
+}
 
