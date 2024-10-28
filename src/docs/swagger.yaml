@@ -418,12 +418,6 @@ paths:
         name: id
         required: true
         type: string
-      - description: Review Request
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/models.NewReviewRequest'
       produces:
       - application/json
       responses:

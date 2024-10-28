@@ -383,7 +383,6 @@ func (bc *BooksController) ReviewBook(ctx *gin.Context) {
 // @Tags books
 // @Param id path string true "Book Id"
 // @Produce  json
-// @Param user body models.NewReviewRequest true "Review Request"
 // @Success 200 {object} []models.Review
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetailsWithParams
