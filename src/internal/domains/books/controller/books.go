@@ -65,7 +65,7 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"book": book})
+	ctx.JSON(http.StatusCreated, book)
 }
 
 // GetBookInfo godoc
@@ -101,7 +101,7 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"book": book})
+	ctx.JSON(http.StatusCreated, book)
 }
 
 // GetBooksByName
@@ -122,7 +122,7 @@ func (bc *BooksController) SearchBooksInfoByName(ctx *gin.Context) {
 		ctx.AbortWithError(err.Status, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"books": books})
+	ctx.JSON(http.StatusOK, books)
 }
 
 // GetBookPicture godoc
@@ -177,7 +177,7 @@ func (bc *BooksController) GetBooksInfo(ctx *gin.Context) {
 		ctx.AbortWithError(err.Status, err)
 		return
 	}
-	ctx.JSON(http.StatusAccepted, gin.H{"books": books})
+	ctx.JSON(http.StatusAccepted, books)
 }
 
 // RateBook godoc
