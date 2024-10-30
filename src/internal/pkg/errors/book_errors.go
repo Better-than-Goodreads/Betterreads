@@ -48,6 +48,15 @@ func NewErrBookNotFound() *ErrorDetails {
 	return errBookNotFound
 }
 
+func NewErrAuthorNotFound() *ErrorDetails {
+    errAuthorNotFound := NewErrorDetails(
+        "author not found",
+        "Author not found",
+        http.StatusNotFound,
+    )
+    return errAuthorNotFound
+}
+
 func NewErrNotAuthor() *ErrorDetails {
     errNotAuthor := NewErrorDetails(
         "not an author",
@@ -84,6 +93,15 @@ func NewErrInvalidBookId(id string) *ErrorDetails {
 	)
 
     return errInvalidBookId
+}
+
+func NewErrInvalidAuthorId(id string) *ErrorDetails {
+    errInvalidAuthorId := NewErrorDetails(
+        "failed to parse author id",
+        "value of id should be a uuid: " + "Id: " + id,
+        http.StatusBadRequest,
+    )
+    return errInvalidAuthorId
 }
 
 func NewErrInvalidRating(rate string) *ErrorDetails {

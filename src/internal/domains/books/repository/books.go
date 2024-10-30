@@ -49,6 +49,9 @@ type BooksDatabase interface {
 	GetBookById(id uuid.UUID) (*models.Book, error)
     GetBookPictureById(id uuid.UUID) ([]byte, error)
     GetBooks() ([]*models.Book, error)
+
+    // GetBooksOfAuthor returns all books of an author, if it doesn't exist returns ErrAuthorNotFound
+    GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error)
     GetBooksByName(name string) ([]*models.Book, error)
     CheckIfBookExists(bookId uuid.UUID) bool
     // RATE

@@ -125,6 +125,44 @@ func (bc *BooksController) SearchBooksInfoByName(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, books)
 }
 
+// GetBooksOfAuthor
+// @Summary Get books of an auther
+// @Description Get the books of an author, if no books found returns an empty array
+// @Tags books
+// @Param id path string true "Author Id"
+// @Produce  json
+// @Success 200 {object} []models.BookResponseWithReview
+// @Failure 400 {object} errors.ErrorDetails
+// @Router /books/author/{id} [get]
+func (bc *BooksController) GetBooksOfAuthor(ctx *gin.Context) {
+	userId, err := getUserId(ctx)
+	if err != nil {
+		err := er.NewErrNotLogged()
+		ctx.AbortWithError(err.Status, err)
+		return
+	}
+
+	authorId, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		err := er.NewErrInvalidAuthorId(ctx.Param("id"))
+		ctx.AbortWithError(err.Status, err)
+		return
+	}
+
+	books, err := bc.bookService.GetBooksOfAuthor(authorId, userId)
+	if err != nil {
+		if errors.Is(err, service.ErrAuthorNotFound) {
+			err := er.NewErrAuthorNotFound()
+			ctx.AbortWithError(err.Status, err)
+			return
+		}
+		err := er.NewErrGettingBooks(err)
+		ctx.AbortWithError(err.Status, err)
+		return
+	}
+	ctx.JSON(http.StatusOK, books)
+}
+
 // GetBookPicture godoc
 // @Summary Get book picture by id
 // @Description Get book id, note that its a UUID

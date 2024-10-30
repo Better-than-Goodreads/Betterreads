@@ -163,7 +163,7 @@ func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error)
 	query := `SELECT * FROM books WHERE id = $1;`
 	if err := r.c.Get(bookdb, query, id); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("book with id %s not found", id)
+			return nil, ErrBookNotFound
 		}
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
@@ -220,6 +220,35 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
         }
         res = append(res, Bookres)
     }
+	return res, nil
+}
+
+func (r *PostgresBookRepository) GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error) {
+	var authorName string
+	query := `SELECT username FROM users WHERE id = $1;`
+	if err := r.c.Get(&authorName, query, authorId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrAuthorNotFound
+		}
+		return nil, fmt.Errorf("failed to get author: %w", err)
+	}
+
+	var books []*models.BookDb
+	query = `SELECT * FROM books WHERE author = $1;`
+	if err := r.c.Select(&books, query, authorId); err != nil {
+		if err == sql.ErrNoRows {
+			return []*models.Book{}, nil
+		}
+		return nil, fmt.Errorf("failed to get books: %w", err)
+	}
+	res := []*models.Book{}
+	for _, book := range books {
+		Bookres, err := r.getBookInfo(book)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get book: %w", err)
+		}
+		res = append(res, Bookres)
+	}
 	return res, nil
 }
 

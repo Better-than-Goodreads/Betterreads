@@ -18,6 +18,7 @@ var (
     ErrRatingAlreadyExists = errors.New("rating already exists")
     ErrReviewAlreadyExists = errors.New("review already exists")
     ErrReviewNotFound = errors.New("review not found")
+	ErrAuthorNotFound = errors.New("author not found")
 
 	ErrRatingAmount = er.ErrorParam{
 		Name:   "rating",
@@ -55,6 +56,9 @@ func (bs *BooksService) PublishBook(req *models.NewBookRequest, author uuid.UUID
 func (bs *BooksService) GetBookInfo(bookId uuid.UUID, userId uuid.UUID) (*models.BookResponseWithReview, error) {
 	book, err := bs.booksRepository.GetBookById(bookId)
 	if err != nil {
+		if errors.Is(err, repository.ErrBookNotFound) {
+			return nil, ErrBookNotFound
+		}
 		return nil, err
 	}
 
@@ -65,6 +69,18 @@ func (bs *BooksService) GetBookInfo(bookId uuid.UUID, userId uuid.UUID) (*models
     }
 
 	return bookRes, nil
+}
+
+func (bs *BooksService) GetBooksOfAuthor(authorId uuid.UUID, userId uuid.UUID) ([]*models.BookResponseWithReview, error) {
+	books, err := bs.booksRepository.GetBooksOfAuthor(authorId)
+	if err != nil {
+		if errors.Is(err, repository.ErrAuthorNotFound) {
+			return nil, ErrAuthorNotFound
+		}
+		return nil, err
+	}
+
+	return bs.mapBooksToBooksResponseWithReview(books, userId)
 }
 
 func (bs *BooksService) SearchBooksByName(name string, userId uuid.UUID) ([]*models.BookResponseWithReview, error) {
