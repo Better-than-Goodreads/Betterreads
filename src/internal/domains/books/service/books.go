@@ -211,6 +211,17 @@ func (bs *BooksService) GetBookReviews(bookId uuid.UUID) ([]*models.Review, erro
     return reviews, nil
 }
 
+func (bs *BooksService) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.Review, error){
+	reviews, err := bs.booksRepository.GetAllReviewsOfUser(userId)
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			return []*models.Review{}, er.NewErrUserNotFoundById(err)
+		}
+		return nil, err
+	}
+	return reviews, nil
+}
+
 func (bs *BooksService) addAuthor(book *models.Book, author uuid.UUID) (*models.BookResponse, error) {
 	author_name, err := bs.booksRepository.GetAuthorName(author)
 	if err != nil {

@@ -447,6 +447,33 @@ func (bc *BooksController) GetBookReviews (ctx *gin.Context) {
     ctx.JSON(http.StatusOK, gin.H{"reviews": reviews})
 }
 
+// GetAllReviewsOfUser godoc
+// @Summary Gets all reviews of a user
+// @Description Get all reviews of a user
+// @Tags books
+// @Param id path string true "User Id"
+// @Produce  json
+// @Success 200 {object} []models.Review
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetailsWithParams
+// @router /books/user/{id}/reviews [get]
+func (bc *BooksController) GetAllReviewsOfUser (ctx *gin.Context) {
+    userId, err := uuid.Parse(ctx.Param("id"))
+    if err != nil {
+        err := er.NewErrInvalidUserID(ctx.Param("id"))
+        ctx.AbortWithError(err.Status, err)
+        return
+    }
+
+    reviews, err := bc.bookService.GetAllReviewsOfUser(userId)
+    if err != nil {
+		err := er.NewErrGettingUserReviews(err)
+		ctx.AbortWithError(err.Status, err)
+		return
+        }
+    ctx.JSON(http.StatusOK, gin.H{"reviews": reviews})
+}
+
 // AUX FUNCTIONS
 /*
 * getBookRequest is a helper function that parses the request body and returns a New

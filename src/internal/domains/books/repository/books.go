@@ -42,6 +42,7 @@ var (
     ErrReviewAlreadyExists = errors.New("review already exists")
     ErrReviewNotFound = errors.New("review not found")
     ErrReviewEmpty = errors.New("review is empty")
+    ErrUserNotFound = errors.New("user not found")
 )
 
 type BooksDatabase interface {
@@ -66,6 +67,9 @@ type BooksDatabase interface {
     AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error
     CheckifReviewExists(bookId uuid.UUID, userId uuid.UUID) (bool, error)
 	GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error)
+
+    // GetAllReviewsOfUser returns all reviews of a user, if it doesn't exist returns ErrUserNotFound
+    GetAllReviewsOfUser(userId uuid.UUID) ([]*models.Review, error)
     EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) (error)
 }
 

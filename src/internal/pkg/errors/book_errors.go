@@ -39,6 +39,15 @@ func NewErrGettingBookReviews(err error) *ErrorDetails {
     return errGettingReviews
 }
 
+func NewErrGettingUserReviews(err error) *ErrorDetails {
+    errGettingReviews := NewErrorDetails(
+        "failed to get user reviews",
+        "Error when getting user reviews: " + err.Error(),
+        http.StatusInternalServerError,
+    )
+    return errGettingReviews
+}
+
 func NewErrBookNotFound() *ErrorDetails {
 	errBookNotFound := NewErrorDetails(
 		"book not found",

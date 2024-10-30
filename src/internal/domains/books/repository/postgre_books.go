@@ -324,6 +324,35 @@ func (r *PostgresBookRepository) GetBookReviewOfUser(bookId uuid.UUID, userId uu
 	return ReviewRes, nil
 }
 
+func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.Review, error) {
+	var username string
+	query := `SELECT username FROM users WHERE id = $1;`
+	if err := r.c.Get(&username, query, userId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("failed to get author: %w", err)
+	}
+	
+	reviews := &[]*models.ReviewDb{}
+	query = `SELECT * FROM reviews WHERE user_id = $1;`
+	if err := r.c.Select(reviews, query, userId); err != nil {
+		return nil, fmt.Errorf("failed to get reviews: %w", err)
+	}
+	res := []*models.Review{}
+	for _, review := range *reviews {
+		if review.Review == "" {
+			continue
+		}
+		reviewRes := &models.Review{
+			Text: review.Review,
+			Rating: review.Rating,
+		}
+		res = append(res, reviewRes)
+	}
+	return res, nil
+}
+
 func (r *PostgresBookRepository) GetAuthorName(authorId uuid.UUID) (string, error) {
 	var authorName string
 	query := `SELECT username FROM users WHERE id = $1;`
