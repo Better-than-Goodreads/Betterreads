@@ -244,7 +244,12 @@ func (u *UsersController) GetPicture(c *gin.Context) {
     }
     base64Bytes, err := u.us.GetUserPicture(uuid)
     if err != nil {
-        err := er.NewErrUserNotFoundById(err)
+        if errors.Is(err, service.ErrUserNotFound) {
+            err := er.NewErrUserNotFoundById(err)
+            c.AbortWithError(err.Status, err)
+            return
+        }
+        err := er.NewErrGetPicture(err)
         c.AbortWithError(err.Status, err)
         return
     }

@@ -22,6 +22,8 @@ var (
 		Name: "email",
 		Reason: "email already taken",
 	}
+
+	ErrUserNotFound = errors.New("user not found")
 )
 
 type UsersService struct {
@@ -131,6 +133,9 @@ func (u *UsersService) PostUserPicture(id uuid.UUID, picture models.UserPictureR
 func (u *UsersService) GetUserPicture(id uuid.UUID) ([]byte, error) {
     picture, err := u.rp.GetUserPicture(id)
     if err != nil {
+		if errors.Is(err, rs.ErrUserNotFound) {
+			return nil, ErrUserNotFound
+		}
         return nil, err
     }
     return picture, nil

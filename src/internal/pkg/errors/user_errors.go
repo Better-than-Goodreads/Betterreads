@@ -75,6 +75,16 @@ func NewErrUserNotFoundById(err error) *ErrorDetails {
 	return errUserNotFoundById
 }
 
+func NewErrGetPicture(err error) *ErrorDetails {
+    errGetPicture := NewErrorDetails(
+        "failed to get user picture",
+        "Error when getting user picture: " + err.Error(),
+        http.StatusInternalServerError,
+    )
+
+    return errGetPicture
+}
+
 func NewErrParsingPicture() *ErrorDetailsWithParams {
     err := ErrorParam {
         Name: "file",
