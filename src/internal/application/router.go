@@ -139,7 +139,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 		private.POST("/:id/reviews", bc.ReviewBook)
 		private.POST("/:id/rating", bc.RateBook)
         private.PUT("/:id/rating", bc.UpdateRatingOfBook)
-        private.PUT("/author/:id", bc.GetBooksOfAuthor)
+        private.GET("/author/:id", bc.GetBooksOfAuthor)
 		private.GET("/user/:id/reviews", bc.GetAllReviewsOfUser)
 	}
 
