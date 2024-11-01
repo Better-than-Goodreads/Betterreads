@@ -2,6 +2,7 @@ package application
 
 import (
 	"net/http"
+    "fmt"
     "strings"
 	"github.com/betterreads/internal/pkg/auth"
 	"github.com/gin-gonic/gin"
@@ -11,7 +12,7 @@ import (
 func AuthMiddleware(c *gin.Context) {
     authHeader := c.Request.Header.Get("Authorization")
     if authHeader == ""{
-		er.SendError(c, er.NewErrNotLogged())
+		er.SendError(c, er.NewErrorDetails("Not authorized", fmt.Errorf("Invalid Log in attempt"), http.StatusUnauthorized))
         c.Abort()
         return
     }
@@ -26,7 +27,7 @@ func AuthMiddleware(c *gin.Context) {
     tokenString := bearerToken[1]
     claims, err := auth.ValidateToken(tokenString)
     if err != nil {
-		er.SendError(c, er.NewErrNotLogged())
+		er.SendError(c, er.NewErrorDetails("Not authorized", fmt.Errorf("Invalid Log in attempt"), http.StatusUnauthorized))
         c.Abort()
         return
     }

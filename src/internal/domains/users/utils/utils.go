@@ -4,13 +4,13 @@ import (
 	"github.com/betterreads/internal/domains/users/models"
 )
 
-func MapUsersRecordToUsersResponses(users []*models.UserRecord) ([]*models.UserResponse, error) {
+func MapUsersRecordToUsersResponses(users []*models.UserRecord) ([]*models.UserResponse) {
 	userResponses := make([]*models.UserResponse, 0, len(users))
 	for _, user := range users {
 		userResponse := MapUserRecordToUserResponse(user)
 		userResponses = append(userResponses, userResponse)
 	}
-	return userResponses, nil
+	return userResponses
 }
 
 func MapUserRecordToUserResponse(user *models.UserRecord) *models.UserResponse {

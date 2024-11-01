@@ -2,18 +2,10 @@ package errors
 
 import (
 	"encoding/json"
-	"net/http"
 
 	gin "github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-)
-
-var (
-	ErrParsingRequest = NewErrorDetails(
-		"failed to parse request",
-		"Error when parsing request: ",
-		http.StatusBadRequest,
-	)
+    "net/http"
 )
 
 // Follows RFC 7807: https://datatracker.ietf.org/doc/html/rfc7807
@@ -26,35 +18,19 @@ type ErrorDetails struct {
 }
 
 func (e ErrorDetails) Error() string {
-	return e.Detail
+    string := e.Title + " " + e.Detail
+    return string
 }
 
-func NewErrorDetails(title string, detail string, status int) *ErrorDetails {
+func NewErrorDetails(title string, err error, status int) *ErrorDetails {
 	return &ErrorDetails{
 		Type:   "about:blank",
 		Title:  title,
-		Detail: detail,
-		Status: status, // ESTE TMP 
+		Detail: err.Error(),
+		Status: status, 
 	}
 }
 
-type HttpErrorDetails struct {
-    Type    string `json:"type"`
-    Title   string `json:"title"`
-    Detail string `json:"detail"`
-    Instance string `json:"instance"`
-    Status int `json:"status"`
-}
-
-func NewHttpErrorDetails(err *ErrorDetails, status int) *HttpErrorDetails {
-    return &HttpErrorDetails{
-        Type: err.Type,
-        Title: err.Title,
-        Detail: err.Detail,
-        Instance: err.Instance,
-        Status: status,
-    }
-}
 
 type ErrorDetailsWithParams struct {
 	Type     string       `json:"type"`
@@ -66,7 +42,8 @@ type ErrorDetailsWithParams struct {
 }
 
 func (e ErrorDetailsWithParams) Error() string {
-    return e.Detail
+    string := e.Title + " " + e.Detail
+    return string
 }
 
 type ErrorParam struct {
@@ -104,34 +81,21 @@ func parseParameters(err error) []ErrorParam {
 	return errors
 }
 
-func NewErrorDetailsWithParams(title string, detail string, status int, err error) *ErrorDetailsWithParams {
+func NewErrorDetailsWithParams(title string , status int, err error) *ErrorDetailsWithParams {
 	return &ErrorDetailsWithParams{
 		Type:   "about:blank",
 		Title:  title,
-		Detail: detail,
+		Detail: err.Error(),
 		Status: status,
 		Params: parseParameters(err),
 	}
 }
 
-func NewErrParsingRequest(err error) *ErrorDetailsWithParams {
-	errorDetails := NewErrorDetailsWithParams(
-		ErrParsingRequest.Title,
-		ErrParsingRequest.Detail,
-		ErrParsingRequest.Status,
-		err,
-	)
-	return errorDetails
+func AbortWithJsonErorr(c *gin.Context, err error){
+    errToSend := NewErrorDetailsWithParams("Error parsing request json", http.StatusBadRequest, err)
+    c.AbortWithError(errToSend.Status, errToSend)
 }
 
-func NewErrNotLogged() *ErrorDetails {
-	errNotLogged := NewErrorDetails(
-		"not logged",
-		"User is not logged",
-		http.StatusUnauthorized,
-	)
-	return errNotLogged
-}
 
 func SendError(c *gin.Context, err *ErrorDetails) {
 	err.Instance = c.Request.RequestURI

@@ -2,48 +2,29 @@ package service
 
 import (
 	"errors"
-
+    "fmt"
 	"github.com/google/uuid"
-
 	"github.com/betterreads/internal/domains/users/models"
 	rs "github.com/betterreads/internal/domains/users/repository"
 	"github.com/betterreads/internal/domains/users/utils"
 	"github.com/betterreads/internal/pkg/auth"
-	er "github.com/betterreads/internal/pkg/errors"
 )
 
-var (
-	ErrUsernameTaken = er.ErrorParam{
-		Name: "username",
-		Reason:  "username already taken",
-	}
 
-	ErrEmailTaken = er.ErrorParam {
-		Name: "email",
-		Reason: "email already taken",
-	}
-
-	ErrUserNotFound = errors.New("user not found")
-)
-
-type UsersService struct {
+type UsersServiceImpl struct {
 	rp rs.UsersDatabase
 }
 
-var (
-	ErrUsernameNotExists    = errors.New("username doesn't exist")
-	ErrWrongPassword        = errors.New("wrong password")
-)
 
-func NewUsersService(rp rs.UsersDatabase) *UsersService {
-	return &UsersService{
+
+func NewUsersServiceImpl(rp rs.UsersDatabase) UsersService{
+	return &UsersServiceImpl{
 		rp: rp,
 	}
 }
 
-
-func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error) {
-    if err := u.rp.CheckUserExists(user); err != nil {
+func (u *UsersServiceImpl) RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error) {
+    if err := u.rp.CheckUserExistsForRegister(user); err != nil {
 		if errors.Is(err, rs.ErrUsernameAlreadyTaken) {
 			return nil, ErrUsernameTaken	
 		} else if errors.Is(err, rs.ErrEmailAlreadyTaken) {
@@ -60,16 +41,19 @@ func (u *UsersService) RegisterFirstStep(user *models.UserStageRequest) (*models
 
 	userRecord, err := u.rp.CreateStageUser(user)
 	if err != nil {
-		return nil, err
+        return nil, fmt.Errorf("Error when creating stage user: %w",   err)
 	}
 
 	UserStageResponse := utils.MapUserStageRecordToUserStageResponse(userRecord)
 	return UserStageResponse, nil
 }
 
-func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest, id uuid.UUID) (*models.UserResponse, error) {
+func (u *UsersServiceImpl)  RegisterSecondStep(user *models.UserAdditionalRequest, id uuid.UUID) (*models.UserResponse, error) {
     UserRecord, err := u.rp.JoinAndCreateUser(user, id)
     if err != nil {
+        if errors.Is(err, rs.ErrUserStageNotFound) {
+            return nil, ErrUserNotFound
+        }
         return nil, err
     }
 
@@ -77,10 +61,13 @@ func (u *UsersService)  RegisterSecondStep(user *models.UserAdditionalRequest, i
     return UserResponse, nil
 }
 
-func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserResponse, string, error) {
+func (u *UsersServiceImpl) LogInUser(user *models.UserLoginRequest) (*models.UserResponse, string, error) {
 	userRecord, err := u.rp.GetUserByUsername(user.Username)
 	if err != nil {
-		return nil,"", ErrUsernameNotExists
+        if errors.Is(err, rs.ErrUserNotFound) {
+            return nil,"", ErrUsernameNotFound
+        }
+		return nil,"", err
 	}
 
 	if !auth.VerifyPassword(userRecord.Password, user.Password) {
@@ -95,26 +82,24 @@ func (u *UsersService) LogInUser(user *models.UserLoginRequest) (*models.UserRes
 	return userResponse, token, nil
 }
 
-func (u *UsersService) GetUsers() ([]*models.UserResponse, error) {
+func (u *UsersServiceImpl) GetUsers() ([]*models.UserResponse, error) {
 	users, err := u.rp.GetUsers()
 	if err != nil {
 		return nil, err
 	}
 
-	UserResponses, err := utils.MapUsersRecordToUsersResponses(users)
-	if err != nil {
-		return nil, err
-	}
+	UserResponses:= utils.MapUsersRecordToUsersResponses(users)
 
 	return UserResponses, nil
 }
 
-
-
-func (u *UsersService) GetUser(id uuid.UUID) (*models.UserResponse, error) {
+func (u *UsersServiceImpl) GetUser(id uuid.UUID) (*models.UserResponse, error) {
 	user, err := u.rp.GetUser(id)
 	if err != nil {
-		return nil, rs.ErrUserNotFound
+        if errors.Is(err, rs.ErrUserNotFound) {
+            return nil, ErrUserNotFound
+        }
+		return nil, err
 	}
 
 	UserResponse := utils.MapUserRecordToUserResponse(user)
@@ -122,20 +107,30 @@ func (u *UsersService) GetUser(id uuid.UUID) (*models.UserResponse, error) {
 	return UserResponse, nil
 }
 
-func (u *UsersService) PostUserPicture(id uuid.UUID, picture models.UserPictureRequest) error{
+func (u *UsersServiceImpl) PostUserPicture(id uuid.UUID, picture models.UserPictureRequest) error{
+    exists := u.rp.CheckUserExists(id)
+    if !exists {
+        return ErrUserNotFound
+    }
+
     err := u.rp.SaveUserPicture(id, picture.Picture)
     if err != nil {
+        if errors.Is(err, rs.ErrUserNotFound) {
+            return ErrUserNotFound // to be sure
+        }
         return err
     }
     return nil
 }
 
-func (u *UsersService) GetUserPicture(id uuid.UUID) ([]byte, error) {
+func (u *UsersServiceImpl) GetUserPicture(id uuid.UUID) ([]byte, error) {
+    exists := u.rp.CheckUserExists(id)
+    if !exists {
+        return nil, ErrUserNotFound
+    }
+
     picture, err := u.rp.GetUserPicture(id)
     if err != nil {
-		if errors.Is(err, rs.ErrUserNotFound) {
-			return nil, ErrUserNotFound
-		}
         return nil, err
     }
     return picture, nil

@@ -14,10 +14,10 @@ import (
 )
 
 type UsersController struct {
-	us *service.UsersService
+	us service.UsersService
 }
 
-func NewUsersController(us *service.UsersService) *UsersController {
+func NewUsersController(us service.UsersService) *UsersController {
 	return &UsersController{
 		us: us,
 	}
@@ -34,7 +34,7 @@ func NewUsersController(us *service.UsersService) *UsersController {
 func (u *UsersController) GetUsers(c *gin.Context) {
 	Users, err := u.us.GetUsers()
 	if err != nil {
-        err := er.NewErrFetchUsers(err)
+        err := er.NewErrorDetails("Error when getting users", err, http.StatusInternalServerError)
         c.AbortWithError(err.Status, err)
         return
 	}
@@ -52,19 +52,22 @@ func (u *UsersController) GetUsers(c *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
 func (u *UsersController) GetUser(c *gin.Context) {
-	id := c.Param("id")
-	uuid, err := uuid.Parse(id)
+	uuid, err := parseUserId(c)
 	if err != nil {
-        err := er.NewErrInvalidUserID(id)
-        c.AbortWithError(err.Status, err)
+        c.AbortWithError(http.StatusBadRequest, err)
         return
 	}
 
 	user, err := u.us.GetUser(uuid)
 
 	if err != nil {
-        err := er.NewErrUserNotFoundById(err)
-        c.AbortWithError(err.Status, err)
+        if errors.Is(err, service.ErrUserNotFound) {
+            errHttp := er.NewErrorDetails("Error when Getting user", err, http.StatusNotFound)
+            c.AbortWithError(errHttp.Status, err)
+        } else {
+            errHttp := er.NewErrorDetails("Error when Getting user", err, http.StatusInternalServerError)
+            c.AbortWithError(errHttp.Status, err)
+        }
 		return
 	}
 
@@ -85,19 +88,25 @@ func (u *UsersController) GetUser(c *gin.Context) {
 // @Router /users/login [post]
 func (u *UsersController) LogIn(c *gin.Context) {
 	var user *models.UserLoginRequest
-
+    
 	if err := c.ShouldBindJSON(&user); err != nil {
-        err := er.NewErrParsingRequest(err)
-        c.AbortWithError(err.Status, err)
+        er.AbortWithJsonErorr(c , err )
 		return
 	}
 
 	userResponse, token, err := u.us.LogInUser(user)
 
 	if err != nil {
-        err := er.NewErrLogInUser(err)
-        c.AbortWithError(err.Status, err)
-		return
+        if errors.Is(err, service.ErrUsernameNotFound) {
+            errDetails := er.NewErrorDetails("Error when logging in", err, http.StatusNotFound)
+            c.AbortWithError(errDetails.Status, errDetails)
+        } else if errors.Is(err, service.ErrWrongPassword) {
+            errDetails := er.NewErrorDetails("Error when logging in", err, http.StatusUnauthorized)
+            c.AbortWithError(errDetails.Status, errDetails)
+        } else {
+            errDetails := er.NewErrorDetails("Error when logging in", err, http.StatusInternalServerError)
+            c.AbortWithError(errDetails.Status, errDetails)
+        }
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -121,8 +130,7 @@ func (u *UsersController) LogIn(c *gin.Context) {
 func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 	var user *models.UserStageRequest
 	if err := c.ShouldBindJSON(&user); err != nil {
-        err := er.NewErrParsingRequest(err)
-        c.AbortWithError(err.Status, err)
+        er.AbortWithJsonErorr(c, err)
 		return
 	}
 
@@ -130,11 +138,11 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 
 	if err != nil {
         if errors.Is(err, service.ErrUsernameTaken) || errors.Is(err, service.ErrEmailTaken) {
-            err := er.NewErrUserNotUnique(err)
-            c.AbortWithError(err.Status, err)
+            errDetails := er.NewErrorDetailsWithParams("Error when registering user",  http.StatusBadRequest, err)
+            c.AbortWithError(errDetails.Status, errDetails)
         } else {
-            err := er.NewErrRegisterUser(err)
-            c.AbortWithError(err.Status, err)
+            errDetails := er.NewErrorDetails("Error when registering user", err, http.StatusInternalServerError)
+            c.AbortWithError(errDetails.Status, err)
         }
 		return
 	}
@@ -156,24 +164,27 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/register/{id}/additional-info [post]
 func (u *UsersController) RegisterSecondStep(c *gin.Context) {
-	id := c.Param("id")
-	uuid, err := uuid.Parse(id)
+	uuid, err := parseUserId(c)
 	if err != nil {
-        err := er.NewErrInvalidRegisterId(id)
-        c.AbortWithError(err.Status, err)
-		return
+        c.AbortWithError(http.StatusBadRequest, err)
+        return
 	}
+
 	var user *models.UserAdditionalRequest
 	if err := c.ShouldBindJSON(&user); err != nil {
-        err := er.NewErrParsingRequest(err)
-        c.AbortWithError(err.Status, err)
+        er.AbortWithJsonErorr(c , err)
 		return
 	}
 
 	userResponse, err := u.us.RegisterSecondStep(user, uuid)
 	if err != nil {
-        err := er.NewErrRegisterUser(err)
-        c.AbortWithError(err.Status, err)
+        if errors.Is(err, service.ErrUserNotFound) {
+            errDetails := er.NewErrorDetails("Error when registering user", err, http.StatusNotFound)
+            c.AbortWithError(errDetails.Status, err)
+        } else {
+            errDetails := er.NewErrorDetails("Error when registering user", err, http.StatusInternalServerError)
+            c.AbortWithError(errDetails.Status, err)
+        }
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
@@ -192,16 +203,17 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/picture [post]
 func (u *UsersController) PostPicture(c *gin.Context) {
-    user_id , err:= getLoggedUserId(c)
-    if err != nil {
-        err := er.NewErrNotLogged()
-        c.AbortWithError(err.Status, err)
-    }
+	user_id, err := parseUserId(c)
+	if err != nil {
+        c.AbortWithError(http.StatusBadRequest, err)
+        return
+	}
 
     file, _, err := c.Request.FormFile("file")
     if err != nil {
-        err := er.NewErrParsingPicture()
-        c.AbortWithError(err.Status, err)
+        errDetail := fmt.Errorf("Error when parsing picture: %w", err)
+        errDetails := er.NewErrorDetails("Failed to post picture", errDetail, http.StatusBadRequest)
+        c.AbortWithError(errDetails.Status, err)
         return 
     }
 
@@ -209,16 +221,23 @@ func (u *UsersController) PostPicture(c *gin.Context) {
 
     picture , err := io.ReadAll(file)
     if err != nil {
-        err := er.NewErrPostPicture()
-        c.AbortWithError(err.Status, err)
+        errDetail := fmt.Errorf("Error when parsing picture: %w", err)
+        errDetails := er.NewErrorDetails("Failed to post picture", errDetail, http.StatusInternalServerError)
+        c.AbortWithError(errDetails.Status, err)
         return
     }
     
     request := models.UserPictureRequest{ Picture: picture}
     err = u.us.PostUserPicture(user_id, request)
     if err != nil {
-        err := er.NewErrPostPicture() //User must exists because he's logged
-        c.AbortWithError(err.Status, err)
+        if errors.Is(err, service.ErrUserNotFound) {
+            errDetails := er.NewErrorDetails("Failed to post picture", err, http.StatusNotFound)
+            c.AbortWithError(errDetails.Status, err)
+        } else {
+            errDetails := er.NewErrorDetails("Failed to post picture", err, http.StatusInternalServerError)
+            c.AbortWithError(errDetails.Status, err)
+        }
+        return
     }
 
     c.JSON(http.StatusCreated, gin.H{})
@@ -235,29 +254,26 @@ func (u *UsersController) PostPicture(c *gin.Context) {
 // @Failure 404 {object} errors.ErrorDetails
 // @Router /users/{id}/picture [get]
 func (u *UsersController) GetPicture(c *gin.Context) {
-    id := c.Param("id")
-    uuid, err := uuid.Parse(id)
-    if err != nil {
-        err := er.NewErrInvalidUserID(id)
-        c.AbortWithError(err.Status, err)
+	user_id, err := parseUserId(c)
+	if err != nil {
+        c.AbortWithError(http.StatusBadRequest, err)
         return
-    }
-    base64Bytes, err := u.us.GetUserPicture(uuid)
+	}
+
+    base64Bytes, err := u.us.GetUserPicture(user_id)
     if err != nil {
         if errors.Is(err, service.ErrUserNotFound) {
-            err := er.NewErrUserNotFoundById(err)
-            c.AbortWithError(err.Status, err)
-            return
+            errDetails := er.NewErrorDetails("Failed to get user picture", err, http.StatusNotFound)
+            c.AbortWithError(errDetails.Status, err)
+        } else {
+            errDetails := er.NewErrorDetails("Failed to get user picture", err, http.StatusInternalServerError)
+            c.AbortWithError(errDetails.Status, err)
         }
-        err := er.NewErrGetPicture(err)
-        c.AbortWithError(err.Status, err)
         return
     }
 
     if base64Bytes == nil {
-        err := er.NewErrNoPictureUser()
-        c.AbortWithError(err.Status, err)
-        return
+        c.JSON(http.StatusNoContent, gin.H{})
     }
 
     c.Data(http.StatusOK, "image/jpeg", base64Bytes)
@@ -274,4 +290,15 @@ func getLoggedUserId(ctx *gin.Context) (uuid.UUID, error) {
 		return uuid.UUID{}, fmt.Errorf("invalid user id")
 	}
 	return userId, nil
+}
+
+// Returns the user id from the context. If the id is not a valid uuid it returns an errorDetails prepared to send.
+func parseUserId(ctx *gin.Context) (uuid.UUID, error) {
+    id := ctx.Param("id")
+    uuid, err := uuid.Parse(id)
+    if err != nil {
+        err_detail := fmt.Errorf("Invalid user id: %s", id)
+       return uuid,  er.NewErrorDetails("Error when getting user id", err_detail, http.StatusBadRequest)
+    }
+    return uuid, nil
 }

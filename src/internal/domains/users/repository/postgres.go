@@ -93,27 +93,25 @@ func (r *PostgresUserRepository) CreateStageUser(user *models.UserStageRequest) 
 	
     err := r.c.Get(userRecord, query, args...)
     if err != nil {
-        return nil, fmt.Errorf("failed to create user: %w", err)
+        return nil,  err
     }
     
 	return userRecord, nil
 }
 
-
-
 func (r *PostgresUserRepository) JoinAndCreateUser(userAdditional *models.UserAdditionalRequest, id uuid.UUID) (*models.UserRecord, error) {
 	user, err := r.GetStageUser(id)
 	if err != nil {
-		return nil, fmt.Errorf("failed joining: %w", err)
+		return nil, err
 	}
     userRecord, err := r.createUser(user, userAdditional)
     if err != nil {
-		return nil, fmt.Errorf("failed to create user: %w", err)
+		return nil, err
 	}
     
 
 	if err := r.deleteStageUser(id); err != nil {
-		return nil, fmt.Errorf("failed to delete stage user: %w", err)
+		return nil, err
 	}
 
 	return userRecord, nil
@@ -150,7 +148,7 @@ func (r *PostgresUserRepository) GetUser(id uuid.UUID) (*models.UserRecord, erro
 	query := `SELECT * FROM users WHERE id = $1;`
 	if err := r.c.Get(user, query, id); err != nil {
         if err == sql.ErrNoRows {
-            return nil, fmt.Errorf("user with id %s not found", id)
+            return nil, ErrUserNotFound
         }
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -162,7 +160,7 @@ func (r *PostgresUserRepository) GetStageUser(uuid uuid.UUID) (*models.UserStage
 	query := `SELECT * FROM registry WHERE id = $1;`
 	if err := r.c.Get(user, query, uuid); err != nil {
         if err == sql.ErrNoRows {
-            return nil, fmt.Errorf("user with id %s not found", uuid)
+            return nil, ErrUserStageNotFound
         }
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -170,22 +168,23 @@ func (r *PostgresUserRepository) GetStageUser(uuid uuid.UUID) (*models.UserStage
 }
 
 func (r *PostgresUserRepository) GetUsers() ([]*models.UserRecord, error) {
-	var users []*models.UserRecord
+    users := []*models.UserRecord{}
 	query := `SELECT * FROM users;`
 	if err := r.c.Select(&users, query); err != nil {
-        if err == sql.ErrNoRows {
-            return nil, fmt.Errorf("No users found")
+        if err != sql.ErrNoRows {
+            return nil, fmt.Errorf("failed to get users: %w", err)
         }
-		return nil, fmt.Errorf("failed to get users: %w", err)
 	}
 	return users, nil
 }
-
 
 func (r *PostgresUserRepository) GetUserByUsername(username string) (*models.UserRecord, error) {
     user := &models.UserRecord{}
 	query := `SELECT * FROM users WHERE username = $1;`
 	if err := r.c.Get(user, query, username); err != nil {
+        if err == sql.ErrNoRows {
+            return nil, ErrUserNotFound
+        }
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return user, nil
@@ -195,6 +194,9 @@ func (r *PostgresUserRepository) GetUserByEmail(email string) (*models.UserRecor
     user := &models.UserRecord{}
 	query := `SELECT * FROM users WHERE email = $1;`
 	if err := r.c.Get(user, query, email); err != nil {
+        if err == sql.ErrNoRows {
+            return nil, ErrUserNotFound
+        }
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return user, nil
@@ -205,7 +207,7 @@ func (r *PostgresUserRepository) GetUserPicture(id uuid.UUID) ([]byte, error) {
 	query := `SELECT picture FROM pictures_users WHERE user_id= $1;`
 	if err := r.c.Get(&picture, query, id); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, ErrUserNotFound 
+			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -216,6 +218,9 @@ func (r *PostgresUserRepository) SaveUserPicture(id uuid.UUID, picture []byte) e
     exists := false
     query := `SELECT EXISTS(SELECT 1 FROM pictures_users WHERE user_id = $1);`
     if err := r.c.Get(&exists, query, id); err != nil {
+        if err == sql.ErrNoRows {
+            return ErrUserNotFound
+        }
         return fmt.Errorf("failed to check if user picture exists: %w", err)
     }
 
@@ -232,8 +237,7 @@ func (r *PostgresUserRepository) SaveUserPicture(id uuid.UUID, picture []byte) e
     return nil
 }
 
-
-func (r *PostgresUserRepository) CheckUserExists(user *models.UserStageRequest) error {
+func (r *PostgresUserRepository) CheckUserExistsForRegister(user *models.UserStageRequest) error {
     result_registry_email, result_registry_username , err:= r.checkUserExistsInTable(user , "registry")
     if err != nil {
         return  fmt.Errorf("failed to check user exists in user table: %w", err)
@@ -256,7 +260,6 @@ func (r *PostgresUserRepository) CheckUserExists(user *models.UserStageRequest) 
     return nil 
 }
     
-
 func (r *PostgresUserRepository) checkUserExistsInTable(user *models.UserStageRequest, table string) (bool, bool, error) {
     result_email := false
     result_username := false
@@ -278,3 +281,11 @@ func (r *PostgresUserRepository) checkUserExistsInTable(user *models.UserStageRe
     return result_email, result_username, nil
 }
 
+func (r *PostgresUserRepository) CheckUserExists(id uuid.UUID) bool {
+    exists := false
+    query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1);`
+    if err := r.c.Get(&exists, query, id); err != nil {
+        return false
+    }
+    return exists
+}

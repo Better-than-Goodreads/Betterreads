@@ -109,7 +109,7 @@ func (r *PostgresBookRepository) SaveBook(book *models.NewBookRequest, author uu
 	for _, genre := range book.Genres {
 		genreid, err := getGenreById(genre)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create book: %w", err)
+			return nil, ErrGenreNotFound
 		}
 		args = []interface{}{bookRecord.Id, genreid}
 		if _, err := r.c.Exec(query, args...); err != nil {
@@ -178,6 +178,9 @@ func (r *PostgresBookRepository) GetBooksByName(name string) ([]*models.Book, er
     books := &[]*models.BookDb{}
     query := `SELECT * FROM books WHERE LOWER(title) LIKE LOWER('%'||$1||'%');`
     if err := r.c.Select(books, query, name); err != nil {
+        if err != sql.ErrNoRows {
+            return []*models.Book{}, nil
+        }
         return nil, fmt.Errorf("failed to get book: %w", err)
     }
     res := []*models.Book{}
@@ -196,7 +199,7 @@ func (r *PostgresBookRepository) GetBookPictureById(id uuid.UUID) ([]byte, error
 	query := `SELECT picture FROM pictures WHERE book_id = $1;`
 	if err := r.c.Get(&picture, query, id); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, ErrBookNotFound
+			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
@@ -224,17 +227,8 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
 }
 
 func (r *PostgresBookRepository) GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error) {
-	var authorName string
-	query := `SELECT username FROM users WHERE id = $1;`
-	if err := r.c.Get(&authorName, query, authorId); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrAuthorNotFound
-		}
-		return nil, fmt.Errorf("failed to get author: %w", err)
-	}
-
 	var books []*models.BookDb
-	query = `SELECT * FROM books WHERE author = $1;`
+    query := `SELECT * FROM books WHERE author = $1;`
 	if err := r.c.Select(&books, query, authorId); err != nil {
 		if err == sql.ErrNoRows {
 			return []*models.Book{}, nil
@@ -285,27 +279,6 @@ func (r *PostgresBookRepository) UpdateRating(bookId uuid.UUID, userId uuid.UUID
     return nil
 }
 
-
-
-// func (r *PostgresBookRepository) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
-// 	exists, err := r.checkIfRatingExists(bookId, userId)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to check rating: %w", err)
-// 	}
-
-// 	if exists {
-// 		query := `DELETE FROM ratings WHERE user_id = $1 AND book_id = $2;`
-
-// 		if _, err := r.c.Exec(query, userId, bookId); err != nil {
-// 			return fmt.Errorf("failed to delete rating: %w", err)
-// 		}
-
-// 		return nil
-// 	} else {
-// 		return ErrRatingNotFound
-// 	}
-// }
-
 func (r *PostgresBookRepository) GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error) {
 	var ratings models.ReviewDb
 	query := `SELECT * FROM reviews WHERE book_id = $1 AND user_id = $2;`
@@ -313,7 +286,7 @@ func (r *PostgresBookRepository) GetBookReviewOfUser(bookId uuid.UUID, userId uu
 
 	if err := r.c.Get(&ratings, query, args...); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, ErrRatingNotFound
+			return nil, ErrReviewNotFound
 		}
 		return nil, fmt.Errorf("failed to get ratings: %w", err)
 	}
@@ -337,6 +310,9 @@ func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*model
 	reviews := &[]*models.ReviewDb{}
 	query = `SELECT * FROM reviews WHERE user_id = $1;`
 	if err := r.c.Select(reviews, query, userId); err != nil {
+        if err == sql.ErrNoRows {
+            return []*models.Review{}, nil
+        }
 		return nil, fmt.Errorf("failed to get reviews: %w", err)
 	}
 	res := []*models.Review{}
@@ -358,13 +334,12 @@ func (r *PostgresBookRepository) GetAuthorName(authorId uuid.UUID) (string, erro
 	query := `SELECT username FROM users WHERE id = $1;`
 	if err := r.c.Get(&authorName, query, authorId); err != nil {
 		if err == sql.ErrNoRows {
-			return "", fmt.Errorf("author with id %s not found", authorId)
+			return "", ErrAuthorNotFound
 		}
 		return "", fmt.Errorf("failed to get author: %w", err)
 	}
 	return authorName, nil
 }
-
 
 func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error {
     args := []interface{}{userId, bookId}
@@ -378,7 +353,6 @@ func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, r
     return nil
 }
 
-
 func (r *PostgresBookRepository) EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) error{
     fmt.Println("edit review")
     query := `UPDATE reviews SET review = $1, rating = $2 WHERE book_id = $3 AND user_id = $4;`
@@ -389,10 +363,8 @@ func (r *PostgresBookRepository) EditReview(bookId uuid.UUID, userId uuid.UUID, 
     return nil
 }
 
-
-
 func (r *PostgresBookRepository) DeleteReview(bookId uuid.UUID, userId uuid.UUID) error {
-    return nil
+    return nil //lol
 }
 
 func (r *PostgresBookRepository) CheckifReviewExists(bookId uuid.UUID, userId uuid.UUID) (bool, error) {
@@ -413,11 +385,13 @@ func (r *PostgresBookRepository) CheckifReviewExists(bookId uuid.UUID, userId uu
     return true, nil
 }
 
-
 func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.Review, error){
     reviews := &[]*models.ReviewDb{}
     query := `SELECT * FROM reviews WHERE book_id = $1;`
     if err := r.c.Select(reviews, query, bookID); err != nil {
+        if err == sql.ErrNoRows {
+            return []*models.Review{}, nil
+        }
         return nil, fmt.Errorf("failed to get reviews: %w", err)
     }
     res := []*models.Review{}
@@ -434,7 +408,6 @@ func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.Rev
     return res, nil
 }
 
-
 func (r *PostgresBookRepository) getBookInfo(book *models.BookDb) (*models.Book, error) {
     genres, err := r.getGenresForBook(book.Id)
     if err != nil {
@@ -449,12 +422,19 @@ func (r *PostgresBookRepository) getBookInfo(book *models.BookDb) (*models.Book,
     return utils.MapBookDbToBook(book, genres, ratings), nil
 }
 
-
-
 func (r *PostgresBookRepository) CheckIfBookExists(bookId uuid.UUID) bool{
     exists := false
     query := `SELECT EXISTS(SELECT 1 FROM books WHERE id = $1);`
     if err := r.c.Get(&exists, query, bookId); err != nil {
+        return false
+    }
+    return exists
+}
+
+func (r *PostgresBookRepository) CheckIfAuthorExists(authorId uuid.UUID) bool {
+    exists := false
+    query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1);`
+    if err := r.c.Get(&exists, query, authorId); err != nil {
         return false
     }
     return exists

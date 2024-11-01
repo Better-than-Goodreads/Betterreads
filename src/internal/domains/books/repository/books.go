@@ -63,6 +63,7 @@ type BooksDatabase interface {
 	// DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
 
     GetAuthorName(id uuid.UUID) (string, error)
+    CheckIfAuthorExists(authorId uuid.UUID) bool
 
     AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error
     CheckifReviewExists(bookId uuid.UUID, userId uuid.UUID) (bool, error)

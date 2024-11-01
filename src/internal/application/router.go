@@ -94,7 +94,7 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 	if err != nil {
 		log.Fatalf("can't create db: %v", err)
 	}
-	us := usersService.NewUsersService(userRepo)
+	us := usersService.NewUsersServiceImpl(userRepo)
 	uc := usersController.NewUsersController(us)
 
 	public := r.engine.Group("/users")
@@ -119,7 +119,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) {
 	if err != nil {
 		fmt.Println("error: %w", err)
 	}
-	bs := booksService.NewBooksService(booksRepo)
+	bs := booksService.NewBooksServiceImpl(booksRepo)
 	bc := booksController.NewBooksController(bs)
 
 	public := r.engine.Group("/books")
