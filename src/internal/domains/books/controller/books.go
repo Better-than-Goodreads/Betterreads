@@ -92,7 +92,7 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 	bookId := ctx.Param("id")
 	bookUuid, err := uuid.Parse(bookId)
 	if err != nil {
-        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %w", bookId), http.StatusBadRequest)
+        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %s", bookId), http.StatusBadRequest)
 		ctx.AbortWithError(errDetails.Status, errDetails)
 		return
 	}
@@ -147,7 +147,7 @@ func (bc *BooksController) GetBooksOfAuthor(ctx *gin.Context) {
 
 	authorId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-        errDetail := er.NewErrorDetails("Error when getting Author id", fmt.Errorf("Invalid uuid %w", ctx.Param("id")), http.StatusBadRequest)
+        errDetail := er.NewErrorDetails("Error when getting Author id", fmt.Errorf("Invalid uuid %s", ctx.Param("id")), http.StatusBadRequest)
 		ctx.AbortWithError(errDetail.Status, errDetail)
 		return
 	}
@@ -180,7 +180,7 @@ func (bc *BooksController) GetBookPicture(ctx *gin.Context) {
 	id := ctx.Param("id")
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid id %w", id), http.StatusBadRequest)
+        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid id %s", id), http.StatusBadRequest)
         ctx.AbortWithError(errDetails.Status, errDetails)
         return
 	}
@@ -251,7 +251,7 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 
 	bookId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %w", ctx.Param("id")), http.StatusBadRequest)
+        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %s", ctx.Param("id")), http.StatusBadRequest)
         ctx.AbortWithError(errDetails.Status, errDetails)
 		return
 	}
@@ -309,7 +309,7 @@ func (bc *BooksController) UpdateRatingOfBook(ctx *gin.Context){
 
 	bookId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %w", ctx.Param("id")), http.StatusBadRequest)
+        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %s", ctx.Param("id")), http.StatusBadRequest)
         ctx.AbortWithError(errDetails.Status, errDetails)
 		return
 	}
@@ -352,7 +352,7 @@ func (bc *BooksController) ReviewBook(ctx *gin.Context) {
 
 	bookId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %w", ctx.Param("id")), http.StatusBadRequest)
+        errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %s", ctx.Param("id")), http.StatusBadRequest)
 		ctx.AbortWithError(errDetails.Status, errDetails)
 		return
 	}
