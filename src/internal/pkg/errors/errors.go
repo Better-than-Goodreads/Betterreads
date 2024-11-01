@@ -85,7 +85,7 @@ func NewErrorDetailsWithParams(title string , status int, err error) *ErrorDetai
 	return &ErrorDetailsWithParams{
 		Type:   "about:blank",
 		Title:  title,
-		Detail: err.Error(),
+		Detail: "Invalid request parameters",
 		Status: status,
 		Params: parseParameters(err),
 	}

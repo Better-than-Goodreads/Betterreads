@@ -63,10 +63,10 @@ func (u *UsersController) GetUser(c *gin.Context) {
 	if err != nil {
         if errors.Is(err, service.ErrUserNotFound) {
             errHttp := er.NewErrorDetails("Error when Getting user", err, http.StatusNotFound)
-            c.AbortWithError(errHttp.Status, err)
+            c.AbortWithError(errHttp.Status, errHttp)
         } else {
             errHttp := er.NewErrorDetails("Error when Getting user", err, http.StatusInternalServerError)
-            c.AbortWithError(errHttp.Status, err)
+            c.AbortWithError(errHttp.Status, errHttp)
         }
 		return
 	}
@@ -142,7 +142,7 @@ func (u *UsersController) RegisterFirstStep(c *gin.Context) {
             c.AbortWithError(errDetails.Status, errDetails)
         } else {
             errDetails := er.NewErrorDetails("Error when registering user", err, http.StatusInternalServerError)
-            c.AbortWithError(errDetails.Status, err)
+            c.AbortWithError(errDetails.Status, errDetails)
         }
 		return
 	}
@@ -180,10 +180,10 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
 	if err != nil {
         if errors.Is(err, service.ErrUserNotFound) {
             errDetails := er.NewErrorDetails("Error when registering user", err, http.StatusNotFound)
-            c.AbortWithError(errDetails.Status, err)
+            c.AbortWithError(errDetails.Status, errDetails)
         } else {
             errDetails := er.NewErrorDetails("Error when registering user", err, http.StatusInternalServerError)
-            c.AbortWithError(errDetails.Status, err)
+            c.AbortWithError(errDetails.Status, errDetails)
         }
 		return
 	}
@@ -203,7 +203,7 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/picture [post]
 func (u *UsersController) PostPicture(c *gin.Context) {
-	user_id, err := parseUserId(c)
+	user_id, err := getLoggedUserId(c)
 	if err != nil {
         c.AbortWithError(http.StatusBadRequest, err)
         return
@@ -213,7 +213,7 @@ func (u *UsersController) PostPicture(c *gin.Context) {
     if err != nil {
         errDetail := fmt.Errorf("Error when parsing picture: %w", err)
         errDetails := er.NewErrorDetails("Failed to post picture", errDetail, http.StatusBadRequest)
-        c.AbortWithError(errDetails.Status, err)
+        c.AbortWithError(errDetails.Status, errDetails)
         return 
     }
 
@@ -223,7 +223,7 @@ func (u *UsersController) PostPicture(c *gin.Context) {
     if err != nil {
         errDetail := fmt.Errorf("Error when parsing picture: %w", err)
         errDetails := er.NewErrorDetails("Failed to post picture", errDetail, http.StatusInternalServerError)
-        c.AbortWithError(errDetails.Status, err)
+        c.AbortWithError(errDetails.Status, errDetails)
         return
     }
     
@@ -232,10 +232,10 @@ func (u *UsersController) PostPicture(c *gin.Context) {
     if err != nil {
         if errors.Is(err, service.ErrUserNotFound) {
             errDetails := er.NewErrorDetails("Failed to post picture", err, http.StatusNotFound)
-            c.AbortWithError(errDetails.Status, err)
+            c.AbortWithError(errDetails.Status, errDetails)
         } else {
             errDetails := er.NewErrorDetails("Failed to post picture", err, http.StatusInternalServerError)
-            c.AbortWithError(errDetails.Status, err)
+            c.AbortWithError(errDetails.Status, errDetails)
         }
         return
     }
@@ -264,10 +264,10 @@ func (u *UsersController) GetPicture(c *gin.Context) {
     if err != nil {
         if errors.Is(err, service.ErrUserNotFound) {
             errDetails := er.NewErrorDetails("Failed to get user picture", err, http.StatusNotFound)
-            c.AbortWithError(errDetails.Status, err)
+            c.AbortWithError(errDetails.Status, errDetails)
         } else {
             errDetails := er.NewErrorDetails("Failed to get user picture", err, http.StatusInternalServerError)
-            c.AbortWithError(errDetails.Status, err)
+            c.AbortWithError(errDetails.Status, errDetails)
         }
         return
     }
@@ -283,11 +283,13 @@ func (u *UsersController) GetPicture(c *gin.Context) {
 func getLoggedUserId(ctx *gin.Context) (uuid.UUID, error) {
 	_userId := ctx.GetString("userId")
 	if _userId == "" {
-		return uuid.UUID{}, fmt.Errorf("user not logged")
+        error := er.NewErrorDetails("Error when getting user id", fmt.Errorf("user not logged"), http.StatusBadRequest)
+		return uuid.UUID{}, error
 	}
 	userId, err := uuid.Parse(_userId)
 	if err != nil {
-		return uuid.UUID{}, fmt.Errorf("invalid user id")
+        error := er.NewErrorDetails("Error when getting user id", fmt.Errorf("user not logged"), http.StatusBadRequest)
+		return uuid.UUID{}, error
 	}
 	return userId, nil
 }

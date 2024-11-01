@@ -127,7 +127,7 @@ func (bs *BooksServiceImpl) mapBookToBookResponseWithReview(book *models.Book, u
     if userId != uuid.Nil {
         bookRes.Review, err = bs.booksRepository.GetBookReviewOfUser(book.Id, userId)
         if err != nil {
-            if errors.Is(err, repository.ErrRatingNotFound) {
+            if errors.Is(err, repository.ErrReviewNotFound) {
                 bookRes.Review = nil
             } else {
                 return nil, err
