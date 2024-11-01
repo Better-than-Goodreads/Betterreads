@@ -75,6 +75,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/books/author/{id}": {
+            "get": {
+                "description": "Get the books of an author, if no books found returns an empty array",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Get books of an auther",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Author Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.BookResponseWithReview"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
         "/books/info": {
             "get": {
                 "description": "Get all books",
@@ -140,6 +178,50 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/user/{id}/reviews": {
+            "get": {
+                "description": "Get all reviews of a user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Gets all reviews of a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User Id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ReviewOfUser"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
                         }
                     }
                 }
@@ -359,7 +441,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Review"
+                                "$ref": "#/definitions/models.ReviewOfBook"
                             }
                         }
                     },
@@ -799,6 +881,9 @@ const docTemplate = `{
                 "author": {
                     "type": "string"
                 },
+                "author_name": {
+                    "type": "string"
+                },
                 "avg_rating": {
                     "type": "number"
                 },
@@ -945,6 +1030,40 @@ const docTemplate = `{
         "models.Review": {
             "type": "object",
             "properties": {
+                "rating": {
+                    "type": "integer"
+                },
+                "review": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ReviewOfBook": {
+            "type": "object",
+            "properties": {
+                "rating": {
+                    "type": "integer"
+                },
+                "review": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ReviewOfUser": {
+            "type": "object",
+            "properties": {
+                "book_id": {
+                    "type": "string"
+                },
+                "book_title": {
+                    "type": "string"
+                },
                 "rating": {
                     "type": "integer"
                 },

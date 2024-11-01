@@ -46,8 +46,8 @@ type BooksService interface {
     GetBooksInfo(userId uuid.UUID) ([]*models.BookResponseWithReview, error)
     RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmount int) (*models.Rating, error)
     UpdateRating(bookId uuid.UUID, userId uuid.UUID, rateAmount int) (error)
-    GetBookReviews(bookId uuid.UUID) ([]*models.Review, error)
-    GetAllReviewsOfUser(userId uuid.UUID) ([]*models.Review, error)
+    GetBookReviews(bookId uuid.UUID) ([]*models.ReviewOfBook, error)
+    GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error)
     AddReview(bookId uuid.UUID, userId uuid.UUID, review models.NewReviewRequest) error
 }
 

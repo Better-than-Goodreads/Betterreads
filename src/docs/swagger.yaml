@@ -44,6 +44,8 @@ definitions:
         type: integer
       author:
         type: string
+      author_name:
+        type: string
       avg_rating:
         type: number
       description:
@@ -150,6 +152,28 @@ definitions:
     type: object
   models.Review:
     properties:
+      rating:
+        type: integer
+      review:
+        type: string
+    type: object
+  models.ReviewOfBook:
+    properties:
+      rating:
+        type: integer
+      review:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.ReviewOfUser:
+    properties:
+      book_id:
+        type: string
+      book_title:
+        type: string
       rating:
         type: integer
       review:
@@ -425,7 +449,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Review'
+              $ref: '#/definitions/models.ReviewOfBook'
             type: array
         "400":
           description: Bad Request
@@ -472,6 +496,32 @@ paths:
       summary: Add review to a book
       tags:
       - books
+  /books/author/{id}:
+    get:
+      description: Get the books of an author, if no books found returns an empty
+        array
+      parameters:
+      - description: Author Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookResponseWithReview'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get books of an auther
+      tags:
+      - books
   /books/info:
     get:
       consumes:
@@ -516,6 +566,35 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Get books by name
+      tags:
+      - books
+  /books/user/{id}/reviews:
+    get:
+      description: Get all reviews of a user
+      parameters:
+      - description: User Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ReviewOfUser'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+      summary: Gets all reviews of a user
       tags:
       - books
   /users:

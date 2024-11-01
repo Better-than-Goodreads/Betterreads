@@ -92,6 +92,20 @@ type BookResponse struct {
 	Id              uuid.UUID `json:"id"`
 }
 
+type ReviewOfUser struct {
+    BookTitle string `json:"book_title" db:"book_title"`
+    Review string `json:"review" db:"review"`
+    BookId uuid.UUID `json:"book_id" db:"book_id"`
+    Rating int `json:"rating" db:"rating"`
+}
+
+type ReviewOfBook struct {
+    Username string `json:"username" db:"username"`
+    Review string `json:"review" db:"review"`
+    UserId uuid.UUID `json:"user_id" db:"user_id"`
+    Rating int `json:"rating" db:"rating"`
+}
+
 
 type BookResponseWithReview struct {
     Book *BookResponse      `json:"book"`

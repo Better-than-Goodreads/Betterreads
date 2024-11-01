@@ -388,7 +388,7 @@ func (bc *BooksController) ReviewBook(ctx *gin.Context) {
 // @Tags books
 // @Param id path string true "Book Id"
 // @Produce  json
-// @Success 200 {object} []models.Review
+// @Success 200 {object} []models.ReviewOfBook
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetailsWithParams
 // @router /books/{id}/review [get]
@@ -420,7 +420,7 @@ func (bc *BooksController) GetBookReviews (ctx *gin.Context) {
 // @Tags books
 // @Param id path string true "User Id"
 // @Produce  json
-// @Success 200 {object} []models.Review
+// @Success 200 {object} []models.ReviewOfUser
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetailsWithParams
 // @router /books/user/{id}/reviews [get]

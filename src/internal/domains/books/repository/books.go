@@ -46,30 +46,26 @@ var (
 )
 
 type BooksDatabase interface {
+
 	SaveBook(*models.NewBookRequest, uuid.UUID)(*models.Book, error)
 	GetBookById(id uuid.UUID) (*models.Book, error)
     GetBookPictureById(id uuid.UUID) ([]byte, error)
     GetBooks() ([]*models.Book, error)
-
-    // GetBooksOfAuthor returns all books of an author, if it doesn't exist returns ErrAuthorNotFound
     GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error)
     GetBooksByName(name string) ([]*models.Book, error)
+
     CheckIfBookExists(bookId uuid.UUID) bool
-    // RATE
+    CheckIfAuthorExists(authorId uuid.UUID) bool
+
 	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) (*models.Rating, error)
     UpdateRating(bookId uuid.UUID, userId uuid.UUID, rating int) (error)
     CheckIfRatingExists(bookId uuid.UUID, userId uuid.UUID) (bool, error)
-    GetBookReviews(bookID uuid.UUID) ([]*models.Review, error)
-	// DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
-
-    CheckIfAuthorExists(authorId uuid.UUID) bool
-
+    
     AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error
     CheckifReviewExists(bookId uuid.UUID, userId uuid.UUID) (bool, error)
+    GetBookReviews(bookID uuid.UUID) ([]*models.ReviewOfBook, error)
 	GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error)
-
-    // GetAllReviewsOfUser returns all reviews of a user, if it doesn't exist returns ErrUserNotFound
-    GetAllReviewsOfUser(userId uuid.UUID) ([]*models.Review, error)
+    GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error)
     EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) (error)
 }
 

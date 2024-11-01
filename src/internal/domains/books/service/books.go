@@ -187,7 +187,7 @@ func (bs *BooksServiceImpl) UpdateRating(bookId uuid.UUID, userId uuid.UUID, rat
     return nil
 }
 
-func (bs *BooksServiceImpl) GetBookReviews(bookId uuid.UUID) ([]*models.Review, error){
+func (bs *BooksServiceImpl) GetBookReviews(bookId uuid.UUID) ([]*models.ReviewOfBook, error){
     reviews, err := bs.booksRepository.GetBookReviews(bookId)
     if err != nil {
         return nil, err
@@ -195,7 +195,7 @@ func (bs *BooksServiceImpl) GetBookReviews(bookId uuid.UUID) ([]*models.Review, 
     return reviews, nil
 }
 
-func (bs *BooksServiceImpl) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.Review, error){
+func (bs *BooksServiceImpl) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error){
 	reviews, err := bs.booksRepository.GetAllReviewsOfUser(userId)
 	if err != nil {
 		if errors.Is(err, repository.ErrUserNotFound) {

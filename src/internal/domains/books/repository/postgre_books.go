@@ -303,7 +303,7 @@ func (r *PostgresBookRepository) GetBookReviewOfUser(bookId uuid.UUID, userId uu
 	return ReviewRes, nil
 }
 
-func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.Review, error) {
+func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error) {
 	var username string
 	query := `SELECT username FROM users WHERE id = $1;`
 	if err := r.c.Get(&username, query, userId); err != nil {
@@ -312,27 +312,22 @@ func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*model
 		}
 		return nil, fmt.Errorf("failed to get author: %w", err)
 	}
-	
-	reviews := &[]*models.ReviewDb{}
-	query = `SELECT * FROM reviews WHERE user_id = $1;`
-	if err := r.c.Select(reviews, query, userId); err != nil {
+
+    res := []*models.ReviewOfUser{}  
+    query = `
+        SELECT b.title AS book_title, r.review,b.id as book_id, r.rating
+        FROM reviews r
+        INNER JOIN books b ON r.book_id = b.id
+        WHERE r.user_id = $1;
+    `
+    if err := r.c.Select(&res, query, userId); err != nil {
         if err == sql.ErrNoRows {
-            return []*models.Review{}, nil
+            return []*models.ReviewOfUser{}, nil
         }
-		return nil, fmt.Errorf("failed to get reviews: %w", err)
-	}
-	res := []*models.Review{}
-	for _, review := range *reviews {
-		if review.Review == "" {
-			continue
-		}
-		reviewRes := &models.Review{
-			Text: review.Review,
-			Rating: review.Rating,
-		}
-		res = append(res, reviewRes)
-	}
-	return res, nil
+        return nil, fmt.Errorf("failed to get reviews: %w", err)
+    }
+
+    return res, nil
 }
 
 func (r *PostgresBookRepository) getAuthorName(authorId uuid.UUID) (string, error) {
@@ -391,28 +386,25 @@ func (r *PostgresBookRepository) CheckifReviewExists(bookId uuid.UUID, userId uu
     return true, nil
 }
 
-func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.Review, error){
-    reviews := &[]*models.ReviewDb{}
-    query := `SELECT * FROM reviews WHERE book_id = $1;`
-    if err := r.c.Select(reviews, query, bookID); err != nil {
+func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.ReviewOfBook, error){
+    res := []*models.ReviewOfBook{}
+    query := `
+        SELECT u.username, r.review, u.id AS user_id, r.rating
+        FROM reviews r
+        INNER JOIN users u ON r.user_id = u.id
+        WHERE r.book_id = $1;
+    `
+
+    if err := r.c.Select(&res, query, bookID); err != nil {
         if err == sql.ErrNoRows {
-            return []*models.Review{}, nil
+            return []*models.ReviewOfBook{}, nil
         }
         return nil, fmt.Errorf("failed to get reviews: %w", err)
     }
-    res := []*models.Review{}
-    for _, review := range *reviews {
-        if review.Review == "" {
-            continue
-        }
-        reviewRes := &models.Review{
-            Text: review.Review,
-            Rating: review.Rating,
-        }
-        res = append(res, reviewRes)
-    }
+
     return res, nil
 }
+
 
 func (r *PostgresBookRepository) getBookInfo(book *models.BookDb) (*models.Book, error) {
     genres, err := r.getGenresForBook(book.Id)
