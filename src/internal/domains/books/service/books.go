@@ -41,7 +41,7 @@ func (bs *BooksServiceImpl) PublishBook(req *models.NewBookRequest, author uuid.
 	}
 
 
-    res := utils.MapBookToBookResponse(book, book.AuthorName)
+    res := utils.MapBookToBookResponse(book)
 
 	return res, nil
 }
@@ -154,7 +154,7 @@ func (bs *BooksServiceImpl) mapBookToBookResponseWithReview(book *models.Book, u
         }
     }
 
-    bookRes.Book = utils.MapBookToBookResponse(book, book.AuthorName)
+    bookRes.Book = utils.MapBookToBookResponse(book)
 
     return bookRes, nil
 }

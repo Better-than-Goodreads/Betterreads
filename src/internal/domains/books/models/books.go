@@ -81,7 +81,8 @@ type NewReviewRequest struct {
 // RESPONSES
 type BookResponse struct {
 	Title           string    `json:"title"`
-	Author          string    `json:"author"`
+    Author          uuid.UUID   `json:"author_id"`
+	AuthorName          string    `json:"author_name"`
 	Description     string    `json:"description"`
 	PublicationDate string    `json:"publication_date"`
 	Language        string    `json:"language"`

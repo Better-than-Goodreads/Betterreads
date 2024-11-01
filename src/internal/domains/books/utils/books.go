@@ -20,10 +20,11 @@ func MapBookRequestToBookRecord(req *models.NewBookRequest, id uuid.UUID, author
 }
 
 
-func MapBookToBookResponse(book *models.Book, author_name string) *models.BookResponse {
+func MapBookToBookResponse(book *models.Book) *models.BookResponse {
     return &models.BookResponse{
         Title: book.Title,
-        Author: author_name, 
+        Author: book.Author, 
+        AuthorName: book.AuthorName,
         Description: book.Description,
         PublicationDate: book.PublicationDate,
         Language: book.Language,
