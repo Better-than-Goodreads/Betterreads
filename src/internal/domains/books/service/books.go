@@ -36,12 +36,13 @@ func (bs *BooksServiceImpl) PublishBook(req *models.NewBookRequest, author uuid.
 		return nil, err
 	}
 
-	bookRes, err := bs.addAuthor(book, book.Author)
 	if err != nil {
 		return nil, err
 	}
 
-	return bookRes, nil
+    res := utils.MapBookToBookResponse(book, book.AuthorName)
+
+	return res, nil
 }
 
 func (bs *BooksServiceImpl) GetBookInfo(bookId uuid.UUID, userId uuid.UUID) (*models.BookResponseWithReview, error) {
@@ -104,8 +105,13 @@ func (bs *BooksServiceImpl) GetBooksInfo(userId uuid.UUID) ([]*models.BookRespon
 	if err != nil {
 		return nil, err
 	}
+    res , err:= bs.mapBooksToBooksResponseWithReview(books, userId)
+    if err != nil {
+        return nil, err
+    }
+    fmt.Printf("BooksResponse: %+v\n", res)
 
-	return bs.mapBooksToBooksResponseWithReview(books, userId)
+    return res, nil
 }
 
 func (bs *BooksServiceImpl) mapBooksToBooksResponseWithReview(books []*models.Book, userId uuid.UUID) ([]*models.BookResponseWithReview, error) {
@@ -135,10 +141,7 @@ func (bs *BooksServiceImpl) mapBookToBookResponseWithReview(book *models.Book, u
         }
     }
 
-    bookRes.Book, err = bs.addAuthor(book, book.Author)
-    if err != nil {
-        return nil, err
-    }
+    bookRes.Book = utils.MapBookToBookResponse(book, book.AuthorName)
 
     return bookRes, nil
 }
@@ -201,18 +204,6 @@ func (bs *BooksServiceImpl) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.Rev
 		return nil, err
 	}
 	return reviews, nil
-}
-
-func (bs *BooksServiceImpl) addAuthor(book *models.Book, author uuid.UUID) (*models.BookResponse, error) {
-	author_name, err := bs.booksRepository.GetAuthorName(author)
-	if err != nil {
-        if errors.Is(err, repository.ErrAuthorNotFound) {
-            return nil, ErrAuthorNotFound
-        }
-		return nil, err
-	}
-	bookRes := utils.MapBookToBookResponse(book, author_name)
-	return bookRes, nil
 }
 
 func (bs *BooksServiceImpl) AddReview(bookId uuid.UUID, userId uuid.UUID, review models.NewReviewRequest) error {

@@ -5,10 +5,11 @@ import (
 	"github.com/google/uuid"
 )
 
-func MapBookRequestToBookRecord(req *models.NewBookRequest, id uuid.UUID, author uuid.UUID) models.Book {
+func MapBookRequestToBookRecord(req *models.NewBookRequest, id uuid.UUID, author uuid.UUID, authorName string) models.Book {
 	return models.Book{
         Title:   req.Title,
         Author: author,
+        AuthorName: authorName,
         Description: req.Description,
         AmountOfPages: req.AmountOfPages,
         PublicationDate: req.PublicationDate,
@@ -35,10 +36,11 @@ func MapBookToBookResponse(book *models.Book, author_name string) *models.BookRe
 }
 
 
-func MapBookDbToBook(book *models.BookDb, genres []string, ratings *models.Ratings ) *models.Book{
+func MapBookDbToBook(book *models.BookDb, genres []string, ratings *models.Ratings, author string ) *models.Book{
     return &models.Book{
         Title: book.Title,
         Author: book.Author,
+        AuthorName: author,
         Description: book.Description,
         PublicationDate: book.PublicationDate,
         Language: book.Language,

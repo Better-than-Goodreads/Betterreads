@@ -6,6 +6,7 @@ import "github.com/google/uuid"
 type Book struct {
 	Title           string    `json:"title" binding:"required"`
 	Author          uuid.UUID    `json:"author" binding:"required"`
+    AuthorName      string   `json:"author_name"`
 	Description     string    `json:"description" binding:"required"`
 	AmountOfPages   int       `json:"amount_of_pages" binding:"required"`
 	PublicationDate string    `json:"publication_date" binding:"required"`

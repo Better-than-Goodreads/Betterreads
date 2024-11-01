@@ -126,9 +126,14 @@ func (r *PostgresBookRepository) SaveBook(book *models.NewBookRequest, author uu
 		return nil, fmt.Errorf("failed to create book: %w", err)
 	}
 
-	res := utils.MapBookRequestToBookRecord(book, bookRecord.Id, author)
+    authorName, err := r.getAuthorName(author)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create book: %w", err)
+    }
 
-	return &res, nil
+    res := utils.MapBookDbToBook(bookRecord, book.Genres, &models.Ratings{}, authorName)
+
+	return res, nil
 }
 
 func (r *PostgresBookRepository) getGenresForBook(book_id uuid.UUID) ([]string, error) {
@@ -223,6 +228,7 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
         }
         res = append(res, Bookres)
     }
+    fmt.Printf("Books: %v\n", res)
 	return res, nil
 }
 
@@ -329,7 +335,7 @@ func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*model
 	return res, nil
 }
 
-func (r *PostgresBookRepository) GetAuthorName(authorId uuid.UUID) (string, error) {
+func (r *PostgresBookRepository) getAuthorName(authorId uuid.UUID) (string, error) {
 	var authorName string
 	query := `SELECT username FROM users WHERE id = $1;`
 	if err := r.c.Get(&authorName, query, authorId); err != nil {
@@ -419,7 +425,12 @@ func (r *PostgresBookRepository) getBookInfo(book *models.BookDb) (*models.Book,
             return nil, fmt.Errorf("failed to get book: %w", err)
         }
     }
-    return utils.MapBookDbToBook(book, genres, ratings), nil
+    author, err := r.getAuthorName(book.Author)
+    if err != nil {
+        return nil, fmt.Errorf("failed to get book: %w", err)
+    }
+
+    return utils.MapBookDbToBook(book, genres, ratings, author), nil
 }
 
 func (r *PostgresBookRepository) CheckIfBookExists(bookId uuid.UUID) bool{

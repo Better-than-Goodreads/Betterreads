@@ -62,7 +62,6 @@ type BooksDatabase interface {
     GetBookReviews(bookID uuid.UUID) ([]*models.Review, error)
 	// DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
 
-    GetAuthorName(id uuid.UUID) (string, error)
     CheckIfAuthorExists(authorId uuid.UUID) bool
 
     AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error
