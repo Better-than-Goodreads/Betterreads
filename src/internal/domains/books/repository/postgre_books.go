@@ -304,17 +304,9 @@ func (r *PostgresBookRepository) GetBookReviewOfUser(bookId uuid.UUID, userId uu
 }
 
 func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error) {
-	var username string
-	query := `SELECT username FROM users WHERE id = $1;`
-	if err := r.c.Get(&username, query, userId); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, ErrUserNotFound
-		}
-		return nil, fmt.Errorf("failed to get author: %w", err)
-	}
 
     res := []*models.ReviewOfUser{}  
-    query = `
+    query := `
         SELECT b.title AS book_title, r.review,b.id as book_id, r.rating
         FROM reviews r
         INNER JOIN books b ON r.book_id = b.id
@@ -405,7 +397,6 @@ func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.Rev
     return res, nil
 }
 
-
 func (r *PostgresBookRepository) getBookInfo(book *models.BookDb) (*models.Book, error) {
     genres, err := r.getGenresForBook(book.Id)
     if err != nil {
@@ -434,10 +425,19 @@ func (r *PostgresBookRepository) CheckIfBookExists(bookId uuid.UUID) bool{
     return exists
 }
 
-func (r *PostgresBookRepository) CheckIfAuthorExists(authorId uuid.UUID) bool {
+func (r *PostgresBookRepository) CheckIfUserIsAuthor(authorId uuid.UUID) bool {
+    exists := false
+    query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1 AND is_author = true);`
+    if err := r.c.Get(&exists, query, authorId); err != nil {
+        return false
+    }
+    return exists
+}
+
+func (r *PostgresBookRepository) CheckIfUserExists(userId uuid.UUID) bool {
     exists := false
     query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1);`
-    if err := r.c.Get(&exists, query, authorId); err != nil {
+    if err := r.c.Get(&exists, query, userId) ; err != nil {
         return false
     }
     return exists

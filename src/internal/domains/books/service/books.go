@@ -24,8 +24,12 @@ func (bs *BooksServiceImpl) PublishBook(req *models.NewBookRequest, author uuid.
 		return nil, ErrGenreRequired
     }
 
-    if !bs.booksRepository.CheckIfAuthorExists(author) {
+    if !bs.booksRepository.CheckIfUserExists(author) {
         return nil, ErrAuthorNotFound
+    }
+
+    if !bs.booksRepository.CheckIfUserIsAuthor(author) {
+        return nil, ErrUserNotAuthor
     }
 
 	book, err := bs.booksRepository.SaveBook(req, author)
@@ -36,9 +40,6 @@ func (bs *BooksServiceImpl) PublishBook(req *models.NewBookRequest, author uuid.
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
 
     res := utils.MapBookToBookResponse(book, book.AuthorName)
 
@@ -64,6 +65,18 @@ func (bs *BooksServiceImpl) GetBookInfo(bookId uuid.UUID, userId uuid.UUID) (*mo
 }
 
 func (bs *BooksServiceImpl) GetBooksOfAuthor(authorId uuid.UUID, userId uuid.UUID) ([]*models.BookResponseWithReview, error) {
+    exists := bs.booksRepository.CheckIfUserExists(authorId)
+    if !exists {
+        return nil, ErrAuthorNotFound
+    }
+
+    isAuthor := bs.booksRepository.CheckIfUserIsAuthor(authorId)
+    if !isAuthor {
+        return nil, ErrUserNotAuthor
+    }
+
+
+
 	books, err := bs.booksRepository.GetBooksOfAuthor(authorId)
 	if err != nil {
 		if errors.Is(err, repository.ErrAuthorNotFound) {
@@ -196,11 +209,13 @@ func (bs *BooksServiceImpl) GetBookReviews(bookId uuid.UUID) ([]*models.ReviewOf
 }
 
 func (bs *BooksServiceImpl) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error){
+    exists := bs.booksRepository.CheckIfUserExists(userId)
+    if !exists {
+        return nil, ErrUserNotFound
+    }
+
 	reviews, err := bs.booksRepository.GetAllReviewsOfUser(userId)
 	if err != nil {
-		if errors.Is(err, repository.ErrUserNotFound) {
-			return nil, ErrUserNotFound
-		}
 		return nil, err
 	}
 	return reviews, nil

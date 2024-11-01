@@ -18,6 +18,7 @@ var (
     ErrReviewAlreadyExists = errors.New("review already exists")
     ErrReviewNotFound = errors.New("review not found")
 	ErrAuthorNotFound = errors.New("author not found")
+    ErrUserNotAuthor = errors.New("user is not the author")
     ErrUserNotFound = errors.New("user not found")
 
     ErrGenreRequired= er.ErrorParam{

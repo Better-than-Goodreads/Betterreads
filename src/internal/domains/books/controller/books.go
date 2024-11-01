@@ -61,6 +61,9 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
         if errors.Is(err, service.ErrGenreNotFound){
             errDetail := er.NewErrorDetailsWithParams("Error when publishing Book", http.StatusBadRequest, err)
             ctx.AbortWithError(errDetail.Status, errDetail)
+        } else if errors.Is(err, service.ErrUserNotAuthor) {
+            errDetails := er.NewErrorDetails("Error when publishing Book", err, http.StatusUnauthorized)
+            ctx.AbortWithError(errDetails.Status, errDetails)
         } else if errors.Is(err, service.ErrAuthorNotFound) {
             errDetail := er.NewErrorDetails("Error when publishing Book", err, http.StatusNotFound)
             ctx.AbortWithError(errDetail.Status, errDetail)
@@ -157,6 +160,9 @@ func (bc *BooksController) GetBooksOfAuthor(ctx *gin.Context) {
 		if errors.Is(err, service.ErrAuthorNotFound) {
             errDetails := er.NewErrorDetails("Error when getting books author", err, http.StatusNotFound)
 			ctx.AbortWithError(errDetails.Status, errDetails)
+        } else if errors.Is(err, service.ErrUserNotAuthor) {
+            errDetails := er.NewErrorDetails("Error when getting books author", err, http.StatusUnauthorized)
+            ctx.AbortWithError(errDetails.Status, errDetails)
 		} else {
             errDetails := er.NewErrorDetails("Error when getting books author", err, http.StatusInternalServerError)
 			ctx.AbortWithError(errDetails.Status, errDetails)

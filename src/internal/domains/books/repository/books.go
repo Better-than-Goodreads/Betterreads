@@ -55,7 +55,8 @@ type BooksDatabase interface {
     GetBooksByName(name string) ([]*models.Book, error)
 
     CheckIfBookExists(bookId uuid.UUID) bool
-    CheckIfAuthorExists(authorId uuid.UUID) bool
+    CheckIfUserExists(userId uuid.UUID) bool
+    CheckIfUserIsAuthor(authorId uuid.UUID) bool
 
 	RateBook(bookId uuid.UUID, userId uuid.UUID, rating int) (*models.Rating, error)
     UpdateRating(bookId uuid.UUID, userId uuid.UUID, rating int) (error)
