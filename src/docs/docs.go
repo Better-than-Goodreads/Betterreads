@@ -511,6 +511,168 @@ const docTemplate = `{
                 }
             }
         },
+        "/bookshelf": {
+            "put": {
+                "description": "Edit book in shelf",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookshelf"
+                ],
+                "summary": "Edit book in shelf",
+                "operationId": "edit-book",
+                "parameters": [
+                    {
+                        "description": "Bookshelf entry",
+                        "name": "bookShelfEntry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BookShelfRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add book to shelf",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookshelf"
+                ],
+                "summary": "Add book to shelf",
+                "operationId": "add-book",
+                "parameters": [
+                    {
+                        "description": "Bookshelf entry",
+                        "name": "bookShelfEntry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BookShelfRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/bookshelf/{userId}": {
+            "get": {
+                "description": "Get bookshelf of an user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookshelf"
+                ],
+                "summary": "Get bookshelf of an user",
+                "operationId": "get-book",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Shelf Type",
+                        "name": "shelfType",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.BookInShelfResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "description": "Get all users",
@@ -913,13 +1075,51 @@ const docTemplate = `{
                 }
             }
         },
+        "models.BookInShelfResponse": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "author_name": {
+                    "type": "string"
+                },
+                "avg_rating": {
+                    "type": "number"
+                },
+                "book_id": {
+                    "type": "string"
+                },
+                "date_added": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "total_ratings": {
+                    "type": "integer"
+                },
+                "user_rating": {
+                    "type": "integer"
+                },
+                "user_review": {
+                    "type": "string"
+                }
+            }
+        },
         "models.BookResponse": {
             "type": "object",
             "properties": {
                 "amount_of_pages": {
                     "type": "integer"
                 },
-                "author": {
+                "author_id": {
+                    "type": "string"
+                },
+                "author_name": {
                     "type": "string"
                 },
                 "avg_rating": {
@@ -959,6 +1159,24 @@ const docTemplate = `{
                 },
                 "review": {
                     "$ref": "#/definitions/models.Review"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.BookShelfRequest": {
+            "type": "object",
+            "required": [
+                "book_id",
+                "status"
+            ],
+            "properties": {
+                "book_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

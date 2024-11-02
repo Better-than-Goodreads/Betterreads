@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/betterreads/internal/domains/books/models"
+    aux "github.com/betterreads/internal/pkg/controller"
 	"github.com/betterreads/internal/domains/books/service"
 	er "github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
@@ -38,7 +39,7 @@ func NewBooksController(bookService service.BooksService) *BooksController {
 // @Router /books [post]
 func (bc *BooksController) PublishBook(ctx *gin.Context) {
 	isAuthor := ctx.GetBool("IsAuthor")
-	userId, errDetail := getUserId(ctx)
+	userId, errDetail := aux.GetLoggedUserId(ctx)
 	if errDetail != nil {
 		ctx.AbortWithError(errDetail.Status, errDetail)
 		return
@@ -243,9 +244,10 @@ func (bc *BooksController) GetBooksInfo(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/{id}/rating [post]
 func (bc *BooksController) RateBook(ctx *gin.Context) {
-	userId, errDetails := getUserId(ctx)
-	if errDetails != nil {
-        ctx.AbortWithError(errDetails.Status, errDetails)
+
+	userId, errDetail := aux.GetLoggedUserId(ctx)
+	if errDetail != nil {
+        ctx.AbortWithError(errDetail.Status, errDetail)
 		return
 	}
 
@@ -300,7 +302,8 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/{id}/rating [put]
 func (bc *BooksController) UpdateRatingOfBook(ctx *gin.Context){
-    userId , errDetails := getUserId(ctx)
+
+	userId, errDetails := aux.GetLoggedUserId(ctx)
     if errDetails != nil {
         ctx.AbortWithError(errDetails.Status, errDetails)
         return
@@ -350,7 +353,7 @@ func (bc *BooksController) UpdateRatingOfBook(ctx *gin.Context){
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/{id}/review [post]
 func (bc *BooksController) ReviewBook(ctx *gin.Context) {
-	userId, errId := getUserId(ctx)
+	userId, errId:= aux.GetLoggedUserId(ctx)
 	if errId != nil {
 		ctx.AbortWithError(errId.Status, errId)
 		return
@@ -504,19 +507,7 @@ func getPicture(ctx *gin.Context) ([]byte, *er.ErrorDetailsWithParams) {
 	return picture, nil
 }
 
-func getUserId(ctx *gin.Context) (uuid.UUID, *er.ErrorDetails) {
-	_userId := ctx.GetString("userId")
-	if _userId == "" {
-        err := er.NewErrorDetails("Error when getting User id", fmt.Errorf("User is not logged in"), http.StatusUnauthorized)
-		return uuid.UUID{}, err
-	}
-	userId, err := uuid.Parse(_userId)
-	if err != nil {
-        err := er.NewErrorDetails("Error when getting User id", fmt.Errorf("User is not logged in"), http.StatusUnauthorized)
-		return uuid.UUID{}, err
-	}
-	return userId, nil
-}
+
 
 func getUserIdIfLogged(ctx *gin.Context) uuid.UUID {
 	_userId := ctx.GetString("userId")

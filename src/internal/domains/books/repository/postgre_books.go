@@ -228,7 +228,6 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
         }
         res = append(res, Bookres)
     }
-    fmt.Printf("Books: %v\n", res)
 	return res, nil
 }
 
@@ -347,7 +346,6 @@ func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, r
 }
 
 func (r *PostgresBookRepository) EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) error{
-    fmt.Println("edit review")
     query := `UPDATE reviews SET review = $1, rating = $2 WHERE book_id = $3 AND user_id = $4;`
     args := []interface{}{review, rating, bookId, userId}
     if _, err := r.c.Exec(query, args...); err != nil {
@@ -416,6 +414,17 @@ func (r *PostgresBookRepository) getBookInfo(book *models.BookDb) (*models.Book,
     return utils.MapBookDbToBook(book, genres, ratings, author), nil
 }
 
+func (r *PostgresBookRepository) GetBookshelfStatusOfUser(bookId uuid.UUID, userId uuid.UUID) (*string, error){
+    var status string
+    query := `SELECT status FROM bookshelf WHERE book_id = $1 AND user_id = $2;`
+    if err := r.c.Get(&status, query, bookId, userId); err != nil {
+        if err == sql.ErrNoRows {
+            return nil, ErrBookNotInShelf
+        }
+        return nil, fmt.Errorf("failed to get bookshelf status: %w", err)
+    }
+    return &status, nil
+}
 func (r *PostgresBookRepository) CheckIfBookExists(bookId uuid.UUID) bool{
     exists := false
     query := `SELECT EXISTS(SELECT 1 FROM books WHERE id = $1);`

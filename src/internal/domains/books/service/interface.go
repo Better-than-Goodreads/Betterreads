@@ -50,6 +50,7 @@ type BooksService interface {
     GetBookReviews(bookId uuid.UUID) ([]*models.ReviewOfBook, error)
     GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error)
     AddReview(bookId uuid.UUID, userId uuid.UUID, review models.NewReviewRequest) error
+    CheckIfUserExists(userId uuid.UUID) bool
 }
 
 

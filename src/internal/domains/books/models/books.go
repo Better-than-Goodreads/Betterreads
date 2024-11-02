@@ -111,4 +111,5 @@ type ReviewOfBook struct {
 type BookResponseWithReview struct {
     Book *BookResponse      `json:"book"`
     Review *Review`json:"review,omitempty"`
+    BookShelfStatus *string `json:"status,omitempty"`
 }

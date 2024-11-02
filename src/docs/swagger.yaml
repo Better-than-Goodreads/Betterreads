@@ -74,11 +74,36 @@ definitions:
     - publication_date
     - title
     type: object
+  models.BookInShelfResponse:
+    properties:
+      author:
+        type: string
+      author_name:
+        type: string
+      avg_rating:
+        type: number
+      book_id:
+        type: string
+      date_added:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+      total_ratings:
+        type: integer
+      user_rating:
+        type: integer
+      user_review:
+        type: string
+    type: object
   models.BookResponse:
     properties:
       amount_of_pages:
         type: integer
-      author:
+      author_id:
+        type: string
+      author_name:
         type: string
       avg_rating:
         type: number
@@ -105,6 +130,18 @@ definitions:
         $ref: '#/definitions/models.BookResponse'
       review:
         $ref: '#/definitions/models.Review'
+      status:
+        type: string
+    type: object
+  models.BookShelfRequest:
+    properties:
+      book_id:
+        type: string
+      status:
+        type: string
+    required:
+    - book_id
+    - status
     type: object
   models.NewBookRequest:
     properties:
@@ -597,6 +634,114 @@ paths:
       summary: Gets all reviews of a user
       tags:
       - books
+  /bookshelf:
+    post:
+      consumes:
+      - application/json
+      description: Add book to shelf
+      operationId: add-book
+      parameters:
+      - description: Bookshelf entry
+        in: body
+        name: bookShelfEntry
+        required: true
+        schema:
+          $ref: '#/definitions/models.BookShelfRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Add book to shelf
+      tags:
+      - bookshelf
+    put:
+      consumes:
+      - application/json
+      description: Edit book in shelf
+      operationId: edit-book
+      parameters:
+      - description: Bookshelf entry
+        in: body
+        name: bookShelfEntry
+        required: true
+        schema:
+          $ref: '#/definitions/models.BookShelfRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Edit book in shelf
+      tags:
+      - bookshelf
+  /bookshelf/{userId}:
+    get:
+      description: Get bookshelf of an user
+      operationId: get-book
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Shelf Type
+        in: query
+        name: shelfType
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookInShelfResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get bookshelf of an user
+      tags:
+      - bookshelf
   /users:
     get:
       consumes:

@@ -8,6 +8,7 @@ import (
 
 	"github.com/betterreads/internal/domains/users/models"
 	"github.com/betterreads/internal/domains/users/service"
+    aux "github.com/betterreads/internal/pkg/controller"
 	er "github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -203,9 +204,9 @@ func (u *UsersController) RegisterSecondStep(c *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/picture [post]
 func (u *UsersController) PostPicture(c *gin.Context) {
-	user_id, err := getLoggedUserId(c)
-	if err != nil {
-        c.AbortWithError(http.StatusBadRequest, err)
+	user_id, errId := aux.GetLoggedUserId(c)
+	if errId != nil {
+        c.AbortWithError(errId.Status, errId)
         return
 	}
 
@@ -280,19 +281,7 @@ func (u *UsersController) GetPicture(c *gin.Context) {
 }
 
 
-func getLoggedUserId(ctx *gin.Context) (uuid.UUID, error) {
-	_userId := ctx.GetString("userId")
-	if _userId == "" {
-        error := er.NewErrorDetails("Error when getting user id", fmt.Errorf("user not logged"), http.StatusBadRequest)
-		return uuid.UUID{}, error
-	}
-	userId, err := uuid.Parse(_userId)
-	if err != nil {
-        error := er.NewErrorDetails("Error when getting user id", fmt.Errorf("user not logged"), http.StatusBadRequest)
-		return uuid.UUID{}, error
-	}
-	return userId, nil
-}
+
 
 // Returns the user id from the context. If the id is not a valid uuid it returns an errorDetails prepared to send.
 func parseUserId(ctx *gin.Context) (uuid.UUID, error) {

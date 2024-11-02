@@ -122,7 +122,6 @@ func (bs *BooksServiceImpl) GetBooksInfo(userId uuid.UUID) ([]*models.BookRespon
     if err != nil {
         return nil, err
     }
-    fmt.Printf("BooksResponse: %+v\n", res)
 
     return res, nil
 }
@@ -148,6 +147,14 @@ func (bs *BooksServiceImpl) mapBookToBookResponseWithReview(book *models.Book, u
         if err != nil {
             if errors.Is(err, repository.ErrReviewNotFound) {
                 bookRes.Review = nil
+            } else {
+                return nil, err
+            }
+        }
+        bookRes.BookShelfStatus, err = bs.booksRepository.GetBookshelfStatusOfUser(book.Id , userId)
+        if err !=nil {
+            if errors.Is(err, repository.ErrBookNotInShelf){
+                bookRes.BookShelfStatus = nil
             } else {
                 return nil, err
             }
@@ -253,4 +260,9 @@ func (bs *BooksServiceImpl) AddReview(bookId uuid.UUID, userId uuid.UUID, review
         }
     }
 	return nil
+}
+
+
+func (bs *BooksServiceImpl) CheckIfUserExists(userId uuid.UUID) bool {
+    return bs.booksRepository.CheckIfUserExists(userId)
 }

@@ -40,6 +40,7 @@ var (
     ErrNoBooksFound = errors.New("no books found")
     ErrRatingAlreadyExists = errors.New("rating already exists")
     ErrReviewAlreadyExists = errors.New("review already exists")
+    ErrBookNotInShelf = errors.New("book not in shelf")
     ErrReviewNotFound = errors.New("review not found")
     ErrReviewEmpty = errors.New("review is empty")
     ErrUserNotFound = errors.New("user not found")
@@ -66,6 +67,7 @@ type BooksDatabase interface {
     CheckifReviewExists(bookId uuid.UUID, userId uuid.UUID) (bool, error)
     GetBookReviews(bookID uuid.UUID) ([]*models.ReviewOfBook, error)
 	GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error)
+    GetBookshelfStatusOfUser(bookId uuid.UUID, userId uuid.UUID) (*string, error)
     GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error)
     EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) (error)
 }
