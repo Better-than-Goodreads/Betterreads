@@ -511,168 +511,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/shelf": {
-            "put": {
-                "description": "Edit book in shelf",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bookshelf"
-                ],
-                "summary": "Edit book in shelf",
-                "operationId": "edit-book",
-                "parameters": [
-                    {
-                        "description": "Bookshelf entry",
-                        "name": "bookShelfEntry",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.BookShelfRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Add book to shelf",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bookshelf"
-                ],
-                "summary": "Add book to shelf",
-                "operationId": "add-book",
-                "parameters": [
-                    {
-                        "description": "Bookshelf entry",
-                        "name": "bookShelfEntry",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.BookShelfRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    }
-                }
-            }
-        },
-        "/shelf/{userId}": {
-            "get": {
-                "description": "Get bookshelf of an user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "bookshelf"
-                ],
-                "summary": "Get bookshelf of an user",
-                "operationId": "get-book",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "userId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Shelf Type",
-                        "name": "type",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.BookInShelfResponse"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/errors.ErrorDetails"
-                        }
-                    }
-                }
-            }
-        },
         "/users": {
             "get": {
                 "description": "Get all users",
@@ -882,6 +720,110 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/shelf": {
+            "put": {
+                "description": "Edit book in shelf",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookshelf"
+                ],
+                "summary": "Edit book in shelf",
+                "operationId": "edit-book",
+                "parameters": [
+                    {
+                        "description": "Bookshelf entry",
+                        "name": "bookShelfEntry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BookShelfRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add book to shelf",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookshelf"
+                ],
+                "summary": "Add book to shelf",
+                "operationId": "add-book",
+                "parameters": [
+                    {
+                        "description": "Bookshelf entry",
+                        "name": "bookShelfEntry",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.BookShelfRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetailsWithParams"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "description": "Get user by id",
@@ -957,6 +899,64 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/shelf": {
+            "get": {
+                "description": "Get bookshelf of an user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookshelf"
+                ],
+                "summary": "Get bookshelf of an user",
+                "operationId": "get-book",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Shelf Type",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.BookInShelfResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/errors.ErrorDetails"
                         }

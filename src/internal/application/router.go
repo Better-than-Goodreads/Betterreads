@@ -158,13 +158,13 @@ func AddBookshelfHandlers(r *Router, conn *sqlx.DB, books booksService.BooksServ
     bs := bookshelfService.NewBookShelfServiceImpl(bookshelfRepo, books)
     bc := bookshelfController.NewBookshelfController(bs)
 
-    public := r.engine.Group("/shelf")
+    public := r.engine.Group("/users")
     {
-        public.GET("/:id", bc.GetBookShelf)
+        public.GET("/:id/shelf", bc.GetBookShelf)
     }
 
 
-    private := r.engine.Group("/shelf")
+    private := r.engine.Group("users/shelf")
     private.Use(middlewares.AuthMiddleware)
     {
         private.POST("/", bc.AddBookToShelf)

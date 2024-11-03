@@ -35,7 +35,7 @@ func NewBookshelfController(service service.BookshelfService) BookshelfControlle
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /shelf/{userId} [get]
+// @Router /users/{userId}/shelf [get]
 func (bc *BookshelfController) GetBookShelf(c *gin.Context) {
     userId, err := uuid.Parse(c.Param("id"))
     if err != nil {
@@ -81,7 +81,7 @@ func (bc *BookshelfController) GetBookShelf(c *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetailsWithParams
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /shelf [post]
+// @Router /users/shelf [post]
 func (bc *BookshelfController) AddBookToShelf(c *gin.Context) {
 
 	userId, errId:= aux.GetLoggedUserId(c)
@@ -129,7 +129,7 @@ func (bc *BookshelfController) AddBookToShelf(c *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /shelf [put]
+// @Router /users/shelf [put]
 func (bc *BookshelfController) EditBookInShelf(c *gin.Context) {
     userId, errId:= aux.GetLoggedUserId(c)
     if errId != nil {

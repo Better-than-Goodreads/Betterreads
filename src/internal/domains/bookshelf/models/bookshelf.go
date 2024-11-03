@@ -59,10 +59,10 @@ type BookShelfRequest struct {
 type BookShelfType string
 
 const (
-    BookShelfTypeWantToRead BookShelfType = "Plan-To-Read"
-    BookShelfTypeReading BookShelfType = "Reading"
-    BookShelfTypeRead BookShelfType = "Read"
-    BookShelfAll BookShelfType = "All"
+    BookShelfTypeWantToRead BookShelfType = "plan-to-read"
+    BookShelfTypeReading BookShelfType = "reading"
+    BookShelfTypeRead BookShelfType = "read"
+    BookShelfAll BookShelfType = "all"
 )
 
 var ValidBookShelfTypes = []BookShelfType{ BookShelfTypeWantToRead, BookShelfTypeReading, BookShelfTypeRead , BookShelfAll}
