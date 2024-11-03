@@ -30,12 +30,12 @@ func NewBookshelfController(service service.BookshelfService) BookshelfControlle
 // @Produce  json
 // @Tags bookshelf
 // @Param userId path string true "User ID"
-// @Param shelfType query string true "Shelf Type"
+// @Param type query string true "Shelf Type"
 // @Success 200 {object} []models.BookInShelfResponse
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /bookshelf/{userId} [get]
+// @Router /shelf/{userId} [get]
 func (bc *BookshelfController) GetBookShelf(c *gin.Context) {
     userId, err := uuid.Parse(c.Param("id"))
     if err != nil {
@@ -43,9 +43,9 @@ func (bc *BookshelfController) GetBookShelf(c *gin.Context) {
         c.AbortWithError(errDetails.Status, errDetails)
         return
     }
-    shelfType := c.Query("shelf")
+    shelfType := c.Query("type")
     if shelfType == "" {
-        errParam := er.ErrorParam{Name: "shelfType", Reason: "shelf is required"}
+        errParam := er.ErrorParam{Name: "type", Reason: "status is required"}
         errDetails := er.NewErrorDetailsWithParams("Error when getting shelf", http.StatusBadRequest, errParam)
         c.AbortWithError(errDetails.Status, errDetails)
         return
@@ -81,7 +81,7 @@ func (bc *BookshelfController) GetBookShelf(c *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetailsWithParams
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /bookshelf [post]
+// @Router /shelf [post]
 func (bc *BookshelfController) AddBookToShelf(c *gin.Context) {
 
 	userId, errId:= aux.GetLoggedUserId(c)
@@ -129,7 +129,7 @@ func (bc *BookshelfController) AddBookToShelf(c *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
-// @Router /bookshelf [put]
+// @Router /shelf [put]
 func (bc *BookshelfController) EditBookInShelf(c *gin.Context) {
     userId, errId:= aux.GetLoggedUserId(c)
     if errId != nil {

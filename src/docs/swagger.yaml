@@ -634,7 +634,7 @@ paths:
       summary: Gets all reviews of a user
       tags:
       - books
-  /bookshelf:
+  /shelf:
     post:
       consumes:
       - application/json
@@ -703,7 +703,7 @@ paths:
       summary: Edit book in shelf
       tags:
       - bookshelf
-  /bookshelf/{userId}:
+  /shelf/{userId}:
     get:
       description: Get bookshelf of an user
       operationId: get-book
@@ -715,7 +715,7 @@ paths:
         type: string
       - description: Shelf Type
         in: query
-        name: shelfType
+        name: type
         required: true
         type: string
       produces:

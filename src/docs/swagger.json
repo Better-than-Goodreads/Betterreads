@@ -505,7 +505,7 @@
                 }
             }
         },
-        "/bookshelf": {
+        "/shelf": {
             "put": {
                 "description": "Edit book in shelf",
                 "consumes": [
@@ -609,7 +609,7 @@
                 }
             }
         },
-        "/bookshelf/{userId}": {
+        "/shelf/{userId}": {
             "get": {
                 "description": "Get bookshelf of an user",
                 "produces": [
@@ -631,7 +631,7 @@
                     {
                         "type": "string",
                         "description": "Shelf Type",
-                        "name": "shelfType",
+                        "name": "type",
                         "in": "query",
                         "required": true
                     }

@@ -511,7 +511,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/bookshelf": {
+        "/shelf": {
             "put": {
                 "description": "Edit book in shelf",
                 "consumes": [
@@ -615,7 +615,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/bookshelf/{userId}": {
+        "/shelf/{userId}": {
             "get": {
                 "description": "Get bookshelf of an user",
                 "produces": [
@@ -637,7 +637,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Shelf Type",
-                        "name": "shelfType",
+                        "name": "type",
                         "in": "query",
                         "required": true
                     }

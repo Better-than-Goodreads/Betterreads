@@ -171,6 +171,7 @@ func (bs *BooksServiceImpl) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmo
 		return nil, ErrRatingAmount
 	}
 
+
     bookExists := bs.booksRepository.CheckIfBookExists(bookId) 
     if !bookExists {
         return nil, ErrBookNotFound
