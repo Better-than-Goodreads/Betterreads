@@ -1,0 +1,936 @@
+basePath: /
+definitions:
+  errors.ErrorDetails:
+    properties:
+      detail:
+        type: string
+      instance:
+        type: string
+      status:
+        description: ESTE NO IRIA MAS
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  errors.ErrorDetailsWithParams:
+    properties:
+      detail:
+        type: string
+      instance:
+        type: string
+      status:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+      validation_errors:
+        items:
+          $ref: '#/definitions/errors.ErrorParam'
+        type: array
+    type: object
+  errors.ErrorParam:
+    properties:
+      field:
+        type: string
+      reason:
+        type: string
+    type: object
+  models.Book:
+    properties:
+      amount_of_pages:
+        type: integer
+      author:
+        type: string
+      author_name:
+        type: string
+      avg_rating:
+        type: number
+      description:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      language:
+        type: string
+      publication_date:
+        type: string
+      title:
+        type: string
+      total_ratings:
+        type: integer
+    required:
+    - amount_of_pages
+    - author
+    - description
+    - genres
+    - id
+    - language
+    - publication_date
+    - title
+    type: object
+  models.BookInShelfResponse:
+    properties:
+      author:
+        type: string
+      author_name:
+        type: string
+      avg_rating:
+        type: number
+      book_id:
+        type: string
+      date_added:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+      total_ratings:
+        type: integer
+      user_rating:
+        type: integer
+      user_review:
+        type: string
+    type: object
+  models.BookResponse:
+    properties:
+      amount_of_pages:
+        type: integer
+      author_id:
+        type: string
+      author_name:
+        type: string
+      avg_rating:
+        type: number
+      description:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      language:
+        type: string
+      publication_date:
+        type: string
+      title:
+        type: string
+      total_ratings:
+        type: integer
+    type: object
+  models.BookResponseWithReview:
+    properties:
+      book:
+        $ref: '#/definitions/models.BookResponse'
+      review:
+        $ref: '#/definitions/models.Review'
+      status:
+        type: string
+    type: object
+  models.BookShelfRequest:
+    properties:
+      book_id:
+        type: string
+      status:
+        type: string
+    required:
+    - book_id
+    - status
+    type: object
+  models.NewBookRequest:
+    properties:
+      amount_of_pages:
+        type: integer
+      description:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      language:
+        type: string
+      picture:
+        items:
+          type: integer
+        type: array
+      publication_date:
+        type: string
+      title:
+        type: string
+    required:
+    - amount_of_pages
+    - description
+    - genres
+    - language
+    - publication_date
+    - title
+    type: object
+  models.NewRatingRequest:
+    properties:
+      rating:
+        type: integer
+    required:
+    - rating
+    type: object
+  models.NewReviewRequest:
+    properties:
+      rating:
+        type: integer
+      review:
+        type: string
+    required:
+    - rating
+    type: object
+  models.Review:
+    properties:
+      rating:
+        type: integer
+      review:
+        type: string
+    type: object
+  models.ReviewOfBook:
+    properties:
+      rating:
+        type: integer
+      review:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.ReviewOfUser:
+    properties:
+      book_id:
+        type: string
+      book_title:
+        type: string
+      rating:
+        type: integer
+      review:
+        type: string
+    type: object
+  models.UserAdditionalRequest:
+    properties:
+      about_me:
+        type: string
+      age:
+        type: integer
+      gender:
+        type: string
+      location:
+        type: string
+    type: object
+  models.UserLoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  models.UserResponse:
+    properties:
+      about_me:
+        type: string
+      age:
+        type: integer
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      is_author:
+        type: boolean
+      last_name:
+        type: string
+      location:
+        type: string
+      username:
+        type: string
+    type: object
+  models.UserStageRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      is_author:
+        type: boolean
+      last_name:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - username
+    type: object
+  models.UserStageResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id_register:
+        type: string
+      is_author:
+        type: boolean
+      last_name:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a  server for Swagger with Gin.
+  title: BetterReads API
+  version: "1.0"
+paths:
+  /books:
+    post:
+      consumes:
+      - multipart/form-data
+      description: publishes a book, the book data should follow the models.NewBookRequest
+        in JSON
+      parameters:
+      - description: Book Data
+        in: formData
+        name: data
+        required: true
+        type: string
+      - description: Book Picture
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Don't need to send this in json, this param is only here to reference
+          NewBookRequest, DONT SEND PICTURE in JSON
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewBookRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: publish a book
+      tags:
+      - books
+  /books/{id}/info:
+    get:
+      description: Get book id, note that its a UUID
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.BookResponseWithReview'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get book by id
+      tags:
+      - books
+  /books/{id}/picture:
+    get:
+      description: Get book id, note that its a UUID
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get book picture by id
+      tags:
+      - books
+  /books/{id}/rating:
+    post:
+      consumes:
+      - application/json
+      description: Rate a book
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rating Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewRatingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Rate a book
+      tags:
+      - books
+    put:
+      description: Update rating of a book
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rating Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewRatingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Update rating of a book
+      tags:
+      - books
+  /books/{id}/review:
+    get:
+      description: Get reviews of a book
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ReviewOfBook'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+      summary: Gets reviews of a book
+      tags:
+      - books
+    post:
+      consumes:
+      - application/json
+      description: Add review to a book
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Add review to a book
+      tags:
+      - books
+  /books/author/{id}:
+    get:
+      description: Get the books of an author, if no books found returns an empty
+        array
+      parameters:
+      - description: Author Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookResponseWithReview'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get books of an auther
+      tags:
+      - books
+  /books/info:
+    get:
+      consumes:
+      - application/json
+      description: Get all books
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookResponseWithReview'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get all books
+      tags:
+      - books
+  /books/info/search:
+    get:
+      description: Get books by name, if no books found returns an empty array
+      parameters:
+      - description: Book Name
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookResponseWithReview'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get books by name
+      tags:
+      - books
+  /books/user/{id}/reviews:
+    get:
+      description: Get all reviews of a user
+      parameters:
+      - description: User Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ReviewOfUser'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+      summary: Gets all reviews of a user
+      tags:
+      - books
+  /bookshelf:
+    post:
+      consumes:
+      - application/json
+      description: Add book to shelf
+      operationId: add-book
+      parameters:
+      - description: Bookshelf entry
+        in: body
+        name: bookShelfEntry
+        required: true
+        schema:
+          $ref: '#/definitions/models.BookShelfRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Add book to shelf
+      tags:
+      - bookshelf
+    put:
+      consumes:
+      - application/json
+      description: Edit book in shelf
+      operationId: edit-book
+      parameters:
+      - description: Bookshelf entry
+        in: body
+        name: bookShelfEntry
+        required: true
+        schema:
+          $ref: '#/definitions/models.BookShelfRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Edit book in shelf
+      tags:
+      - bookshelf
+  /bookshelf/{userId}:
+    get:
+      description: Get bookshelf of an user
+      operationId: get-book
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Shelf Type
+        in: query
+        name: shelfType
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookInShelfResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get bookshelf of an user
+      tags:
+      - bookshelf
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+      summary: Get all users
+      tags:
+      - users
+  /users/{id}:
+    get:
+      description: Get user by id
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get user by id
+      tags:
+      - users
+  /users/{id}/picture:
+    get:
+      description: Get user picture
+      parameters:
+      - description: User id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get user picture
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Log in a user and return a JWT
+      parameters:
+      - description: User login request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Log in a user
+      tags:
+      - users
+  /users/picture:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Post a picture
+      parameters:
+      - description: User picture
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Post a picture
+      tags:
+      - users
+  /users/register/{id}/additional-info:
+    post:
+      consumes:
+      - application/json
+      description: Register second step
+      parameters:
+      - description: User register id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User additional request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserAdditionalRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Register second step
+      tags:
+      - users
+  /users/register/basic:
+    post:
+      consumes:
+      - application/json
+      description: Register first step
+      parameters:
+      - description: User stage request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserStageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.UserStageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Register first step
+      tags:
+      - users
+swagger: "2.0"
