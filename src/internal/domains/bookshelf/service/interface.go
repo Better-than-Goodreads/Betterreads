@@ -15,7 +15,7 @@ var (
     ErrUserNotFound = errors.New("user not found")
     ErrInvalidStatusType = er.ErrorParam{
         Name:   "status",
-        Reason: "status should be: 'Plan To Read', 'Reading', 'Read' or 'All",
+        Reason: "status should be: 'plan-to-read', 'reading', 'read' or 'all",
     }
 )
 
