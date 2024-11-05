@@ -106,12 +106,10 @@ func (r *PostgresRecommendationsRepository) getPreferedGenres(userId uuid.UUID) 
             genresMap[genre]++
         }
     }
-    fmt.Printf("Genres map: %v \n", genresMap)
 
     // Sorts the genres by the amount of times they appear
     topGenres := r.sortGenres(genresMap)
 
-    fmt.Printf("Top genres: %v \n", topGenres)
 
     return topGenres, nil
 }
