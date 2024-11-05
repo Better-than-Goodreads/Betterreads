@@ -12,6 +12,10 @@ import (
     bookshelfRepository "github.com/betterreads/internal/domains/bookshelf/repository"
     bookshelfService "github.com/betterreads/internal/domains/bookshelf/service"
 
+    recommendationsController "github.com/betterreads/internal/domains/recommendations/controller"
+    recommendationsRepository "github.com/betterreads/internal/domains/recommendations/repository"
+    recommendationsService "github.com/betterreads/internal/domains/recommendations/service"
+
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -74,8 +78,9 @@ func NewRouter(port string) *Router {
 	r := createRouterFromConfig(cfg)
 	addCorsConfiguration(r)
 	addUsersHandlers(r, conn)
-    books := addBooksHandlers(r, conn)
+    books, booksRepo := addBooksHandlers(r, conn)
     AddBookshelfHandlers(r, conn, books)
+    AddRecommendationsHandlers(r, conn, books, booksRepo)
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -118,7 +123,7 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 	}
 }
 
-func addBooksHandlers(r *Router, conn *sqlx.DB)  booksService.BooksService{
+func addBooksHandlers(r *Router, conn *sqlx.DB)  (booksService.BooksService, booksRepository.BooksDatabase){
 	booksRepo, err := booksRepository.NewPostgresBookRepository(conn)
 	if err != nil {
 		fmt.Println("error: %w", err)
@@ -147,7 +152,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB)  booksService.BooksService{
 		private.GET("/user/:id/reviews", bc.GetAllReviewsOfUser)
 	}
 
-    return bs
+    return bs, booksRepo
 }
 
 func AddBookshelfHandlers(r *Router, conn *sqlx.DB, books booksService.BooksService) {
@@ -169,6 +174,18 @@ func AddBookshelfHandlers(r *Router, conn *sqlx.DB, books booksService.BooksServ
     {
         private.POST("/", bc.AddBookToShelf)
         private.PUT("/", bc.EditBookInShelf)
+    }
+}
+
+func AddRecommendationsHandlers(r *Router, conn *sqlx.DB, books booksService.BooksService, booksRepo booksRepository.BooksDatabase) {
+    recommendationsRepo := recommendationsRepository.NewPostgresRecommendationsRepository(conn, booksRepo)
+    rs := recommendationsService.NewRecommendationsServiceImpl(recommendationsRepo, books)
+    rc := recommendationsController.NewRecommendationsController(rs)
+    private := r.engine.Group("users/recommendations")
+    private.Use(middlewares.AuthMiddleware)
+    {
+        private.GET("/more", rc.GetMoreRecommendations)
+        private.GET("/", rc.GetRecommendations)
     }
 }
 

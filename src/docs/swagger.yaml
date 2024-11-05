@@ -38,6 +38,15 @@ definitions:
       reason:
         type: string
     type: object
+  model.RecommendationsByGenre:
+    properties:
+      books:
+        items:
+          $ref: '#/definitions/models.Book'
+        type: array
+      genre:
+        type: string
+    type: object
   models.Book:
     properties:
       amount_of_pages:
@@ -634,6 +643,73 @@ paths:
       summary: Gets all reviews of a user
       tags:
       - books
+  /recommendations:
+    get:
+      consumes:
+      - application/json
+      description: Get recommendations for an user based on his top 3 genres. It gets
+        you 5 books for each genre if available.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.RecommendationsByGenre'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get recommendations for an user based on his top 3 genres.
+      tags:
+      - recommendations
+  /recommendations/more:
+    get:
+      consumes:
+      - application/json
+      description: Get more recommendations for an specific genre. May want to use
+        it after GetMoreRecommendations, it gets you 20 books if available for the
+        specific genre
+      parameters:
+      - description: Genre
+        in: query
+        name: genre
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get more recommendations for an specific genre.
+      tags:
+      - recommendations
   /users:
     get:
       consumes:

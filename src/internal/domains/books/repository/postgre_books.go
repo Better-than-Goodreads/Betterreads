@@ -16,7 +16,7 @@ type PostgresBookRepository struct {
 }
 
 func getGenreById(genre string) (int, error) {
-	for key, value := range genresDict {
+	for key, value := range GenresDict {
 		if value == genre {
 			return key, nil
 		}
@@ -136,7 +136,7 @@ func (r *PostgresBookRepository) SaveBook(book *models.NewBookRequest, author uu
 	return res, nil
 }
 
-func (r *PostgresBookRepository) getGenresForBook(book_id uuid.UUID) ([]string, error) {
+func (r *PostgresBookRepository) GetGenresForBook(book_id uuid.UUID) ([]string, error) {
 	var genres_ids []int
 	query := `SELECT genre_id FROM genres_books WHERE book_id = $1;`
 	if err := r.c.Select(&genres_ids, query, book_id); err != nil {
@@ -145,7 +145,7 @@ func (r *PostgresBookRepository) getGenresForBook(book_id uuid.UUID) ([]string, 
 
 	genres := []string{}
 	for _, genre_id := range genres_ids {
-		genres = append(genres, genresDict[genre_id])
+		genres = append(genres, GenresDict[genre_id])
 	}
 
 	return genres, nil
@@ -172,7 +172,7 @@ func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error)
 		}
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
-    book, err := r.getBookInfo(bookdb)
+    book, err := r.GetBookInfo(bookdb)
     if err != nil {
         return nil, fmt.Errorf("failed to get book: %w", err)
     }
@@ -190,7 +190,7 @@ func (r *PostgresBookRepository) GetBooksByName(name string) ([]*models.Book, er
     }
     res := []*models.Book{}
     for _, book := range *books {
-        Bookres, err := r.getBookInfo(book)
+        Bookres, err := r.GetBookInfo(book)
         if err != nil {
             return nil, fmt.Errorf("failed to get book: %w", err)
         }
@@ -222,7 +222,7 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
 	}
 	res := []*models.Book{}
     for _, book := range books {
-        Bookres, err := r.getBookInfo(book)
+        Bookres, err := r.GetBookInfo(book)
         if err != nil {
             return nil, fmt.Errorf("failed to get book: %w", err)
         }
@@ -242,7 +242,7 @@ func (r *PostgresBookRepository) GetBooksOfAuthor(authorId uuid.UUID) ([]*models
 	}
 	res := []*models.Book{}
 	for _, book := range books {
-		Bookres, err := r.getBookInfo(book)
+		Bookres, err := r.GetBookInfo(book)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get book: %w", err)
 		}
@@ -395,8 +395,8 @@ func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.Rev
     return res, nil
 }
 
-func (r *PostgresBookRepository) getBookInfo(book *models.BookDb) (*models.Book, error) {
-    genres, err := r.getGenresForBook(book.Id)
+func (r *PostgresBookRepository) GetBookInfo(book *models.BookDb) (*models.Book, error) {
+    genres, err := r.GetGenresForBook(book.Id)
     if err != nil {
         return nil, fmt.Errorf("failed to get books: %w", err)
     }
@@ -425,6 +425,7 @@ func (r *PostgresBookRepository) GetBookshelfStatusOfUser(bookId uuid.UUID, user
     }
     return &status, nil
 }
+
 func (r *PostgresBookRepository) CheckIfBookExists(bookId uuid.UUID) bool{
     exists := false
     query := `SELECT EXISTS(SELECT 1 FROM books WHERE id = $1);`

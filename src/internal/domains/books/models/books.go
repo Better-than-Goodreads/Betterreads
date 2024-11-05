@@ -25,8 +25,6 @@ type BookDb struct {
 	PublicationDate string    `json:"publication_date" db:"publication_date"`
 	Language        string    `json:"language" db:"language"`
 	Id              uuid.UUID `json:"id" db:"id"`
-	// Ratings         map[int]int    `json:"ratings"` //Tal vez haya que modificar esto mas adelante
-	// El id de un rating es IdBookIdUser, los 2 numeros concatenados
 }
 
 type GenreBook struct {
@@ -107,9 +105,10 @@ type ReviewOfBook struct {
     Rating int `json:"rating" db:"rating"`
 }
 
-
 type BookResponseWithReview struct {
     Book *BookResponse      `json:"book"`
     Review *Review`json:"review,omitempty"`
     BookShelfStatus *string `json:"status,omitempty"`
 }
+
+

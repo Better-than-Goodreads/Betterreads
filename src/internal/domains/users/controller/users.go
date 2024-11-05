@@ -108,6 +108,7 @@ func (u *UsersController) LogIn(c *gin.Context) {
             errDetails := er.NewErrorDetails("Error when logging in", err, http.StatusInternalServerError)
             c.AbortWithError(errDetails.Status, errDetails)
         }
+        return
 	}
 
 	c.JSON(http.StatusOK, gin.H{

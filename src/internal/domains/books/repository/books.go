@@ -6,7 +6,7 @@ import (
 	"github.com/betterreads/internal/domains/books/models"
 )
 
-var genresDict = map[int]string{
+var GenresDict = map[int]string{
     1:  "Fiction",
     2:  "Non-fiction",
     3:  "Fantasy",
@@ -54,6 +54,8 @@ type BooksDatabase interface {
     GetBooks() ([]*models.Book, error)
     GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error)
     GetBooksByName(name string) ([]*models.Book, error)
+    GetGenresForBook(book_id uuid.UUID) ([]string, error) 
+    GetBookInfo(book *models.BookDb) (*models.Book, error) 
 
     CheckIfBookExists(bookId uuid.UUID) bool
     CheckIfUserExists(userId uuid.UUID) bool
@@ -70,5 +72,7 @@ type BooksDatabase interface {
     GetBookshelfStatusOfUser(bookId uuid.UUID, userId uuid.UUID) (*string, error)
     GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error)
     EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) (error)
+
+
 }
 
