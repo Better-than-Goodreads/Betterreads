@@ -113,6 +113,7 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 		public.POST("/login", uc.LogIn)
 		public.GET("/:id", uc.GetUser)
 		public.GET("/:id/picture", uc.GetPicture)
+		public.GET("/search", uc.SearchUsers)
 	}
 
 	private := r.engine.Group("/users")

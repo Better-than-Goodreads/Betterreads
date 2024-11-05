@@ -20,6 +20,7 @@ var (
 	ErrAuthorNotFound = errors.New("author not found")
     ErrUserNotAuthor = errors.New("user is not the author")
     ErrUserNotFound = errors.New("user not found")
+    ErrRatingOwnBook = errors.New("author can't rate his own book")
 
     ErrGenreRequired= er.ErrorParam{
         Name:   "genre",
@@ -51,6 +52,7 @@ type BooksService interface {
     GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error)
     AddReview(bookId uuid.UUID, userId uuid.UUID, review models.NewReviewRequest) error
     CheckIfUserExists(userId uuid.UUID) bool
+    CheckIfAuthorIsRatingOwnBook(bookId uuid.UUID, userId uuid.UUID) (bool, error)
 }
 
 

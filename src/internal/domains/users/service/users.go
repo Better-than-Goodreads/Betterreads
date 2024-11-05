@@ -135,3 +135,15 @@ func (u *UsersServiceImpl) GetUserPicture(id uuid.UUID) ([]byte, error) {
     }
     return picture, nil
 }
+
+
+func (u * UsersServiceImpl) SearchUsers(username string, isAuthor bool) ([]*models.UserResponse, error) {
+	users, err := u.rp.SearchUsers(username, isAuthor)
+	if err != nil {
+		return nil, err
+	}
+
+	UserResponses:= utils.MapUsersRecordToUsersResponses(users)
+
+	return UserResponses, nil
+}

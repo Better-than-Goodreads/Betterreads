@@ -73,6 +73,6 @@ type BooksDatabase interface {
     GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error)
     EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) (error)
 
-
+    
 }
 

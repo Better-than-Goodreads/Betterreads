@@ -282,6 +282,29 @@ func (u *UsersController) GetPicture(c *gin.Context) {
 }
 
 
+func (u *UsersController) SearchUsers(c *gin.Context) {
+    name := c.Query("name")
+    isAuthor := c.Query("author")
+
+    var users []*models.UserResponse
+
+    var err error
+    if isAuthor == "true" {
+        users, err = u.us.SearchUsers(name, true)
+    } else {
+        users, err = u.us.SearchUsers(name, false)
+    }
+
+    if err != nil {
+        errDetails := er.NewErrorDetails("Error when searching users", err, http.StatusInternalServerError)
+        c.AbortWithError(errDetails.Status, errDetails)
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"users": users})
+}
+
+
 
 
 // Returns the user id from the context. If the id is not a valid uuid it returns an errorDetails prepared to send.

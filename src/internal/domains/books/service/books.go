@@ -171,7 +171,6 @@ func (bs *BooksServiceImpl) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmo
 		return nil, ErrRatingAmount
 	}
 
-
     bookExists := bs.booksRepository.CheckIfBookExists(bookId) 
     if !bookExists {
         return nil, ErrBookNotFound
@@ -183,12 +182,36 @@ func (bs *BooksServiceImpl) RateBook(bookId uuid.UUID, userId uuid.UUID, rateAmo
         return nil, ErrRatingAlreadyExists
 	}
 	
+
+    if ratingOwnBook, err := bs.CheckIfAuthorIsRatingOwnBook(bookId, userId); err != nil {
+        return nil, err
+    } else if ratingOwnBook {
+        return nil, ErrRatingOwnBook
+    }
+
 	bookRating, err := bs.booksRepository.RateBook(bookId, userId, rateAmount)
 	if err != nil {
 		return nil, err
 	}
 	return bookRating, nil
 }
+
+func (bs *BooksServiceImpl) CheckIfAuthorIsRatingOwnBook(bookId uuid.UUID, userId uuid.UUID) (bool, error) {
+    isAuthor := bs.booksRepository.CheckIfUserIsAuthor(userId)
+    if isAuthor {
+        AuthorsBooks, err := bs.booksRepository.GetBooksOfAuthor(userId)
+        if err != nil {
+            return false, err
+        }
+        for _, book := range AuthorsBooks {
+            if book.Id == bookId {
+                return true, nil
+            }
+        }
+    }
+    return false, nil
+}
+
 
 func (bs *BooksServiceImpl) UpdateRating(bookId uuid.UUID, userId uuid.UUID, rateAmount int) (error){
     if rateAmount < 1 || rateAmount > 5 {
@@ -200,6 +223,12 @@ func (bs *BooksServiceImpl) UpdateRating(bookId uuid.UUID, userId uuid.UUID, rat
 	} else if !exists {
         return  ErrRatingNotFound
 	}
+
+    if ratingOwnBook, err := bs.CheckIfAuthorIsRatingOwnBook(bookId, userId); err != nil {
+        return err
+    } else if ratingOwnBook {
+        return ErrRatingOwnBook
+    }
 
     err := bs.booksRepository.UpdateRating(bookId, userId, rateAmount)
     if err != nil {
@@ -248,6 +277,12 @@ func (bs *BooksServiceImpl) AddReview(bookId uuid.UUID, userId uuid.UUID, review
         return ErrReviewAlreadyExists
     }
     
+    if ratingOwnBook, err := bs.CheckIfAuthorIsRatingOwnBook(bookId, userId); err != nil {
+        return err
+    } else if ratingOwnBook {
+        return ErrRatingOwnBook
+    }
+
     
     if err == repository.ErrReviewEmpty {
         err = bs.booksRepository.EditReview(bookId, userId, review.Rating , review.Review)

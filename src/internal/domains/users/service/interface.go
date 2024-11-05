@@ -36,6 +36,7 @@ type UsersService interface {
     GetUser(id uuid.UUID) (*models.UserResponse, error)
     PostUserPicture(id uuid.UUID, picture models.UserPictureRequest) error
     GetUserPicture(id uuid.UUID) ([]byte, error)
+	SearchUsers(username string, isAuthor bool) ([]*models.UserResponse, error)
 }
 
 

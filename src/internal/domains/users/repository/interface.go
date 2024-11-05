@@ -26,4 +26,5 @@ type UsersDatabase interface {
     CheckUserExistsForRegister(user *models.UserStageRequest) error
     CheckUserExists(id uuid.UUID) bool
     SaveUserPicture(id uuid.UUID, picture []byte) error
+	SearchUsers(username string, isAuthor bool) ([]*models.UserRecord, error)
 }
