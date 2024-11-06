@@ -940,6 +940,38 @@ paths:
       summary: Register first step
       tags:
       - users
+  /users/search:
+    get:
+      consumes:
+      - application/json
+      description: Search users
+      parameters:
+      - description: User name
+        in: query
+        name: name
+        type: string
+      - description: Is author
+        in: query
+        name: author
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Search users
+      tags:
+      - users
   /users/shelf:
     post:
       consumes:

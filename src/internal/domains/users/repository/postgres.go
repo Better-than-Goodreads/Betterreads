@@ -293,7 +293,7 @@ func (r *PostgresUserRepository) CheckUserExists(id uuid.UUID) bool {
 
 func (r *PostgresUserRepository) SearchUsers(username string, isAuthor bool) ([]*models.UserRecord, error) {
 	users := []*models.UserRecord{}
-	query := `SELECT * FROM users WHERE username LIKE $1 AND is_author = $2;`
+	query := `SELECT * FROM users WHERE LOWER(username) LIKE LOWER($1) AND is_author = $2;`
 	if err := r.c.Select(&users, query, username, isAuthor); err != nil {
 		if err != sql.ErrNoRows {
 			return nil, fmt.Errorf("failed to search users: %w", err)

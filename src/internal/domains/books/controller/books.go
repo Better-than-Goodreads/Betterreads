@@ -277,11 +277,15 @@ func (bc *BooksController) RateBook(ctx *gin.Context) {
             ctx.AbortWithError(errDetails.Status, errDetails)
         } else if errors.Is(err, service.ErrRatingAlreadyExists) {
             errDetails := er.NewErrorDetails("Error when rating Book", err, http.StatusConflict)
+            ctx.AbortWithError(errDetails.Status, errDetails)        
+        } else if errors.Is(err, service.ErrRatingOwnBook) {
+            errDetails := er.NewErrorDetails("Error when rating own Book", err, http.StatusForbidden)
             ctx.AbortWithError(errDetails.Status, errDetails)
         } else {
             err := er.NewErrorDetails("Error when rating Book", err, http.StatusInternalServerError)
             ctx.AbortWithError(err.Status, err)
         }
+        
 		return
 	}
 

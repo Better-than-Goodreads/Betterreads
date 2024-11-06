@@ -281,7 +281,18 @@ func (u *UsersController) GetPicture(c *gin.Context) {
     c.Data(http.StatusOK, "image/jpeg", base64Bytes)
 }
 
-
+// SearchUsers godoc
+// @Summary Search users
+// @Description Search users
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param name query string false "User name"
+// @Param author query string false "Is author"
+// @Success 200 {object} models.UserResponse
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /users/search [get]
 func (u *UsersController) SearchUsers(c *gin.Context) {
     name := c.Query("name")
     isAuthor := c.Query("author")
