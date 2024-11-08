@@ -4,17 +4,17 @@ import "github.com/google/uuid"
 
 // RECORDS
 type Book struct {
-	Title           string    `json:"title" binding:"required"`
-	Author          uuid.UUID `json:"author" binding:"required"`
-	AuthorName      string    `json:"author_name"`
-	Description     string    `json:"description" binding:"required"`
-	AmountOfPages   int       `json:"amount_of_pages" binding:"required"`
-	PublicationDate string    `json:"publication_date" binding:"required"`
-	Language        string    `json:"language" binding:"required"`
-	Genres          []string  `json:"genres" binding:"required"`
-	Id              uuid.UUID `json:"id" binding:"required"`
-	TotalRatings    int       `json:"total_ratings"`
-	AverageRating   float64   `json:"avg_rating"`
+	Title           string    `json:"title" binding:"required" db:"title"`
+	Author          uuid.UUID `json:"author" binding:"required" db:"author"`
+	AuthorName      string    `json:"author_name" binding:"required" db:"author_name"`
+	Description     string    `json:"description" binding:"required" db:"description"`
+	AmountOfPages   int       `json:"amount_of_pages" binding:"required" db:"amount_of_pages"`
+	PublicationDate string    `json:"publication_date" binding:"required" db:"publication_date"`
+	Language        string    `json:"language" binding:"required" db:"language"`
+	Genres          []string  `json:"genres" binding:"required" `
+	Id              uuid.UUID `json:"id" binding:"required" db:"id"`
+	TotalRatings    int       `json:"total_ratings" db:"total_ratings"`
+	AverageRating   float64   `json:"avg_rating" db:"avg_rating"`
 } // This struct is used to return the genres and book from the database
 
 type BookDb struct {

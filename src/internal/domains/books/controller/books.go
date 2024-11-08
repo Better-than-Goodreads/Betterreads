@@ -382,6 +382,9 @@ func (bc *BooksController) ReviewBook(ctx *gin.Context) {
 		} else if errors.Is(err, service.ErrBookNotFound) {
 			errDetails := er.NewErrorDetails("Error when adding review", err, http.StatusNotFound)
 			ctx.AbortWithError(errDetails.Status, errDetails)
+        } else if errors.Is(err, service.ErrRatingOwnBook) {
+            errDetails := er.NewErrorDetails("Error when rating own Book", err, http.StatusForbidden)
+            ctx.AbortWithError(errDetails.Status, errDetails)
 		} else {
 			errDetails := er.NewErrorDetails("Error when adding review", err, http.StatusInternalServerError)
 			ctx.AbortWithError(errDetails.Status, errDetails)
