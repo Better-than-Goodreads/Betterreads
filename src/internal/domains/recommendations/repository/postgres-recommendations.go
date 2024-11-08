@@ -56,7 +56,7 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
 	}
 
 	partRes := []*model.BookRecommendation{}
-	query :=
+	query := // Big query to get all the values from the db to then sort them by rating
 		`
     WITH ratings AS (
         SELECT 
@@ -88,6 +88,7 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
     WHERE 
         gb.genre_id = $1 
         AND bk.id NOT IN (SELECT book_id FROM bookshelf WHERE user_id = $2)
+    ORDER BY r.avg_ratings ASC 
     LIMIT $3
    `
 
@@ -119,37 +120,6 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
 	}
 
 	return res, nil
-
-	// // Gets books by genre that user has not read
-	// query := `SELECT bk.title, bk.author, bk.description, bk.amount_of_pages, bk.
-	//              publication_date, bk.language, bk.id
-	//              FROM books bk
-	//              JOIN genres_books gb ON bk.id = gb.book_id
-	//              WHERE gb.genre_id = $1 AND bk.id NOT IN (SELECT book_id FROM bookshelf WHERE user_id = $2)
-	//              LIMIT $3;`
-	//
-	// books := []*bm.BookDb{}
-	// err = r.c.Select(&books, query, genre_id, userId, limit)
-	// if err != nil && err != sql.ErrNoRows {
-	// 	return nil, fmt.Errorf("failed to get preferedBooks: %w", err)
-	// }
-	//
-	//    res := []*bm.Book{}
-	//    query := `SELECT bk.title, bk.authorName`
-
-	// res := []*bm.Book{}
-	// for _, book := range books {
-	// 	bookRes, err := r.br.GetBookInfo(book)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to get book info: %w", err)
-	// 	}
-	// 	res = append(res, bookRes)
-	// }
-
-	// sort.Slice(res, func(i, j int) bool {
-	//     return res[i].AverageRating > res[j].AverageRating
-	// })
-
 }
 
 func (r *PostgresRecommendationsRepository) getPreferedGenres(userId uuid.UUID) ([]string, error) {

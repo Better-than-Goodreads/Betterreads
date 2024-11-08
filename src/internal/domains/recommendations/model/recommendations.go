@@ -21,4 +21,4 @@ type BookRecommendation struct {
 	Id              uuid.UUID `json:"id" binding:"required" db:"id"`
 	TotalRatings    int       `json:"total_ratings" db:"total_ratings"`
 	AverageRating   float64   `json:"avg_rating" db:"avg_ratings"`
-} // This struct is used to return the genres and book from the database
+} // This struct is used to get all the values from the db to then sort them by rating. The genres are not in here because we are dummies that still use a hashmap.
