@@ -2,14 +2,13 @@ package model
 
 import (
 	"github.com/betterreads/internal/domains/books/models"
-    "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 type RecommendationsByGenre struct {
 	Genre string         `json:"genre"`
 	Books []*models.Book `json:"books"`
 }
-
 
 type BookRecommendation struct {
 	Title           string    `json:"title" binding:"required" db:"title"`

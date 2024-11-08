@@ -55,9 +55,9 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
 		return nil, fmt.Errorf("failed to get genre id: %w", err)
 	}
 
-    partRes := []*model.BookRecommendation{}
-    query :=  
-    `
+	partRes := []*model.BookRecommendation{}
+	query :=
+		`
     WITH ratings AS (
         SELECT 
             book_id, 
@@ -83,48 +83,46 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
         books bk
     JOIN 
         genres_books gb ON bk.id = gb.book_id
-    LEFT JOIN 
+    LEFT JOIN  -- If there are no ratings, return values with null
         ratings r ON bk.id = r.book_id
     WHERE 
         gb.genre_id = $1 
         AND bk.id NOT IN (SELECT book_id FROM bookshelf WHERE user_id = $2)
     LIMIT $3
    `
-    
-    err = r.c.Select(&partRes, query, genre_id, userId, limit)
-    if err != nil && err != sql.ErrNoRows {
-        return nil, fmt.Errorf("failed to get preferedBooks: %w", err)
-    }
-    res := []*bm.Book{}
-    for _,book := range partRes{
-        bookRes := &bm.Book{
-            Title: book.Title,
-            Author: book.Author,
-            AuthorName: book.AuthorName,
-            Description: book.Description,
-            AmountOfPages: book.AmountOfPages,
-            PublicationDate: book.PublicationDate,
-            Language: book.Language, 
-            Id: book.Id,
-            TotalRatings: book.TotalRatings, 
-            AverageRating: book.AverageRating,
-        }
 
-        genres, err := r.br.GetGenresForBook(book.Id)
-        if err != nil {
-            return nil, fmt.Errorf("failed to get genres for book: %w", err)
-                    }
-        bookRes.Genres = genres
-        res = append(res, bookRes)
-    }
+	err = r.c.Select(&partRes, query, genre_id, userId, limit)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("failed to get preferedBooks: %w", err)
+	}
+	res := []*bm.Book{}
+	for _, book := range partRes {
+		bookRes := &bm.Book{
+			Title:           book.Title,
+			Author:          book.Author,
+			AuthorName:      book.AuthorName,
+			Description:     book.Description,
+			AmountOfPages:   book.AmountOfPages,
+			PublicationDate: book.PublicationDate,
+			Language:        book.Language,
+			Id:              book.Id,
+			TotalRatings:    book.TotalRatings,
+			AverageRating:   book.AverageRating,
+		}
 
-    return res , nil
+		genres, err := r.br.GetGenresForBook(book.Id) //Need to fetch the genres unluckily
+		if err != nil {
+			return nil, fmt.Errorf("failed to get genres for book: %w", err)
+		}
+		bookRes.Genres = genres
+		res = append(res, bookRes)
+	}
 
-
+	return res, nil
 
 	// // Gets books by genre that user has not read
 	// query := `SELECT bk.title, bk.author, bk.description, bk.amount_of_pages, bk.
-	//              publication_date, bk.language, bk.id 
+	//              publication_date, bk.language, bk.id
 	//              FROM books bk
 	//              JOIN genres_books gb ON bk.id = gb.book_id
 	//              WHERE gb.genre_id = $1 AND bk.id NOT IN (SELECT book_id FROM bookshelf WHERE user_id = $2)
@@ -147,10 +145,10 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
 	// 	}
 	// 	res = append(res, bookRes)
 	// }
-    
-    // sort.Slice(res, func(i, j int) bool {
-    //     return res[i].AverageRating > res[j].AverageRating
-    // })
+
+	// sort.Slice(res, func(i, j int) bool {
+	//     return res[i].AverageRating > res[j].AverageRating
+	// })
 
 }
 
