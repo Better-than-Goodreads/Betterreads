@@ -50,8 +50,8 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
             FOREIGN KEY (book_id) REFERENCES books(id)
         );
     `
-    
-    schemaReviews := `
+
+	schemaReviews := `
         CREATE TABLE IF NOT EXISTS reviews (
             user_id UUID,
             book_id UUID,
@@ -62,7 +62,7 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
             FOREIGN KEY (user_id) REFERENCES users(id)
         );
     `
-		
+
 	schemaPictures := `
 		CREATE TABLE IF NOT EXISTS pictures (
 			book_id UUID,
@@ -71,7 +71,7 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 			PRIMARY KEY (book_id)
 		);
 		`
-	
+
 	if _, err := c.Exec(schemaBooks); err != nil {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
@@ -126,12 +126,12 @@ func (r *PostgresBookRepository) SaveBook(book *models.NewBookRequest, author uu
 		return nil, fmt.Errorf("failed to create book: %w", err)
 	}
 
-    authorName, err := r.getAuthorName(author)
-    if err != nil {
-        return nil, fmt.Errorf("failed to create book: %w", err)
-    }
+	authorName, err := r.getAuthorName(author)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create book: %w", err)
+	}
 
-    res := utils.MapBookDbToBook(bookRecord, book.Genres, &models.Ratings{}, authorName)
+	res := utils.MapBookDbToBook(bookRecord, book.Genres, &models.Ratings{}, authorName)
 
 	return res, nil
 }
@@ -172,31 +172,31 @@ func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error)
 		}
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
-    book, err := r.GetBookInfo(bookdb)
-    if err != nil {
-        return nil, fmt.Errorf("failed to get book: %w", err)
-    }
+	book, err := r.GetBookInfo(bookdb)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book: %w", err)
+	}
 	return book, nil
 }
 
 func (r *PostgresBookRepository) GetBooksByName(name string) ([]*models.Book, error) {
-    books := &[]*models.BookDb{}
-    query := `SELECT * FROM books WHERE LOWER(title) LIKE LOWER('%'||$1||'%');`
-    if err := r.c.Select(books, query, name); err != nil {
-        if err != sql.ErrNoRows {
-            return []*models.Book{}, nil
-        }
-        return nil, fmt.Errorf("failed to get book: %w", err)
-    }
-    res := []*models.Book{}
-    for _, book := range *books {
-        Bookres, err := r.GetBookInfo(book)
-        if err != nil {
-            return nil, fmt.Errorf("failed to get book: %w", err)
-        }
-        res = append(res, Bookres)
-    }
-    return res, nil
+	books := &[]*models.BookDb{}
+	query := `SELECT * FROM books WHERE LOWER(title) LIKE LOWER('%'||$1||'%');`
+	if err := r.c.Select(books, query, name); err != nil {
+		if err != sql.ErrNoRows {
+			return []*models.Book{}, nil
+		}
+		return nil, fmt.Errorf("failed to get book: %w", err)
+	}
+	res := []*models.Book{}
+	for _, book := range *books {
+		Bookres, err := r.GetBookInfo(book)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get book: %w", err)
+		}
+		res = append(res, Bookres)
+	}
+	return res, nil
 }
 
 func (r *PostgresBookRepository) GetBookPictureById(id uuid.UUID) ([]byte, error) {
@@ -216,24 +216,24 @@ func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
 	query := `SELECT * FROM books;`
 	if err := r.c.Select(&books, query); err != nil {
 		if err == sql.ErrNoRows {
-            return []*models.Book{}, nil
+			return []*models.Book{}, nil
 		}
 		return nil, fmt.Errorf("failed to get books: %w", err)
 	}
 	res := []*models.Book{}
-    for _, book := range books {
-        Bookres, err := r.GetBookInfo(book)
-        if err != nil {
-            return nil, fmt.Errorf("failed to get book: %w", err)
-        }
-        res = append(res, Bookres)
-    }
+	for _, book := range books {
+		Bookres, err := r.GetBookInfo(book)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get book: %w", err)
+		}
+		res = append(res, Bookres)
+	}
 	return res, nil
 }
 
 func (r *PostgresBookRepository) GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error) {
 	var books []*models.BookDb
-    query := `SELECT * FROM books WHERE author = $1;`
+	query := `SELECT * FROM books WHERE author = $1;`
 	if err := r.c.Select(&books, query, authorId); err != nil {
 		if err == sql.ErrNoRows {
 			return []*models.Book{}, nil
@@ -256,7 +256,7 @@ func (r *PostgresBookRepository) RateBook(bookId uuid.UUID, userId uuid.UUID, ra
 	query := `INSERT INTO reviews (user_id, book_id, rating, review)
 			VALUES ($1, $2, $3, $4)
 			RETURNING user_id, book_id, rating;`
-	args := []interface{}{userId, bookId, rating,""}
+	args := []interface{}{userId, bookId, rating, ""}
 
 	if err := r.c.Get(&ratingRecord, query, args...); err != nil {
 		return nil, fmt.Errorf("failed to rate book: %w", err)
@@ -274,14 +274,14 @@ func (r *PostgresBookRepository) CheckIfRatingExists(bookId uuid.UUID, userId uu
 	}
 }
 
-func (r *PostgresBookRepository) UpdateRating(bookId uuid.UUID, userId uuid.UUID, rating int) (error){
-    query := `UPDATE reviews SET rating = $1 WHERE user_id = $2 AND book_id = $3;`
-    args := []interface{}{rating, userId, bookId}
-    if _, err := r.c.Exec(query, args...); err != nil {
-        return fmt.Errorf("failed to update rating: %w", err)
-    }
+func (r *PostgresBookRepository) UpdateRating(bookId uuid.UUID, userId uuid.UUID, rating int) error {
+	query := `UPDATE reviews SET rating = $1 WHERE user_id = $2 AND book_id = $3;`
+	args := []interface{}{rating, userId, bookId}
+	if _, err := r.c.Exec(query, args...); err != nil {
+		return fmt.Errorf("failed to update rating: %w", err)
+	}
 
-    return nil
+	return nil
 }
 
 func (r *PostgresBookRepository) GetBookReviewOfUser(bookId uuid.UUID, userId uuid.UUID) (*models.Review, error) {
@@ -295,30 +295,30 @@ func (r *PostgresBookRepository) GetBookReviewOfUser(bookId uuid.UUID, userId uu
 		}
 		return nil, fmt.Errorf("failed to get ratings: %w", err)
 	}
-    ReviewRes:= &models.Review{
-        Text: ratings.Review,
-        Rating: ratings.Rating,
-    }
+	ReviewRes := &models.Review{
+		Text:   ratings.Review,
+		Rating: ratings.Rating,
+	}
 	return ReviewRes, nil
 }
 
 func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error) {
 
-    res := []*models.ReviewOfUser{}  
-    query := `
+	res := []*models.ReviewOfUser{}
+	query := `
         SELECT b.title AS book_title, r.review,b.id as book_id, r.rating
         FROM reviews r
         INNER JOIN books b ON r.book_id = b.id
         WHERE r.user_id = $1;
     `
-    if err := r.c.Select(&res, query, userId); err != nil {
-        if err == sql.ErrNoRows {
-            return []*models.ReviewOfUser{}, nil
-        }
-        return nil, fmt.Errorf("failed to get reviews: %w", err)
-    }
+	if err := r.c.Select(&res, query, userId); err != nil {
+		if err == sql.ErrNoRows {
+			return []*models.ReviewOfUser{}, nil
+		}
+		return nil, fmt.Errorf("failed to get reviews: %w", err)
+	}
 
-    return res, nil
+	return res, nil
 }
 
 func (r *PostgresBookRepository) getAuthorName(authorId uuid.UUID) (string, error) {
@@ -334,121 +334,121 @@ func (r *PostgresBookRepository) getAuthorName(authorId uuid.UUID) (string, erro
 }
 
 func (r *PostgresBookRepository) AddReview(bookId uuid.UUID, userId uuid.UUID, review string, rating int) error {
-    args := []interface{}{userId, bookId}
-    query := `INSERT INTO reviews (user_id, book_id, review, rating)
+	args := []interface{}{userId, bookId}
+	query := `INSERT INTO reviews (user_id, book_id, review, rating)
     VALUES ($1, $2, $3, $4);`
-    args = []interface{}{userId, bookId, review, rating}
+	args = []interface{}{userId, bookId, review, rating}
 
-    if _, err := r.c.Exec(query, args...); err != nil {
-        return fmt.Errorf("failed to add review: %w", err)
-    }
-    return nil
+	if _, err := r.c.Exec(query, args...); err != nil {
+		return fmt.Errorf("failed to add review: %w", err)
+	}
+	return nil
 }
 
-func (r *PostgresBookRepository) EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) error{
-    query := `UPDATE reviews SET review = $1, rating = $2 WHERE book_id = $3 AND user_id = $4;`
-    args := []interface{}{review, rating, bookId, userId}
-    if _, err := r.c.Exec(query, args...); err != nil {
-        return fmt.Errorf("failed to update review: %w", err)
-    }
-    return nil
+func (r *PostgresBookRepository) EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) error {
+	query := `UPDATE reviews SET review = $1, rating = $2 WHERE book_id = $3 AND user_id = $4;`
+	args := []interface{}{review, rating, bookId, userId}
+	if _, err := r.c.Exec(query, args...); err != nil {
+		return fmt.Errorf("failed to update review: %w", err)
+	}
+	return nil
 }
 
 func (r *PostgresBookRepository) DeleteReview(bookId uuid.UUID, userId uuid.UUID) error {
-    return nil //lol
+	return nil //lol
 }
 
 func (r *PostgresBookRepository) CheckifReviewExists(bookId uuid.UUID, userId uuid.UUID) (bool, error) {
-    reviewCheck := &models.ReviewDb{}
-    query := `SELECT * FROM reviews WHERE book_id = $1 AND user_id = $2;`
-    args := []interface{}{bookId, userId}
-    if err := r.c.Get(reviewCheck, query, args...); err != nil {
-        if err == sql.ErrNoRows{
-            return false , nil
-        }
-        return false, fmt.Errorf("failed to get review: %w", err)
-    }
+	reviewCheck := &models.ReviewDb{}
+	query := `SELECT * FROM reviews WHERE book_id = $1 AND user_id = $2;`
+	args := []interface{}{bookId, userId}
+	if err := r.c.Get(reviewCheck, query, args...); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to get review: %w", err)
+	}
 
-    if reviewCheck.Review == "" {
-        return false, ErrReviewEmpty
-    }
+	if reviewCheck.Review == "" {
+		return false, ErrReviewEmpty
+	}
 
-    return true, nil
+	return true, nil
 }
 
-func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.ReviewOfBook, error){
-    res := []*models.ReviewOfBook{}
-    query := `
+func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.ReviewOfBook, error) {
+	res := []*models.ReviewOfBook{}
+	query := `
         SELECT u.username, r.review, u.id AS user_id, r.rating
         FROM reviews r
         INNER JOIN users u ON r.user_id = u.id
         WHERE r.book_id = $1;
     `
 
-    if err := r.c.Select(&res, query, bookID); err != nil {
-        if err == sql.ErrNoRows {
-            return []*models.ReviewOfBook{}, nil
-        }
-        return nil, fmt.Errorf("failed to get reviews: %w", err)
-    }
+	if err := r.c.Select(&res, query, bookID); err != nil {
+		if err == sql.ErrNoRows {
+			return []*models.ReviewOfBook{}, nil
+		}
+		return nil, fmt.Errorf("failed to get reviews: %w", err)
+	}
 
-    return res, nil
+	return res, nil
 }
 
 func (r *PostgresBookRepository) GetBookInfo(book *models.BookDb) (*models.Book, error) {
-    genres, err := r.GetGenresForBook(book.Id)
-    if err != nil {
-        return nil, fmt.Errorf("failed to get books: %w", err)
-    }
-    ratings, err := r.getRatingsForBook(book.Id)
-    if err != nil {
-        if err != ErrRatingNotFound {
-            return nil, fmt.Errorf("failed to get book: %w", err)
-        }
-    }
-    author, err := r.getAuthorName(book.Author)
-    if err != nil {
-        return nil, fmt.Errorf("failed to get book: %w", err)
-    }
+	genres, err := r.GetGenresForBook(book.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get books: %w", err)
+	}
+	ratings, err := r.getRatingsForBook(book.Id)
+	if err != nil {
+		if err != ErrRatingNotFound {
+			return nil, fmt.Errorf("failed to get book: %w", err)
+		}
+	}
+	author, err := r.getAuthorName(book.Author)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book: %w", err)
+	}
 
-    return utils.MapBookDbToBook(book, genres, ratings, author), nil
+	return utils.MapBookDbToBook(book, genres, ratings, author), nil
 }
 
-func (r *PostgresBookRepository) GetBookshelfStatusOfUser(bookId uuid.UUID, userId uuid.UUID) (*string, error){
-    var status string
-    query := `SELECT status FROM bookshelf WHERE book_id = $1 AND user_id = $2;`
-    if err := r.c.Get(&status, query, bookId, userId); err != nil {
-        if err == sql.ErrNoRows {
-            return nil, ErrBookNotInShelf
-        }
-        return nil, fmt.Errorf("failed to get bookshelf status: %w", err)
-    }
-    return &status, nil
+func (r *PostgresBookRepository) GetBookshelfStatusOfUser(bookId uuid.UUID, userId uuid.UUID) (*string, error) {
+	var status string
+	query := `SELECT status FROM bookshelf WHERE book_id = $1 AND user_id = $2;`
+	if err := r.c.Get(&status, query, bookId, userId); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrBookNotInShelf
+		}
+		return nil, fmt.Errorf("failed to get bookshelf status: %w", err)
+	}
+	return &status, nil
 }
 
-func (r *PostgresBookRepository) CheckIfBookExists(bookId uuid.UUID) bool{
-    exists := false
-    query := `SELECT EXISTS(SELECT 1 FROM books WHERE id = $1);`
-    if err := r.c.Get(&exists, query, bookId); err != nil {
-        return false
-    }
-    return exists
+func (r *PostgresBookRepository) CheckIfBookExists(bookId uuid.UUID) bool {
+	exists := false
+	query := `SELECT EXISTS(SELECT 1 FROM books WHERE id = $1);`
+	if err := r.c.Get(&exists, query, bookId); err != nil {
+		return false
+	}
+	return exists
 }
 
 func (r *PostgresBookRepository) CheckIfUserIsAuthor(authorId uuid.UUID) bool {
-    exists := false
-    query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1 AND is_author = true);`
-    if err := r.c.Get(&exists, query, authorId); err != nil {
-        return false
-    }
-    return exists
+	exists := false
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1 AND is_author = true);`
+	if err := r.c.Get(&exists, query, authorId); err != nil {
+		return false
+	}
+	return exists
 }
 
 func (r *PostgresBookRepository) CheckIfUserExists(userId uuid.UUID) bool {
-    exists := false
-    query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1);`
-    if err := r.c.Get(&exists, query, userId) ; err != nil {
-        return false
-    }
-    return exists
+	exists := false
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1);`
+	if err := r.c.Get(&exists, query, userId); err != nil {
+		return false
+	}
+	return exists
 }

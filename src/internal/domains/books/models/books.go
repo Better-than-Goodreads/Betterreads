@@ -5,8 +5,8 @@ import "github.com/google/uuid"
 // RECORDS
 type Book struct {
 	Title           string    `json:"title" binding:"required"`
-	Author          uuid.UUID    `json:"author" binding:"required"`
-    AuthorName      string   `json:"author_name"`
+	Author          uuid.UUID `json:"author" binding:"required"`
+	AuthorName      string    `json:"author_name"`
 	Description     string    `json:"description" binding:"required"`
 	AmountOfPages   int       `json:"amount_of_pages" binding:"required"`
 	PublicationDate string    `json:"publication_date" binding:"required"`
@@ -19,7 +19,7 @@ type Book struct {
 
 type BookDb struct {
 	Title           string    `json:"title" db:"title"`
-	Author          uuid.UUID    `json:"author" db:"author"`
+	Author          uuid.UUID `json:"author" db:"author"`
 	Description     string    `json:"description" db:"description"`
 	AmountOfPages   int       `json:"amount_of_pages" db:"amount_of_pages"`
 	PublicationDate string    `json:"publication_date" db:"publication_date"`
@@ -44,15 +44,15 @@ type Ratings struct {
 }
 
 type ReviewDb struct {
-    UserId uuid.UUID `json:"user_id" db:"user_id"`
-    BookId uuid.UUID `json:"book_id" db:"book_id"`
-    Review string `json:"review" db:"review"`
-    Rating int `json:"rating" db:"rating"`
+	UserId uuid.UUID `json:"user_id" db:"user_id"`
+	BookId uuid.UUID `json:"book_id" db:"book_id"`
+	Review string    `json:"review" db:"review"`
+	Rating int       `json:"rating" db:"rating"`
 }
 
 type Review struct {
-    Text string `json:"review" db:"review"`
-    Rating int `json:"rating" db:"rating"`
+	Text   string `json:"review" db:"review"`
+	Rating int    `json:"rating" db:"rating"`
 }
 
 // REQUESTS
@@ -63,9 +63,8 @@ type NewBookRequest struct {
 	PublicationDate string   `json:"publication_date" validate:"required"`
 	Language        string   `json:"language" validate:"required"`
 	Genres          []string `json:"genres" validate:"required"`
-	Picture		 	[]byte	 `json:"picture"`
+	Picture         []byte   `json:"picture"`
 }
-
 
 type NewRatingRequest struct {
 	Rating int `json:"rating" binding:"required"`
@@ -73,14 +72,14 @@ type NewRatingRequest struct {
 
 type NewReviewRequest struct {
 	Review string `json:"review"`
-    Rating int    `json:"rating" binding:"required"`
+	Rating int    `json:"rating" binding:"required"`
 }
 
 // RESPONSES
 type BookResponse struct {
 	Title           string    `json:"title"`
-    Author          uuid.UUID   `json:"author_id"`
-	AuthorName          string    `json:"author_name"`
+	Author          uuid.UUID `json:"author_id"`
+	AuthorName      string    `json:"author_name"`
 	Description     string    `json:"description"`
 	PublicationDate string    `json:"publication_date"`
 	Language        string    `json:"language"`
@@ -92,23 +91,21 @@ type BookResponse struct {
 }
 
 type ReviewOfUser struct {
-    BookTitle string `json:"book_title" db:"book_title"`
-    Review string `json:"review" db:"review"`
-    BookId uuid.UUID `json:"book_id" db:"book_id"`
-    Rating int `json:"rating" db:"rating"`
+	BookTitle string    `json:"book_title" db:"book_title"`
+	Review    string    `json:"review" db:"review"`
+	BookId    uuid.UUID `json:"book_id" db:"book_id"`
+	Rating    int       `json:"rating" db:"rating"`
 }
 
 type ReviewOfBook struct {
-    Username string `json:"username" db:"username"`
-    Review string `json:"review" db:"review"`
-    UserId uuid.UUID `json:"user_id" db:"user_id"`
-    Rating int `json:"rating" db:"rating"`
+	Username string    `json:"username" db:"username"`
+	Review   string    `json:"review" db:"review"`
+	UserId   uuid.UUID `json:"user_id" db:"user_id"`
+	Rating   int       `json:"rating" db:"rating"`
 }
 
 type BookResponseWithReview struct {
-    Book *BookResponse      `json:"book"`
-    Review *Review`json:"review,omitempty"`
-    BookShelfStatus *string `json:"status,omitempty"`
+	Book            *BookResponse `json:"book"`
+	Review          *Review       `json:"review,omitempty"`
+	BookShelfStatus *string       `json:"status,omitempty"`
 }
-
-

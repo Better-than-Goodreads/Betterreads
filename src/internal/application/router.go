@@ -8,13 +8,13 @@ import (
 	booksService "github.com/betterreads/internal/domains/books/service"
 	"github.com/jmoiron/sqlx"
 
-    bookshelfController "github.com/betterreads/internal/domains/bookshelf/controller"
-    bookshelfRepository "github.com/betterreads/internal/domains/bookshelf/repository"
-    bookshelfService "github.com/betterreads/internal/domains/bookshelf/service"
+	bookshelfController "github.com/betterreads/internal/domains/bookshelf/controller"
+	bookshelfRepository "github.com/betterreads/internal/domains/bookshelf/repository"
+	bookshelfService "github.com/betterreads/internal/domains/bookshelf/service"
 
-    recommendationsController "github.com/betterreads/internal/domains/recommendations/controller"
-    recommendationsRepository "github.com/betterreads/internal/domains/recommendations/repository"
-    recommendationsService "github.com/betterreads/internal/domains/recommendations/service"
+	recommendationsController "github.com/betterreads/internal/domains/recommendations/controller"
+	recommendationsRepository "github.com/betterreads/internal/domains/recommendations/repository"
+	recommendationsService "github.com/betterreads/internal/domains/recommendations/service"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -78,9 +78,9 @@ func NewRouter(port string) *Router {
 	r := createRouterFromConfig(cfg)
 	addCorsConfiguration(r)
 	addUsersHandlers(r, conn)
-    books, booksRepo := addBooksHandlers(r, conn)
-    AddBookshelfHandlers(r, conn, books)
-    AddRecommendationsHandlers(r, conn, books, booksRepo)
+	books, booksRepo := addBooksHandlers(r, conn)
+	AddBookshelfHandlers(r, conn, books)
+	AddRecommendationsHandlers(r, conn, books, booksRepo)
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -124,7 +124,7 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 	}
 }
 
-func addBooksHandlers(r *Router, conn *sqlx.DB)  (booksService.BooksService, booksRepository.BooksDatabase){
+func addBooksHandlers(r *Router, conn *sqlx.DB) (booksService.BooksService, booksRepository.BooksDatabase) {
 	booksRepo, err := booksRepository.NewPostgresBookRepository(conn)
 	if err != nil {
 		fmt.Println("error: %w", err)
@@ -139,7 +139,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB)  (booksService.BooksService, boo
 		public.GET("/:id/info", bc.GetBookInfo)
 		public.GET("/info", bc.GetBooksInfo)
 		public.GET("/info/search", bc.SearchBooksInfoByName)
-        public.GET("/:id/reviews", bc.GetBookReviews)
+		public.GET("/:id/reviews", bc.GetBookReviews)
 	}
 
 	private := r.engine.Group("/books")
@@ -148,46 +148,45 @@ func addBooksHandlers(r *Router, conn *sqlx.DB)  (booksService.BooksService, boo
 		private.POST("/", bc.PublishBook)
 		private.POST("/:id/reviews", bc.ReviewBook)
 		private.POST("/:id/rating", bc.RateBook)
-        private.PUT("/:id/rating", bc.UpdateRatingOfBook)
-        private.GET("/author/:id", bc.GetBooksOfAuthor)
+		private.PUT("/:id/rating", bc.UpdateRatingOfBook)
+		private.GET("/author/:id", bc.GetBooksOfAuthor)
 		private.GET("/user/:id/reviews", bc.GetAllReviewsOfUser)
 	}
 
-    return bs, booksRepo
+	return bs, booksRepo
 }
 
 func AddBookshelfHandlers(r *Router, conn *sqlx.DB, books booksService.BooksService) {
-    bookshelfRepo, err := bookshelfRepository.NewPostgresBookShelfRepository(conn)
-    if err != nil {
-        fmt.Println("error: %w", err)
-    }
-    bs := bookshelfService.NewBookShelfServiceImpl(bookshelfRepo, books)
-    bc := bookshelfController.NewBookshelfController(bs)
+	bookshelfRepo, err := bookshelfRepository.NewPostgresBookShelfRepository(conn)
+	if err != nil {
+		fmt.Println("error: %w", err)
+	}
+	bs := bookshelfService.NewBookShelfServiceImpl(bookshelfRepo, books)
+	bc := bookshelfController.NewBookshelfController(bs)
 
-    public := r.engine.Group("/users")
-    {
-        public.GET("/:id/shelf", bc.GetBookShelf)
-    }
+	public := r.engine.Group("/users")
+	{
+		public.GET("/:id/shelf", bc.GetBookShelf)
+	}
 
-
-    private := r.engine.Group("users/shelf")
-    private.Use(middlewares.AuthMiddleware)
-    {
-        private.POST("/", bc.AddBookToShelf)
-        private.PUT("/", bc.EditBookInShelf)
-    }
+	private := r.engine.Group("users/shelf")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.POST("/", bc.AddBookToShelf)
+		private.PUT("/", bc.EditBookInShelf)
+	}
 }
 
 func AddRecommendationsHandlers(r *Router, conn *sqlx.DB, books booksService.BooksService, booksRepo booksRepository.BooksDatabase) {
-    recommendationsRepo := recommendationsRepository.NewPostgresRecommendationsRepository(conn, booksRepo)
-    rs := recommendationsService.NewRecommendationsServiceImpl(recommendationsRepo, books)
-    rc := recommendationsController.NewRecommendationsController(rs)
-    private := r.engine.Group("users/recommendations")
-    private.Use(middlewares.AuthMiddleware)
-    {
-        private.GET("/more", rc.GetMoreRecommendations)
-        private.GET("/", rc.GetRecommendations)
-    }
+	recommendationsRepo := recommendationsRepository.NewPostgresRecommendationsRepository(conn, booksRepo)
+	rs := recommendationsService.NewRecommendationsServiceImpl(recommendationsRepo, books)
+	rc := recommendationsController.NewRecommendationsController(rs)
+	private := r.engine.Group("users/recommendations")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.GET("/more", rc.GetMoreRecommendations)
+		private.GET("/", rc.GetRecommendations)
+	}
 }
 
 func (r *Router) Run() {

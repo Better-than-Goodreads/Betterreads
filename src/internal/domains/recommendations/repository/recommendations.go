@@ -1,19 +1,17 @@
 package repository
 
 import (
-    "errors"
-    "github.com/google/uuid"
-    "github.com/betterreads/internal/domains/books/models"
+	"errors"
+	"github.com/betterreads/internal/domains/books/models"
+	"github.com/google/uuid"
 )
-
 
 var (
-    ErrNeedMoreBooksInShelf = errors.New("need 5 or more books in shelf")
+	ErrNeedMoreBooksInShelf = errors.New("need 5 or more books in shelf")
 )
 
-
 type RecommendationsDatabase interface {
-    GetMoreRecommendations(userId uuid.UUID, genre string) ([]*models.Book, error)
-    GetRecommendations(userId uuid.UUID) (map[string][]*models.Book, error)
-    CheckIfUserHasValidShelf(userId uuid.UUID) bool 
+	GetMoreRecommendations(userId uuid.UUID, genre string) ([]*models.Book, error)
+	GetRecommendations(userId uuid.UUID) (map[string][]*models.Book, error)
+	CheckIfUserHasValidShelf(userId uuid.UUID) bool
 }
