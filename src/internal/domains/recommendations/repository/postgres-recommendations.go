@@ -76,6 +76,10 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
 		}
 		res = append(res, bookRes)
 	}
+    
+    sort.Slice(res, func(i, j int) bool {
+        return res[i].AverageRating > res[j].AverageRating
+    })
 
 	return res, nil
 }
