@@ -62,7 +62,7 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
         SELECT 
             book_id, 
             COUNT(*) AS total_ratings, 
-            AVG(rating) AS avg_ratings 
+            AVG(COALESCE(rating,0)) AS avg_ratings 
         FROM 
             reviews 
         GROUP BY 
@@ -83,13 +83,13 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
         books bk
     JOIN 
         genres_books gb ON bk.id = gb.book_id
-    LEFT JOIN  -- If there are no ratings, return values with null
+    LEFT JOIN
         ratings r ON bk.id = r.book_id
     WHERE 
         gb.genre_id = $1 
         AND bk.id NOT IN (SELECT book_id FROM bookshelf WHERE user_id = $2)
-    ORDER BY r.avg_ratings ASC 
-    LIMIT $3
+    ORDER BY avg_ratings DESC
+    LIMIT $3;
    `
 
 	err = r.c.Select(&partRes, query, genre_id, userId, limit)
@@ -114,11 +114,11 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
 		genres, err := r.br.GetGenresForBook(book.Id) //Need to fetch the genres unluckily
 		if err != nil {
 			return nil, fmt.Errorf("failed to get genres for book: %w", err)
-		}
+        }
 		bookRes.Genres = genres
 		res = append(res, bookRes)
 	}
-
+    
 	return res, nil
 }
 
