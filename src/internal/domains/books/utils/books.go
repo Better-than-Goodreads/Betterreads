@@ -50,3 +50,19 @@ func MapBookDbToBook(book *models.BookDb, genres []string, ratings *models.Ratin
 		AverageRating:   ratings.Avg_ratings,
 	}
 }
+
+func MapBookRecordToBook(book *models.BookRecord, genres []string) *models.Book {
+	return &models.Book{
+		Title:           book.Title,
+		Author:          book.Author,
+		AuthorName:      book.AuthorName,
+		Description:     book.Description,
+		AmountOfPages:   book.AmountOfPages,
+		PublicationDate: book.PublicationDate,
+		Language:        book.Language,
+		Genres:          genres,
+		Id:              book.Id,
+		TotalRatings:    book.TotalRatings,
+		AverageRating:   book.AverageRating,
+	}
+}

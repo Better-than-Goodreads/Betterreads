@@ -54,7 +54,6 @@ type BooksDatabase interface {
 	GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error)
 	GetBooksByName(name string) ([]*models.Book, error)
 	GetGenresForBook(book_id uuid.UUID) ([]string, error)
-	GetBookInfo(book *models.BookDb) (*models.Book, error)
 
 	CheckIfBookExists(bookId uuid.UUID) bool
 	CheckIfUserExists(userId uuid.UUID) bool

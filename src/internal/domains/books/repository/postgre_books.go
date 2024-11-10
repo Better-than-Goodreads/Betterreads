@@ -87,7 +87,54 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 		return nil, fmt.Errorf("failed to create table: %w", err)
 	}
 
+	if err := defineView(c); err != nil {
+		return nil, fmt.Errorf("failed to create view: %w", err)
+	}
+
 	return &PostgresBookRepository{c}, nil
+}
+
+func defineView(c *sqlx.DB) error {
+	query := `
+    DO $$
+    BEGIN
+        -- Check if the view exists
+        IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_views WHERE viewname = 'book_view') THEN
+            -- Create the view if it doesn't exist
+            CREATE VIEW book_view AS
+            WITH ratings AS (
+                SELECT 
+                    book_id, 
+                    COUNT(*) AS total_ratings, 
+                    AVG(COALESCE(rating, 0)) AS avg_ratings
+                FROM 
+                    reviews
+                GROUP BY 
+                    book_id
+            )
+            SELECT 
+                bk.title, 
+                bk.author, 
+                (SELECT username FROM users WHERE id = bk.author) AS author_name, 
+                bk.description, 
+                bk.amount_of_pages, 
+                bk.publication_date, 
+                bk.language, 
+                bk.id,
+                COALESCE(r.total_ratings, 0) AS total_ratings,
+                COALESCE(r.avg_ratings, 0) AS avg_ratings
+            FROM 
+                books bk
+            LEFT JOIN 
+                ratings r ON bk.id = r.book_id;
+        END IF;
+    END $$;
+    `
+
+	if _, err := c.Exec(query); err != nil {
+		return fmt.Errorf("failed to create book view: %w", err)
+	}
+	return nil
 }
 
 func (r *PostgresBookRepository) SaveBook(book *models.NewBookRequest, author uuid.UUID) (*models.Book, error) {
@@ -151,51 +198,38 @@ func (r *PostgresBookRepository) GetGenresForBook(book_id uuid.UUID) ([]string, 
 	return genres, nil
 }
 
-func (r *PostgresBookRepository) getRatingsForBook(book_id uuid.UUID) (*models.Ratings, error) {
-	ratings := &models.Ratings{}
-	query := `SELECT COUNT(*) as total_ratings, COALESCE(AVG(rating), 0) as avg_ratings FROM reviews WHERE book_id = $1;`
-	if err := r.c.Get(ratings, query, book_id); err != nil {
-		if err == sql.ErrNoRows {
-			return ratings, nil
-		}
-		return nil, fmt.Errorf("failed to get ratings: %w", err)
-	}
-	return ratings, nil
-}
-
 func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error) {
-	bookdb := &models.BookDb{}
-	query := `SELECT * FROM books WHERE id = $1;`
-	if err := r.c.Get(bookdb, query, id); err != nil {
+	bookRecord := &models.BookRecord{}
+	query := `SELECT * FROM book_view WHERE id = $1;`
+	if err := r.c.Get(bookRecord, query, id); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrBookNotFound
 		}
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
-	book, err := r.GetBookInfo(bookdb)
+
+	genres, err := r.GetGenresForBook(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
-	return book, nil
+
+	return utils.MapBookRecordToBook(bookRecord, genres), nil
 }
 
 func (r *PostgresBookRepository) GetBooksByName(name string) ([]*models.Book, error) {
-	books := &[]*models.BookDb{}
-	query := `SELECT * FROM books WHERE LOWER(title) LIKE LOWER('%'||$1||'%');`
-	if err := r.c.Select(books, query, name); err != nil {
-		if err != sql.ErrNoRows {
+	bookRecords := []*models.BookRecord{}
+	query := `SELECT * FROM book_view WHERE LOWER(title) LIKE LOWER('%'||$1||'%');`
+	if err := r.c.Select(&bookRecords, query, name); err != nil {
+		if err == sql.ErrNoRows {
 			return []*models.Book{}, nil
 		}
-		return nil, fmt.Errorf("failed to get book: %w", err)
+		return nil, fmt.Errorf("failed to get books: %w", err)
 	}
-	res := []*models.Book{}
-	for _, book := range *books {
-		Bookres, err := r.GetBookInfo(book)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get book: %w", err)
-		}
-		res = append(res, Bookres)
+	res, error := r.CompleteBooks(bookRecords)
+	if error != nil {
+		return nil, fmt.Errorf("failed to get book: %w", error)
 	}
+
 	return res, nil
 }
 
@@ -212,41 +246,34 @@ func (r *PostgresBookRepository) GetBookPictureById(id uuid.UUID) ([]byte, error
 }
 
 func (r *PostgresBookRepository) GetBooks() ([]*models.Book, error) {
-	var books []*models.BookDb
-	query := `SELECT * FROM books;`
+	books := []*models.BookRecord{}
+	query := `SELECT * FROM book_view;`
 	if err := r.c.Select(&books, query); err != nil {
 		if err == sql.ErrNoRows {
 			return []*models.Book{}, nil
 		}
 		return nil, fmt.Errorf("failed to get books: %w", err)
 	}
-	res := []*models.Book{}
-	for _, book := range books {
-		Bookres, err := r.GetBookInfo(book)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get book: %w", err)
-		}
-		res = append(res, Bookres)
+	res, error := r.CompleteBooks(books)
+	if error != nil {
+		return nil, fmt.Errorf("failed to get book: %w", error)
 	}
 	return res, nil
 }
 
 func (r *PostgresBookRepository) GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error) {
-	var books []*models.BookDb
-	query := `SELECT * FROM books WHERE author = $1;`
+	books := []*models.BookRecord{}
+	query := `SELECT * FROM book_view WHERE author = $1;`
 	if err := r.c.Select(&books, query, authorId); err != nil {
 		if err == sql.ErrNoRows {
 			return []*models.Book{}, nil
 		}
 		return nil, fmt.Errorf("failed to get books: %w", err)
 	}
-	res := []*models.Book{}
-	for _, book := range books {
-		Bookres, err := r.GetBookInfo(book)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get book: %w", err)
-		}
-		res = append(res, Bookres)
+
+	res, err := r.CompleteBooks(books)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
 	return res, nil
 }
@@ -395,25 +422,6 @@ func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.Rev
 	return res, nil
 }
 
-func (r *PostgresBookRepository) GetBookInfo(book *models.BookDb) (*models.Book, error) {
-	genres, err := r.GetGenresForBook(book.Id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get books: %w", err)
-	}
-	ratings, err := r.getRatingsForBook(book.Id)
-	if err != nil {
-		if err != ErrRatingNotFound {
-			return nil, fmt.Errorf("failed to get book: %w", err)
-		}
-	}
-	author, err := r.getAuthorName(book.Author)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get book: %w", err)
-	}
-
-	return utils.MapBookDbToBook(book, genres, ratings, author), nil
-}
-
 func (r *PostgresBookRepository) GetBookshelfStatusOfUser(bookId uuid.UUID, userId uuid.UUID) (*string, error) {
 	var status string
 	query := `SELECT status FROM bookshelf WHERE book_id = $1 AND user_id = $2;`
@@ -451,4 +459,16 @@ func (r *PostgresBookRepository) CheckIfUserExists(userId uuid.UUID) bool {
 		return false
 	}
 	return exists
+}
+
+func (r *PostgresBookRepository) CompleteBooks(books []*models.BookRecord) ([]*models.Book, error) {
+	res := []*models.Book{}
+	for _, book := range books {
+		genres, err := r.GetGenresForBook(book.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get book: %w", err)
+		}
+		res = append(res, utils.MapBookRecordToBook(book, genres))
+	}
+	return res, nil
 }

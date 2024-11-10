@@ -70,6 +70,8 @@ func NewRouter(port string) *Router {
 		cfg.DatabasePort,
 		cfg.DatabaseName)
 
+	fmt.Printf("conn string: %s\n", dsn)
+
 	conn, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		log.Fatalf("can't connect to db: %v", err)
@@ -128,6 +130,9 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) (booksService.BooksService, book
 	booksRepo, err := booksRepository.NewPostgresBookRepository(conn)
 	if err != nil {
 		fmt.Println("error: %w", err)
+	}
+	if booksRepo == nil {
+		fmt.Println("booksRepo is nil")
 	}
 	bs := booksService.NewBooksServiceImpl(booksRepo)
 	bc := booksController.NewBooksController(bs)

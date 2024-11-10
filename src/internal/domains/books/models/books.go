@@ -17,6 +17,19 @@ type Book struct {
 	AverageRating   float64   `json:"avg_rating" db:"avg_rating"`
 } // This struct is used to return the genres and book from the database
 
+type BookRecord struct {
+	Title           string    `json:"title" db:"title"`
+	Author          uuid.UUID `json:"author" db:"author"`
+	AuthorName      string    `json:"author" db:"author_name"`
+	Description     string    `json:"description" db:"description"`
+	AmountOfPages   int       `json:"amount_of_pages" db:"amount_of_pages"`
+	PublicationDate string    `json:"publication_date" db:"publication_date"`
+	Language        string    `json:"language" db:"language"`
+	Id              uuid.UUID `json:"id" db:"id"`
+	TotalRatings    int       `json:"total_ratings" db:"total_ratings"`
+	AverageRating   float64   `json:"avg_rating" db:"avg_ratings"`
+}
+
 type BookDb struct {
 	Title           string    `json:"title" db:"title"`
 	Author          uuid.UUID `json:"author" db:"author"`

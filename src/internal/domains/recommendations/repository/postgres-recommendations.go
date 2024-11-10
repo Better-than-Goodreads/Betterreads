@@ -114,11 +114,11 @@ func (r *PostgresRecommendationsRepository) GetPreferedBooks(genre string, limit
 		genres, err := r.br.GetGenresForBook(book.Id) //Need to fetch the genres unluckily
 		if err != nil {
 			return nil, fmt.Errorf("failed to get genres for book: %w", err)
-        }
+		}
 		bookRes.Genres = genres
 		res = append(res, bookRes)
 	}
-    
+
 	return res, nil
 }
 
