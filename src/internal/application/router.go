@@ -70,7 +70,6 @@ func NewRouter(port string) *Router {
 		cfg.DatabasePort,
 		cfg.DatabaseName)
 
-	fmt.Printf("conn string: %s\n", dsn)
 
 	conn, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
