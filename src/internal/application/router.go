@@ -70,7 +70,6 @@ func NewRouter(port string) *Router {
 		cfg.DatabasePort,
 		cfg.DatabaseName)
 
-
 	conn, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		log.Fatalf("can't connect to db: %v", err)
@@ -142,7 +141,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) (booksService.BooksService, book
 		public.GET("/:id/picture", bc.GetBookPicture)
 		public.GET("/:id/info", bc.GetBookInfo)
 		public.GET("/info", bc.GetBooksInfo)
-		public.GET("/info/search", bc.SearchBooksInfoByName)
+		public.GET("/info/search", bc.SearchBooksInfo)
 		public.GET("/:id/reviews", bc.GetBookReviews)
 	}
 

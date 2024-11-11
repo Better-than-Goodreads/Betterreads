@@ -118,21 +118,43 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 
 // GetBooksByName
 // @Summary Get books by name
-// @Description Get books by name, if no books found returns an empty array
+// @Description Get books by name, filters by genre and also sorts, if no books found returns an empty array
 // @Tags books
 // @Param name query string true "Book Name"
+// @Param genre query string false "Book Genre"
+// @Param sort query string false "Sort by publication_date, total_ratings, avg_rating"
+// @Param direction query string false "Sort direction asc or desc"
 // @Produce  json
 // @Success 200 {object} []models.BookResponseWithReview
 // @Failure 400 {object} errors.ErrorDetails
 // @Router /books/info/search [get]
-func (bc *BooksController) SearchBooksInfoByName(ctx *gin.Context) {
+func (bc *BooksController) SearchBooksInfo(ctx *gin.Context) {
 	userId := getUserIdIfLogged(ctx)
 	name := ctx.Query("name")
-	books, err := bc.bookService.SearchBooksByName(name, userId)
+    genre := ctx.Query("genre")
+    sort := ctx.Query("sort")
+    direction := ctx.Query("direction")
+	books, err := bc.bookService.SearchBooks(name, genre, userId, sort, direction)
 	if err != nil {
-		errDetail := er.NewErrorDetails("Error when searching books", err, http.StatusInternalServerError)
-		ctx.AbortWithError(errDetail.Status, errDetail)
-		return
+        if errors.Is(err, service.ErrInvalidSort) {
+            errDetails := er.NewErrorDetailsWithParams(
+            "Error when searching books", http.StatusBadRequest, err)
+            ctx.AbortWithError(errDetails.Status, errDetails)
+        }else if errors.Is(err, service.ErrInvalidDirection) {
+            errDetails := er.NewErrorDetailsWithParams(
+            "Error when searching books", http.StatusBadRequest, err)
+            ctx.AbortWithError(errDetails.Status, errDetails)
+        } else if errors.Is(err, service.ErrDirectionWhenNoSort){
+            errDetails := er.NewErrorDetails("Error when searching books", err, http.StatusBadRequest)
+            ctx.AbortWithError(errDetails.Status, errDetails)
+        } else if errors.Is(err, service.ErrGenreNotFound){
+            errDetail := er.NewErrorDetails("Error when searching books", err, http.StatusBadRequest)
+            ctx.AbortWithError(errDetail.Status, errDetail)
+        } else {
+            errDetail := er.NewErrorDetails("Error when searching books", err, http.StatusInternalServerError)
+            ctx.AbortWithError(errDetail.Status, errDetail)
+        }
+        return
 	}
 	ctx.JSON(http.StatusOK, books)
 }

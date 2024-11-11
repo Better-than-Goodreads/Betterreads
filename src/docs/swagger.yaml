@@ -76,6 +76,7 @@ definitions:
     required:
     - amount_of_pages
     - author
+    - author_name
     - description
     - genres
     - id
@@ -597,6 +598,18 @@ paths:
         in: query
         name: name
         required: true
+        type: string
+      - description: Book Genre
+        in: query
+        name: genre
+        type: string
+      - description: Sort by publication_date, total_ratings, avg_rating
+        in: query
+        name: sort
+        type: string
+      - description: Sort direction asc or desc
+        in: query
+        name: direction
         type: string
       produces:
       - application/json

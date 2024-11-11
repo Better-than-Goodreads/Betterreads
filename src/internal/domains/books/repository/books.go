@@ -52,7 +52,7 @@ type BooksDatabase interface {
 	GetBookPictureById(id uuid.UUID) ([]byte, error)
 	GetBooks() ([]*models.Book, error)
 	GetBooksOfAuthor(authorId uuid.UUID) ([]*models.Book, error)
-	GetBooksByName(name string) ([]*models.Book, error)
+	GetBooksByNameAndGenre(name string, genre string, sort string, directAsc bool) ([]*models.Book, error)
 	GetGenresForBook(book_id uuid.UUID) ([]string, error)
 
 	CheckIfBookExists(bookId uuid.UUID) bool

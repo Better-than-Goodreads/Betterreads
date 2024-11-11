@@ -162,6 +162,24 @@ const docTemplate = `{
                         "name": "name",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Book Genre",
+                        "name": "genre",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by publication_date, total_ratings, avg_rating",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort direction asc or desc",
+                        "name": "direction",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1189,6 +1207,7 @@ const docTemplate = `{
             "required": [
                 "amount_of_pages",
                 "author",
+                "author_name",
                 "description",
                 "genres",
                 "id",

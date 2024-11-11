@@ -216,18 +216,53 @@ func (r *PostgresBookRepository) GetBookById(id uuid.UUID) (*models.Book, error)
 	return utils.MapBookRecordToBook(bookRecord, genres), nil
 }
 
-func (r *PostgresBookRepository) GetBooksByName(name string) ([]*models.Book, error) {
-	bookRecords := []*models.BookRecord{}
-	query := `SELECT * FROM book_view WHERE LOWER(title) LIKE LOWER('%'||$1||'%');`
-	if err := r.c.Select(&bookRecords, query, name); err != nil {
-		if err == sql.ErrNoRows {
-			return []*models.Book{}, nil
-		}
-		return nil, fmt.Errorf("failed to get books: %w", err)
-	}
-	res, error := r.CompleteBooks(bookRecords)
-	if error != nil {
-		return nil, fmt.Errorf("failed to get book: %w", error)
+func (r *PostgresBookRepository) GetBooksByNameAndGenre(name string, genre string, sort string, ascDirection bool) ([]*models.Book, error) {
+    bookRecords := []*models.BookRecord{}
+    var query string
+	query_start := `SELECT bk.title, bk.author, bk.author_name, bk.description, bk.amount_of_pages, bk.publication_date, bk.language, bk.id, bk.total_ratings, bk.avg_ratings FROM book_view bk
+    `
+    var err error 
+    var genre_id int
+
+    if genre == "" {
+        query = query_start + "WHERE LOWER(bk.title) LIKE LOWER('%'||$1||'%')"
+    } else {
+        genre_id, err = getGenreById(genre)
+        if err != nil {
+            return nil, fmt.Errorf("failed to get books: %w", err)
+        }
+        query = query_start + `
+        JOIN genres_books gb ON bk.id = gb.book_id
+        WHERE (LOWER(bk.title) like lower('%'||$1||'%')) and gb.genre_id = $2
+        `
+    }
+
+    if sort != "" {
+        var direciton string
+        if ascDirection {
+            direciton = "ASC"
+        } else {
+            direciton = "DESC"
+        }
+        query += " ORDER BY " + sort + " " + direciton
+    }
+
+    if genre == "" {
+        err = r.c.Select(&bookRecords, query, name)
+    } else {
+        err = r.c.Select(&bookRecords, query, name, genre_id)
+    }
+    
+
+    if err != nil {
+        if err != sql.ErrNoRows {
+            return nil, fmt.Errorf("failed to get books: %w", err)
+        }
+    }
+
+	res, err := r.CompleteBooks(bookRecords)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
 
 	return res, nil
