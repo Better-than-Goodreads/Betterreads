@@ -602,6 +602,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/recommendations/friends": {
+            "get": {
+                "description": "Get recommendations for an user based on his friends. It gets you all friends books",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recommendations"
+                ],
+                "summary": "Get recommendations for an user based on his friends.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Book"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
         "/recommendations/more": {
             "get": {
                 "description": "Get more recommendations for an specific genre. May want to use it after GetMoreRecommendations, it gets you 20 books if available for the specific genre",

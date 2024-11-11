@@ -119,6 +119,7 @@ func (rc *RecommenationsController) GetMoreRecommendations(c *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
+// @Router /recommendations/friends [get]
 func (rc *RecommenationsController) GetFriendsRecommendations(c *gin.Context) {
 	userId, errId := aux.GetLoggedUserId(c)
 	if errId != nil {
