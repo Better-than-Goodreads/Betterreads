@@ -321,3 +321,11 @@ func validateSort(sort string) error {
     }
     return ErrInvalidSort
 }
+
+func(bs *BooksServiceImpl) GetGenres() ([]string, error){
+    genres, err := bs.booksRepository.GetGenres()    
+    if err != nil {
+        return nil, err
+    }
+    return genres, nil
+}

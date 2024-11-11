@@ -507,3 +507,11 @@ func (r *PostgresBookRepository) CompleteBooks(books []*models.BookRecord) ([]*m
 	}
 	return res, nil
 }
+
+func (r *PostgresBookRepository) GetGenres() ([]string, error) {
+    genres := []string{}
+    for _, genre := range GenresDict {
+        genres = append(genres, genre)
+    }
+    return genres, nil
+}

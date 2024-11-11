@@ -113,6 +113,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/books/genres": {
+            "get": {
+                "description": "Get all genres",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "books"
+                ],
+                "summary": "Get all genres",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
         "/books/info": {
             "get": {
                 "description": "Get all books",
@@ -147,7 +176,7 @@ const docTemplate = `{
         },
         "/books/info/search": {
             "get": {
-                "description": "Get books by name, if no books found returns an empty array",
+                "description": "Get books by name, filters by genre and also sorts, if no books found returns an empty array",
                 "produces": [
                     "application/json"
                 ],

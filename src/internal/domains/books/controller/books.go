@@ -480,6 +480,25 @@ func (bc *BooksController) GetAllReviewsOfUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"reviews": reviews})
 }
 
+// GetGenres godoc
+// @Summary Get all genres
+// @Description Get all genres
+// @Tags books
+// @Produce  json
+// @Success 200 {object} []string
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /books/genres [get]
+func (bc *BooksController) GetGenres(ctx *gin.Context) {
+    genres , err:= bc.bookService.GetGenres()
+    if err != nil {
+        errDetails := er.NewErrorDetails("Error when getting genres", err, http.StatusInternalServerError)
+        ctx.AbortWithError(errDetails.Status, errDetails)
+        return
+    }
+    ctx.JSON(http.StatusOK, gin.H{"genres": genres})
+}
+
+
 // AUX FUNCTIONS
 /*
 * getBookRequest is a helper function that parses the request body and returns a New

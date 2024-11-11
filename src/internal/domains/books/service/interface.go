@@ -65,4 +65,5 @@ type BooksService interface {
 	AddReview(bookId uuid.UUID, userId uuid.UUID, review models.NewReviewRequest) error
 	CheckIfUserExists(userId uuid.UUID) bool
 	CheckIfAuthorIsRatingOwnBook(bookId uuid.UUID, userId uuid.UUID) (bool, error)
+    GetGenres() ([]string, error)
 }

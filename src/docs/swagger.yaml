@@ -569,6 +569,25 @@ paths:
       summary: Get books of an auther
       tags:
       - books
+  /books/genres:
+    get:
+      description: Get all genres
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get all genres
+      tags:
+      - books
   /books/info:
     get:
       consumes:
@@ -592,7 +611,8 @@ paths:
       - books
   /books/info/search:
     get:
-      description: Get books by name, if no books found returns an empty array
+      description: Get books by name, filters by genre and also sorts, if no books
+        found returns an empty array
       parameters:
       - description: Book Name
         in: query
