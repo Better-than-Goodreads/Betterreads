@@ -131,30 +131,30 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 func (bc *BooksController) SearchBooksInfo(ctx *gin.Context) {
 	userId := getUserIdIfLogged(ctx)
 	name := ctx.Query("name")
-    genre := ctx.Query("genre")
-    sort := ctx.Query("sort")
-    direction := ctx.Query("direction")
+	genre := ctx.Query("genre")
+	sort := ctx.Query("sort")
+	direction := ctx.Query("direction")
 	books, err := bc.bookService.SearchBooks(name, genre, userId, sort, direction)
 	if err != nil {
-        if errors.Is(err, service.ErrInvalidSort) {
-            errDetails := er.NewErrorDetailsWithParams(
-            "Error when searching books", http.StatusBadRequest, err)
-            ctx.AbortWithError(errDetails.Status, errDetails)
-        }else if errors.Is(err, service.ErrInvalidDirection) {
-            errDetails := er.NewErrorDetailsWithParams(
-            "Error when searching books", http.StatusBadRequest, err)
-            ctx.AbortWithError(errDetails.Status, errDetails)
-        } else if errors.Is(err, service.ErrDirectionWhenNoSort){
-            errDetails := er.NewErrorDetails("Error when searching books", err, http.StatusBadRequest)
-            ctx.AbortWithError(errDetails.Status, errDetails)
-        } else if errors.Is(err, service.ErrGenreNotFound){
-            errDetail := er.NewErrorDetails("Error when searching books", err, http.StatusBadRequest)
-            ctx.AbortWithError(errDetail.Status, errDetail)
-        } else {
-            errDetail := er.NewErrorDetails("Error when searching books", err, http.StatusInternalServerError)
-            ctx.AbortWithError(errDetail.Status, errDetail)
-        }
-        return
+		if errors.Is(err, service.ErrInvalidSort) {
+			errDetails := er.NewErrorDetailsWithParams(
+				"Error when searching books", http.StatusBadRequest, err)
+			ctx.AbortWithError(errDetails.Status, errDetails)
+		} else if errors.Is(err, service.ErrInvalidDirection) {
+			errDetails := er.NewErrorDetailsWithParams(
+				"Error when searching books", http.StatusBadRequest, err)
+			ctx.AbortWithError(errDetails.Status, errDetails)
+		} else if errors.Is(err, service.ErrDirectionWhenNoSort) {
+			errDetails := er.NewErrorDetails("Error when searching books", err, http.StatusBadRequest)
+			ctx.AbortWithError(errDetails.Status, errDetails)
+		} else if errors.Is(err, service.ErrGenreNotFound) {
+			errDetail := er.NewErrorDetails("Error when searching books", err, http.StatusBadRequest)
+			ctx.AbortWithError(errDetail.Status, errDetail)
+		} else {
+			errDetail := er.NewErrorDetails("Error when searching books", err, http.StatusInternalServerError)
+			ctx.AbortWithError(errDetail.Status, errDetail)
+		}
+		return
 	}
 	ctx.JSON(http.StatusOK, books)
 }
@@ -489,15 +489,14 @@ func (bc *BooksController) GetAllReviewsOfUser(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/genres [get]
 func (bc *BooksController) GetGenres(ctx *gin.Context) {
-    genres , err:= bc.bookService.GetGenres()
-    if err != nil {
-        errDetails := er.NewErrorDetails("Error when getting genres", err, http.StatusInternalServerError)
-        ctx.AbortWithError(errDetails.Status, errDetails)
-        return
-    }
-    ctx.JSON(http.StatusOK, gin.H{"genres": genres})
+	genres, err := bc.bookService.GetGenres()
+	if err != nil {
+		errDetails := er.NewErrorDetails("Error when getting genres", err, http.StatusInternalServerError)
+		ctx.AbortWithError(errDetails.Status, errDetails)
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"genres": genres})
 }
-
 
 // AUX FUNCTIONS
 /*

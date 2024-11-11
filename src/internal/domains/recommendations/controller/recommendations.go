@@ -109,3 +109,35 @@ func (rc *RecommenationsController) GetMoreRecommendations(c *gin.Context) {
 
 	c.JSON(http.StatusOK, books)
 }
+
+// GetFriendsRecommendations godoc
+// @Summary Get recommendations for an user based on his friends.
+// @Description Get recommendations for an user based on his friends. It gets you all friends books
+// @Tags recommendations
+// @Produce  json
+// @Success 200 {object} []models.Book
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+func (rc *RecommenationsController) GetFriendsRecommendations(c *gin.Context) {
+	userId, errId := aux.GetLoggedUserId(c)
+	if errId != nil {
+		c.AbortWithError(errId.Status, errId)
+		return
+	}
+	books, err := rc.rs.GetFriendsRecommendations(userId)
+	if err != nil {
+		if errors.Is(err, bookService.ErrUserNotFound) {
+			errDetails := er.NewErrorDetails("Error when getting recommendations", err, http.StatusNotFound)
+			c.AbortWithError(errDetails.Status, errDetails)
+		} else if errors.Is(err, service.ErrNeedMoreBooksInShelf) {
+			errDetails := er.NewErrorDetails("Error when getting recommendations", err, http.StatusBadRequest)
+			c.AbortWithError(errDetails.Status, errDetails)
+		} else {
+			errDetails := er.NewErrorDetails("Error when getting recommendations", err, http.StatusInternalServerError)
+			c.AbortWithError(errDetails.Status, errDetails)
+		}
+		return
+	}
+	c.JSON(http.StatusOK, books)
+}

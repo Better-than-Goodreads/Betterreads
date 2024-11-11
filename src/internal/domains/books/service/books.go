@@ -85,28 +85,27 @@ func (bs *BooksServiceImpl) GetBooksOfAuthor(authorId uuid.UUID, userId uuid.UUI
 }
 
 func (bs *BooksServiceImpl) SearchBooks(name string, genre string, userId uuid.UUID, sort string, direction string) ([]*models.BookResponseWithReview, error) {
-    if sort != "" {
-        if err := validateSort(sort); err != nil {
-            return nil, err
-        }
-    }
+	if sort != "" {
+		if err := validateSort(sort); err != nil {
+			return nil, err
+		}
+	}
 
-    if sort == "" && direction != "" {
-        return nil, ErrDirectionWhenNoSort 
-    }
+	if sort == "" && direction != "" {
+		return nil, ErrDirectionWhenNoSort
+	}
 
+	if direction != "" && direction != "asc" && direction != "desc" {
+		return nil, ErrInvalidDirection
+	}
 
-    if direction != "" && direction != "asc" && direction != "desc" {
-        return nil, ErrInvalidDirection
-    }
-    
-    isDirAsc := direction == "asc"
+	isDirAsc := direction == "asc"
 
 	books, err := bs.booksRepository.GetBooksByNameAndGenre(name, genre, sort, isDirAsc)
 	if err != nil {
-        if errors.Is(err, repository.ErrGenreNotFound) {
-            return nil, ErrGenreNotFound
-        }
+		if errors.Is(err, repository.ErrGenreNotFound) {
+			return nil, ErrGenreNotFound
+		}
 		return nil, err
 	}
 
@@ -314,18 +313,18 @@ func (bs *BooksServiceImpl) CheckIfUserExists(userId uuid.UUID) bool {
 }
 
 func validateSort(sort string) error {
-    for _, s := range AvailableSorts {
-        if s == sort {
-            return nil
-        }
-    }
-    return ErrInvalidSort
+	for _, s := range AvailableSorts {
+		if s == sort {
+			return nil
+		}
+	}
+	return ErrInvalidSort
 }
 
-func(bs *BooksServiceImpl) GetGenres() ([]string, error){
-    genres, err := bs.booksRepository.GetGenres()    
-    if err != nil {
-        return nil, err
-    }
-    return genres, nil
+func (bs *BooksServiceImpl) GetGenres() ([]string, error) {
+	genres, err := bs.booksRepository.GetGenres()
+	if err != nil {
+		return nil, err
+	}
+	return genres, nil
 }

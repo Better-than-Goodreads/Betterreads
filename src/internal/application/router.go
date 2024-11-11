@@ -16,9 +16,9 @@ import (
 	recommendationsRepository "github.com/betterreads/internal/domains/recommendations/repository"
 	recommendationsService "github.com/betterreads/internal/domains/recommendations/service"
 
-    friendsController "github.com/betterreads/internal/domains/friends/controller"
-    friendsRepository "github.com/betterreads/internal/domains/friends/repository"
-    friendsService "github.com/betterreads/internal/domains/friends/service"
+	friendsController "github.com/betterreads/internal/domains/friends/controller"
+	friendsRepository "github.com/betterreads/internal/domains/friends/repository"
+	friendsService "github.com/betterreads/internal/domains/friends/service"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -81,11 +81,11 @@ func NewRouter(port string) *Router {
 
 	r := createRouterFromConfig(cfg)
 	addCorsConfiguration(r)
-    users := addUsersHandlers(r, conn)
+	users := addUsersHandlers(r, conn)
 	books, booksRepo := addBooksHandlers(r, conn)
 	AddBookshelfHandlers(r, conn, books)
 	AddRecommendationsHandlers(r, conn, books, booksRepo)
-    addFriendsHandlers(r, users, conn)
+	addFriendsHandlers(r, users, conn)
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -102,7 +102,7 @@ func addCorsConfiguration(r *Router) {
 	r.engine.Use(cors.New(config))
 }
 
-func addUsersHandlers(r *Router, conn *sqlx.DB) usersService.UsersService{
+func addUsersHandlers(r *Router, conn *sqlx.DB) usersService.UsersService {
 
 	userRepo, err := usersRepository.NewPostgresUserRepository(conn)
 	if err != nil {
@@ -127,7 +127,7 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) usersService.UsersService{
 		private.GET("/", uc.GetUsers)
 		private.POST("/picture", uc.PostPicture)
 	}
-    return us
+	return us
 }
 
 func addBooksHandlers(r *Router, conn *sqlx.DB) (booksService.BooksService, booksRepository.BooksDatabase) {
@@ -149,7 +149,7 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) (booksService.BooksService, book
 		public.GET("/info", bc.GetBooksInfo)
 		public.GET("/info/search", bc.SearchBooksInfo)
 		public.GET("/:id/reviews", bc.GetBookReviews)
-        public.GET("/genres", bc.GetGenres)
+		public.GET("/genres", bc.GetGenres)
 	}
 
 	private := r.engine.Group("/books")
@@ -196,31 +196,31 @@ func AddRecommendationsHandlers(r *Router, conn *sqlx.DB, books booksService.Boo
 	{
 		private.GET("/more", rc.GetMoreRecommendations)
 		private.GET("/", rc.GetRecommendations)
+		private.GET("/friends", rc.GetFriendsRecommendations)
 	}
 }
 
 func addFriendsHandlers(r *Router, users usersService.UsersService, conn *sqlx.DB) {
-    friendsRepo, err := friendsRepository.NewPostgresFriendsRepository(conn)
-    if err != nil {
-        fmt.Println("error: %w", err)
-    }
-    fs := friendsService.NewFriendsServiceImpl(friendsRepo, users)
-    fc := friendsController.NewFriendsController(fs)
-    public := r.engine.Group("users")
-    {
-        public.GET("/:id/friends", fc.GetFriends)
-    }
+	friendsRepo, err := friendsRepository.NewPostgresFriendsRepository(conn)
+	if err != nil {
+		fmt.Println("error: %w", err)
+	}
+	fs := friendsService.NewFriendsServiceImpl(friendsRepo, users)
+	fc := friendsController.NewFriendsController(fs)
+	public := r.engine.Group("users")
+	{
+		public.GET("/:id/friends", fc.GetFriends)
+	}
 
-    private := r.engine.Group("users/friends")
-    private.Use(middlewares.AuthMiddleware)
-    {
-        private.POST("/", fc.AddFriend)
-        private.POST("/requests", fc.AcceptFriendRequest)
-        private.DELETE("/requests", fc.RejectFriendRequest)
-        private.GET("/requests/sent", fc.GetFriendsRequestSent)
-        private.GET("/requests/received", fc.GetFriendRequestsReceived)
-    }
-
+	private := r.engine.Group("users/friends")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.POST("/", fc.AddFriend)
+		private.POST("/requests", fc.AcceptFriendRequest)
+		private.DELETE("/requests", fc.RejectFriendRequest)
+		private.GET("/requests/sent", fc.GetFriendsRequestSent)
+		private.GET("/requests/received", fc.GetFriendRequestsReceived)
+	}
 
 }
 

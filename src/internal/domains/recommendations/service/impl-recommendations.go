@@ -52,3 +52,16 @@ func (rs *RecommendationsServiceImpl) GetMoreRecommendations(userId uuid.UUID, g
 	}
 	return books, nil
 }
+
+func (rs *RecommendationsServiceImpl) GetFriendsRecommendations(userId uuid.UUID) ([]*models.Book, error) {
+	userExists := rs.booksService.CheckIfUserExists(userId)
+	if !userExists {
+		return nil, bs.ErrUserNotFound
+	}
+
+	books, err := rs.recommendationsRepository.GetFriendsRecommendations(userId)
+	if err != nil {
+		return nil, err
+	}
+	return books, nil
+}

@@ -194,3 +194,58 @@ func (r *PostgresRecommendationsRepository) CheckIfUserHasValidShelf(userId uuid
 	}
 	return len(bookshelf) >= 5
 }
+
+func (r *PostgresRecommendationsRepository) GetFriendsRecommendations(userId uuid.UUID) ([]*bm.Book, error) {
+	books := []*bm.Book{}
+	query := `
+     WITH ratings AS (
+        SELECT 
+            book_id, 
+            COUNT(*) AS total_ratings, 
+            AVG(COALESCE(rating,0)) AS avg_ratings 
+        FROM 
+            reviews 
+        GROUP BY 
+            book_id
+    )
+    SELECT 
+        bk.title, 
+        bk.author, 
+        (SELECT username FROM users WHERE id = bk.author) AS author_name, 
+        bk.description, 
+        bk.amount_of_pages, 
+        bk.publication_date, 
+        bk.language, 
+        bk.id,
+        COALESCE(r.total_ratings, 0) AS total_ratings,  -- Ensure no NULLs for total_ratings
+        COALESCE(r.avg_ratings, 0) AS avg_rating       -- Ensure no NULLs for avg_ratings
+    FROM 
+        friends fr
+    JOIN 
+        bookshelf bs ON fr.friend_id = bs.user_id or fr.user_id = bs.user_id
+    JOIN 
+        books bk ON bs.book_id = bk.id
+    LEFT JOIN
+        ratings r ON bk.id = r.book_id
+    WHERE 
+        (fr.friend_id = $1 OR fr.user_id = $1) 
+        AND bs.status='read'
+        AND bk.id NOT IN (SELECT book_id FROM bookshelf WHERE user_id = $1)
+    ORDER BY avg_rating DESC
+    `
+
+	err := r.c.Select(&books, query, userId)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("failed to get friends recommendations: %w", err)
+	}
+
+	for _, book := range books {
+		genres, err := r.br.GetGenresForBook(book.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get genres for book: %w", err)
+		}
+		book.Genres = genres
+	}
+
+	return books, nil
+}

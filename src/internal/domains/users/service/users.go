@@ -145,5 +145,5 @@ func (u *UsersServiceImpl) SearchUsers(username string, isAuthor bool) ([]*model
 }
 
 func (u *UsersServiceImpl) CheckUserExists(id uuid.UUID) bool {
-    return u.rp.CheckUserExists(id)
+	return u.rp.CheckUserExists(id)
 }

@@ -14,4 +14,5 @@ type RecommendationsDatabase interface {
 	GetMoreRecommendations(userId uuid.UUID, genre string) ([]*models.Book, error)
 	GetRecommendations(userId uuid.UUID) (map[string][]*models.Book, error)
 	CheckIfUserHasValidShelf(userId uuid.UUID) bool
+	GetFriendsRecommendations(userId uuid.UUID) ([]*models.Book, error)
 }
