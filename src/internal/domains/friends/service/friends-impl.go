@@ -102,3 +102,26 @@ func (fs *FriendsServiceImpl) GetFriendRequestsReceived(userID uuid.UUID) ([]mod
 	}
 	return friendRequestsReceived, nil
 }
+
+func (fs *FriendsServiceImpl) DeleteFriend(userID uuid.UUID, friendID uuid.UUID) error {
+	if userID == friendID {
+		return ErrSameUser
+	}
+	if !fs.us.CheckUserExists(friendID) {
+		return ErrUserFriendNotFound
+	}
+
+	if !fs.us.CheckUserExists(userID) {
+		return users.ErrUserNotFound
+	}
+
+	if !fs.fr.CheckIfFriendShipExists(friendID, userID) {
+		return ErrFriendShipNotFound
+	}
+
+    if err := fs.fr.DeleteFriendship(userID, friendID); err != nil {
+        return err
+    }
+
+    return nil
+}

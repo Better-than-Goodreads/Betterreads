@@ -890,6 +890,30 @@ paths:
       tags:
       - bookshelf
   /users/friends:
+    delete:
+      description: Delete Friend from user logged in
+      parameters:
+      - description: Friend ID
+        in: query
+        name: Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Delete a friend
+      tags:
+      - Friends
     post:
       description: Add Friend to user logged in
       parameters:

@@ -182,3 +182,13 @@ func (c PostgresFriendsRepository) CheckIfFriendShipExists(userID uuid.UUID, fri
 	}
 	return exists1 || exists2
 }
+
+
+func (c PostgresFriendsRepository) DeleteFriendship(userA uuid.UUID, userB uuid.UUID) error{
+    query := `DELETE FROM friends WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)`
+    _, err := c.db.Exec(query, userA, userB)
+    if err != nil {
+        return fmt.Errorf("failed to delete friendship: %w", err)
+    }
+    return nil
+}

@@ -216,6 +216,7 @@ func addFriendsHandlers(r *Router, users usersService.UsersService, conn *sqlx.D
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.POST("/", fc.AddFriend)
+        private.DELETE("/", fc.DeleteFriend)
 		private.POST("/requests", fc.AcceptFriendRequest)
 		private.DELETE("/requests", fc.RejectFriendRequest)
 		private.GET("/requests/sent", fc.GetFriendsRequestSent)

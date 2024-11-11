@@ -14,4 +14,5 @@ type FriendsRepository interface {
 	GetFriendRequestsReceived(userID uuid.UUID) ([]models.FriendOfUser, error)
 	CheckIfFriendRequestExists(userID uuid.UUID, friendID uuid.UUID) bool
 	CheckIfFriendShipExists(userID uuid.UUID, friendID uuid.UUID) bool
+    DeleteFriendship(userA uuid.UUID, userB uuid.UUID) error
 }
