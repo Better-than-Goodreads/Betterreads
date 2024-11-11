@@ -153,6 +153,13 @@ definitions:
     - book_id
     - status
     type: object
+  models.FriendOfUser:
+    properties:
+      id:
+        type: string
+      username:
+        type: string
+    type: object
   models.NewBookRequest:
     properties:
       amount_of_pages:
@@ -785,6 +792,37 @@ paths:
       summary: Get user by id
       tags:
       - users
+  /users/{id}/friends:
+    get:
+      description: Get Friends of user logged in
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/models.FriendOfUser'
+              type: array
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get Friends
+      tags:
+      - Friends
   /users/{id}/picture:
     get:
       description: Get user picture
@@ -851,6 +889,140 @@ paths:
       summary: Get bookshelf of an user
       tags:
       - bookshelf
+  /users/friends:
+    post:
+      description: Add Friend to user logged in
+      parameters:
+      - description: Friend ID
+        in: query
+        name: Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Add a friend
+      tags:
+      - Friends
+  /users/friends/requests:
+    delete:
+      description: Reject Friend Request from
+      parameters:
+      - description: Friend ID
+        in: path
+        name: Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Reject a friend request
+      tags:
+      - Friends
+    post:
+      description: Accept Friend Request from user logged in
+      parameters:
+      - description: Friend ID
+        in: query
+        name: Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Accept a friend request
+      tags:
+      - Friends
+  /users/friends/requests/received:
+    get:
+      description: Get Friends Request Received
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.FriendOfUser'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get Friends Request Received
+      tags:
+      - Friends
+  /users/friends/requests/sent:
+    get:
+      description: Get Friends Request Sent
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/models.FriendOfUser'
+              type: array
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get Friends Request Sent
+      tags:
+      - Friends
   /users/login:
     post:
       consumes:
