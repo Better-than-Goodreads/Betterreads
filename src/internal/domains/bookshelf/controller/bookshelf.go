@@ -158,3 +158,35 @@ func (bc *BookshelfController) EditBookInShelf(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Book edited in shelf"})
 
 }
+
+
+func (bc *BookshelfController) DeleteBookFromShelf(c * gin.Context) {
+	userId, errId := aux.GetLoggedUserId(c)
+	if errId != nil {
+		c.AbortWithError(errId.Status, errId)
+		return
+	}
+	var req models.BookShelfRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		er.AbortWithJsonErorr(c, err)
+		return
+	}
+	err := bc.service.DeleteBookFromShelf(userId, &req)
+	if err != nil {if errors.Is(err, service.ErrUserNotFound) {
+		errDetails := er.NewErrorDetails("Error when editing book in shelf", err, http.StatusNotFound)
+		c.AbortWithError(errDetails.Status, errDetails)
+	} else if errors.Is(err, service.ErrBookNotFoundInLibrary) {
+		errDetails := er.NewErrorDetails("Error when editing book in shelf", err, http.StatusBadRequest)
+		c.AbortWithError(errDetails.Status, errDetails)
+	} else if errors.Is(err, service.ErrInvalidStatusType) {
+		errDetails := er.NewErrorDetails("Error when editing book in shelf", err, http.StatusBadRequest)
+		c.AbortWithError(errDetails.Status, errDetails)
+	} else {
+		errDetails := er.NewErrorDetails("Error when editing book in shelf", err, http.StatusInternalServerError)
+		c.AbortWithError(errDetails.Status, errDetails)
+	}
+	return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Book deleted from shelf"})
+		
+}

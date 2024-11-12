@@ -24,4 +24,6 @@ type BookshelfDatabase interface {
 	EditBookInShelf(userId uuid.UUID, req *models.BookShelfRequest) error
 
 	CheckIfBookIsInUserShelf(userId uuid.UUID, bookId uuid.UUID) bool
+	
+	DeleteBookFromShelf(userId uuid.UUID, bookId uuid.UUID) error
 }

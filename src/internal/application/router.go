@@ -184,6 +184,7 @@ func AddBookshelfHandlers(r *Router, conn *sqlx.DB, books booksService.BooksServ
 	{
 		private.POST("/", bc.AddBookToShelf)
 		private.PUT("/", bc.EditBookInShelf)
+		private.DELETE("/", bc.DeleteBookFromShelf)
 	}
 }
 

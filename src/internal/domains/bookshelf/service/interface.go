@@ -21,4 +21,5 @@ type BookshelfService interface {
 	GetBookShelf(usedId uuid.UUID, shelfType string) ([]*models.BookInShelfResponse, error)
 	AddBookToShelf(userId uuid.UUID, req *models.BookShelfRequest) error
 	EditBookInShelf(userId uuid.UUID, req *models.BookShelfRequest) error
+	DeleteBookFromShelf(userId uuid.UUID, bookId uuid.UUID) error
 }

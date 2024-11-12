@@ -179,3 +179,13 @@ func (p *PostgresBookShelfRepository) CheckIfBookIsInUserShelf(userId uuid.UUID,
 
 	return exists
 }
+
+func (p *PostgresBookShelfRepository) DeleteBookFromShelf(userId uuid.UUID, bookId uuid.UUID) error {
+	query := `DELETE FROM bookshelf WHERE user_id=$1 AND book_id=$2;`
+	_, err := p.c.Exec(query, userId, bookId)
+	if err != nil {
+		return fmt.Errorf("failed to delete book from shelf: %w", err)
+	}
+
+	return nil
+}

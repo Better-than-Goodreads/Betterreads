@@ -92,3 +92,23 @@ func validate_status(status models.BookShelfType) bool {
 	}
 	return false
 }
+
+
+func (bs *BookShelfServiceImpl) DeleteBookFromShelf(userId uuid.UUID, bookId uuid.UUID) error {
+	userExists := bs.bookService.CheckIfUserExists(userId)
+	if !userExists {
+		return ErrUserNotFound
+	}
+
+	exits := bs.r.CheckIfBookIsInUserShelf(userId, bookId)
+	if !exits {
+		return ErrBookNotFoundInLibrary
+	}
+
+	err := bs.r.DeleteBookFromShelf(userId, bookId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
