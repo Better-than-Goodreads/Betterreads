@@ -153,13 +153,6 @@ definitions:
     - book_id
     - status
     type: object
-  models.FriendOfUser:
-    properties:
-      id:
-        type: string
-      username:
-        type: string
-    type: object
   models.NewBookRequest:
     properties:
       amount_of_pages:
@@ -837,7 +830,7 @@ paths:
           schema:
             items:
               items:
-                $ref: '#/definitions/models.FriendOfUser'
+                $ref: '#/definitions/models.UserResponse'
               type: array
             type: array
         "404":
@@ -1037,7 +1030,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.FriendOfUser'
+              $ref: '#/definitions/models.UserResponse'
             type: array
         "404":
           description: Not Found
@@ -1061,7 +1054,7 @@ paths:
           schema:
             items:
               items:
-                $ref: '#/definitions/models.FriendOfUser'
+                $ref: '#/definitions/models.UserResponse'
               type: array
             type: array
         "404":

@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/betterreads/internal/domains/friends/models"
+	"github.com/betterreads/internal/domains/users/models"
 	"github.com/betterreads/internal/domains/friends/repository"
 	users "github.com/betterreads/internal/domains/users/service"
 	"github.com/google/uuid"
@@ -16,7 +16,7 @@ func NewFriendsServiceImpl(fr repository.FriendsRepository, us users.UsersServic
 	return &FriendsServiceImpl{fr: fr, us: us}
 }
 
-func (fs *FriendsServiceImpl) GetFriends(userID uuid.UUID) ([]models.FriendOfUser, error) {
+func (fs *FriendsServiceImpl) GetFriends(userID uuid.UUID) ([]models.UserResponse, error) {
 	if !fs.us.CheckUserExists(userID) {
 		return nil, users.ErrUserNotFound
 	}
@@ -28,58 +28,58 @@ func (fs *FriendsServiceImpl) GetFriends(userID uuid.UUID) ([]models.FriendOfUse
 	return friends, nil
 }
 
-func (fs *FriendsServiceImpl) AddFriend(userID uuid.UUID, friendID uuid.UUID) error {
-	if userID == friendID {
+func (fs *FriendsServiceImpl) AddFriend(senderId uuid.UUID, recipientId uuid.UUID) error {
+	if senderId== recipientId{
 		return ErrSameUser
 	}
-	if !fs.us.CheckUserExists(friendID) {
+	if !fs.us.CheckUserExists(senderId) {
 		return ErrUserFriendNotFound
 	}
 
-	if !fs.us.CheckUserExists(userID) {
+	if !fs.us.CheckUserExists(recipientId) {
 		return users.ErrUserNotFound
 	}
 
-	if fs.fr.CheckIfFriendRequestExists(userID, friendID) {
+	if fs.fr.CheckIfFriendRequestExists(senderId, recipientId) {
 		return ErrFriendRequestExists
 	}
 
-	if fs.fr.CheckIfFriendShipExists(friendID, userID) {
+	if fs.fr.CheckIfFriendShipExists(senderId, recipientId) {
 		return ErrAlreadyFriends
 	}
 
-	err := fs.fr.AddFriend(userID, friendID)
+	err := fs.fr.AddFriend(senderId, recipientId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (fs *FriendsServiceImpl) AcceptFriendRequest(userID uuid.UUID, friendID uuid.UUID) error {
-	if !fs.fr.CheckIfFriendRequestExists(userID, friendID) {
+func (fs *FriendsServiceImpl) AcceptFriendRequest(recipientId uuid.UUID, senderId uuid.UUID) error {
+	if !fs.fr.CheckIfFriendRequestExists(senderId, recipientId) {
 		return ErrRequestNotFound
 	}
 
-	err := fs.fr.AcceptFriendRequest(userID, friendID)
+	err := fs.fr.AcceptFriendRequest(recipientId, senderId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (fs *FriendsServiceImpl) RejectFriendRequest(userID uuid.UUID, friendID uuid.UUID) error {
-	if !fs.fr.CheckIfFriendRequestExists(userID, friendID) {
+func (fs *FriendsServiceImpl) RejectFriendRequest(recipientId uuid.UUID, senderId uuid.UUID) error {
+	if !fs.fr.CheckIfFriendRequestExists(senderId, recipientId) {
 		return ErrRequestNotFound
 	}
 
-	err := fs.fr.RejectFriendRequest(userID, friendID)
+	err := fs.fr.RejectFriendRequest(recipientId, senderId)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (fs *FriendsServiceImpl) GetFriendRequestsSent(userID uuid.UUID) ([]models.FriendOfUser, error) {
+func (fs *FriendsServiceImpl) GetFriendRequestsSent(userID uuid.UUID) ([]models.UserResponse, error) {
 	if !fs.us.CheckUserExists(userID) {
 		return nil, users.ErrUserNotFound
 	}
@@ -91,7 +91,7 @@ func (fs *FriendsServiceImpl) GetFriendRequestsSent(userID uuid.UUID) ([]models.
 	return friendRequestsSent, nil
 }
 
-func (fs *FriendsServiceImpl) GetFriendRequestsReceived(userID uuid.UUID) ([]models.FriendOfUser, error) {
+func (fs *FriendsServiceImpl) GetFriendRequestsReceived(userID uuid.UUID) ([]models.UserResponse, error) {
 	if !fs.us.CheckUserExists(userID) {
 		return nil, users.ErrUserNotFound
 	}

@@ -3,7 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
-	_ "github.com/betterreads/internal/domains/friends/models"
+	_ "github.com/betterreads/internal/domains/users/models"
 	"github.com/betterreads/internal/domains/friends/service"
 	usersService "github.com/betterreads/internal/domains/users/service"
 	aux "github.com/betterreads/internal/pkg/controller"
@@ -27,7 +27,7 @@ func NewFriendsController(fs service.FriendsService) FriendsController {
 // @Tags Friends
 // @Param id path string true "User ID"
 // @Produce json
-// @Success 200 {array} []models.FriendOfUser
+// @Success 200 {array} []models.UserResponse
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/{id}/friends [get]
@@ -66,20 +66,20 @@ func (fc *FriendsController) GetFriends(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/friends [post]
 func (fc *FriendsController) AddFriend(ctx *gin.Context) {
-	userId, errId := aux.GetLoggedUserId(ctx)
+	senderId, errId := aux.GetLoggedUserId(ctx)
 	if errId != nil {
 		ctx.AbortWithError(http.StatusUnauthorized, errId)
 		return
 	}
 
-	friendId, err := uuid.Parse(ctx.Query("Id"))
+	recipientId, err := uuid.Parse(ctx.Query("Id"))
 	if err != nil {
 		errorDetails := er.NewErrorDetails("Error When adding friend", err, http.StatusBadRequest)
 		ctx.AbortWithError(http.StatusBadRequest, errorDetails)
 		return
 	}
 
-	err = fc.FriendsService.AddFriend(userId, friendId)
+	err = fc.FriendsService.AddFriend(senderId, recipientId)
 	if err != nil {
 		if errors.Is(err, usersService.ErrUserNotFound) {
 			errorDetails := er.NewErrorDetails("Error When adding friend", err, http.StatusNotFound)
@@ -117,18 +117,18 @@ func (fc *FriendsController) AddFriend(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/friends/requests [post]
 func (fc *FriendsController) AcceptFriendRequest(ctx *gin.Context) {
-	userId, errId := aux.GetLoggedUserId(ctx)
+	recipientId, errId := aux.GetLoggedUserId(ctx)
 	if errId != nil {
 		ctx.AbortWithError(http.StatusUnauthorized, errId)
 		return
 	}
-	friendId, err := uuid.Parse(ctx.Query("Id"))
+	senderId, err := uuid.Parse(ctx.Query("Id"))
 	if err != nil {
 		errorDetails := er.NewErrorDetails("Error When accepting friend", err, http.StatusBadRequest)
 		ctx.AbortWithError(http.StatusBadRequest, errorDetails)
 		return
 	}
-	err = fc.FriendsService.AcceptFriendRequest(friendId, userId)
+	err = fc.FriendsService.AcceptFriendRequest(recipientId, senderId)
 	if err != nil {
 		if errors.Is(err, service.ErrRequestNotFound) {
 			errorDetails := er.NewErrorDetails("Error When accepting friend", err, http.StatusNotFound)
@@ -147,24 +147,24 @@ func (fc *FriendsController) AcceptFriendRequest(ctx *gin.Context) {
 // @Description Reject Friend Request from
 // @Tags Friends
 // @Produce json
-// @Param Id path string true "Friend ID"
+// @Param Id query string true "Friend ID"
 // @Success 200 {object} string
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/friends/requests [delete]
 func (fc FriendsController) RejectFriendRequest(ctx *gin.Context) {
-	userId, errId := aux.GetLoggedUserId(ctx)
+	recipientId, errId := aux.GetLoggedUserId(ctx)
 	if errId != nil {
 		ctx.AbortWithError(http.StatusUnauthorized, errId)
 		return
 	}
-	friendId, err := uuid.Parse(ctx.Query("Id"))
+	senderId, err := uuid.Parse(ctx.Query("Id"))
 	if err != nil {
 		errorDetails := er.NewErrorDetails("Error When declining friend", err, http.StatusBadRequest)
 		ctx.AbortWithError(http.StatusBadRequest, errorDetails)
 		return
 	}
-	err = fc.FriendsService.RejectFriendRequest(friendId, userId)
+	err = fc.FriendsService.RejectFriendRequest(recipientId, senderId)
 	if err != nil {
 		if errors.Is(err, service.ErrRequestNotFound) {
 			errorDetails := er.NewErrorDetails("Error When declining friend", err, http.StatusNotFound)
@@ -183,7 +183,7 @@ func (fc FriendsController) RejectFriendRequest(ctx *gin.Context) {
 // @Description Get Friends Request Sent
 // @Tags Friends
 // @Produce json
-// @Success 200 {array} []models.FriendOfUser
+// @Success 200 {array} []models.UserResponse
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/friends/requests/sent [get]
@@ -212,7 +212,7 @@ func (fc FriendsController) GetFriendsRequestSent(ctx *gin.Context) {
 // @Description Get Friends Request Received
 // @Tags Friends
 // @Produce json
-// @Success 200 {object} []models.FriendOfUser
+// @Success 200 {object} []models.UserResponse
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/friends/requests/received [get]
@@ -250,6 +250,7 @@ func (fc FriendsController) DeleteFriend(ctx *gin.Context){
     id, errId := aux.GetLoggedUserId(ctx)
     if errId !=nil {
         ctx.AbortWithError(http.StatusUnauthorized, errId)
+        return
     }
 
 	friendId, err := uuid.Parse(ctx.Query("Id"))

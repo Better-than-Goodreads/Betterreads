@@ -1,18 +1,18 @@
 package repository
 
 import (
-	"github.com/betterreads/internal/domains/friends/models"
+	um "github.com/betterreads/internal/domains/users/models"
 	"github.com/google/uuid"
 )
 
 type FriendsRepository interface {
-	GetFriends(userID uuid.UUID) ([]models.FriendOfUser, error)
-	AddFriend(userID uuid.UUID, friendID uuid.UUID) error
-	AcceptFriendRequest(userID uuid.UUID, friendID uuid.UUID) error
-	RejectFriendRequest(userID uuid.UUID, friendID uuid.UUID) error
-	GetFriendRequestsSent(userID uuid.UUID) ([]models.FriendOfUser, error)
-	GetFriendRequestsReceived(userID uuid.UUID) ([]models.FriendOfUser, error)
-	CheckIfFriendRequestExists(userID uuid.UUID, friendID uuid.UUID) bool
-	CheckIfFriendShipExists(userID uuid.UUID, friendID uuid.UUID) bool
+	GetFriends(userID uuid.UUID) ([]um.UserResponse, error)
+	AddFriend(sender uuid.UUID, recipient uuid.UUID) error
+	AcceptFriendRequest(recipient uuid.UUID, sender uuid.UUID) error
+	RejectFriendRequest(recipient uuid.UUID, sender uuid.UUID) error
+	GetFriendRequestsSent(sender uuid.UUID) ([]um.UserResponse, error)
+	GetFriendRequestsReceived(recipient uuid.UUID) ([]um.UserResponse, error)
+	CheckIfFriendRequestExists(sender uuid.UUID, recipient uuid.UUID) bool
+	CheckIfFriendShipExists(userA uuid.UUID, userB uuid.UUID) bool
     DeleteFriendship(userA uuid.UUID, userB uuid.UUID) error
 }

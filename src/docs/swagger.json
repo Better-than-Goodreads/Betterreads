@@ -895,7 +895,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.FriendOfUser"
+                                "$ref": "#/definitions/models.UserResponse"
                             }
                         }
                     },
@@ -932,7 +932,7 @@
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/definitions/models.FriendOfUser"
+                                    "$ref": "#/definitions/models.UserResponse"
                                 }
                             }
                         }
@@ -1359,7 +1359,7 @@
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/definitions/models.FriendOfUser"
+                                    "$ref": "#/definitions/models.UserResponse"
                                 }
                             }
                         }
@@ -1705,17 +1705,6 @@
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.FriendOfUser": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }

@@ -2,7 +2,7 @@ package service
 
 import (
 	"errors"
-	"github.com/betterreads/internal/domains/friends/models"
+	"github.com/betterreads/internal/domains/users/models"
 	"github.com/google/uuid"
 )
 
@@ -16,11 +16,11 @@ var (
 )
 
 type FriendsService interface {
-	GetFriends(userID uuid.UUID) ([]models.FriendOfUser, error)
-	AddFriend(userID uuid.UUID, friendID uuid.UUID) error
-	AcceptFriendRequest(userID uuid.UUID, friendID uuid.UUID) error
-	RejectFriendRequest(userID uuid.UUID, friendID uuid.UUID) error
-	GetFriendRequestsSent(userID uuid.UUID) ([]models.FriendOfUser, error)
-	GetFriendRequestsReceived(userID uuid.UUID) ([]models.FriendOfUser, error)
-    DeleteFriend(userId uuid.UUID, friendId uuid.UUID) error
+	GetFriends(userID uuid.UUID) ([]models.UserResponse, error)
+	AddFriend(senderId uuid.UUID, recipientId uuid.UUID) error
+	AcceptFriendRequest(recipientId uuid.UUID, senderId uuid.UUID) error
+	RejectFriendRequest(recipientId uuid.UUID, senderId uuid.UUID) error
+	GetFriendRequestsSent(userID uuid.UUID) ([]models.UserResponse, error)
+	GetFriendRequestsReceived(userID uuid.UUID) ([]models.UserResponse, error)
+    DeleteFriend(userA uuid.UUID, userB uuid.UUID) error
 }

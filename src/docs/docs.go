@@ -901,7 +901,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.FriendOfUser"
+                                "$ref": "#/definitions/models.UserResponse"
                             }
                         }
                     },
@@ -938,7 +938,7 @@ const docTemplate = `{
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/definitions/models.FriendOfUser"
+                                    "$ref": "#/definitions/models.UserResponse"
                                 }
                             }
                         }
@@ -1365,7 +1365,7 @@ const docTemplate = `{
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/definitions/models.FriendOfUser"
+                                    "$ref": "#/definitions/models.UserResponse"
                                 }
                             }
                         }
@@ -1711,17 +1711,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.FriendOfUser": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }
