@@ -235,7 +235,7 @@ func (bc *BookshelfController) DeleteBookFromShelf(c * gin.Context) {
 		er.AbortWithJsonErorr(c, err)
 		return
 	}
-	err := bc.service.DeleteBookFromShelf(userId, &req)
+	err := bc.service.DeleteBookFromShelf(userId, req.BookId)
 	if err != nil {if errors.Is(err, service.ErrUserNotFound) {
 		errDetails := er.NewErrorDetails("Error when editing book in shelf", err, http.StatusNotFound)
 		c.AbortWithError(errDetails.Status, errDetails)

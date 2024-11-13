@@ -139,3 +139,85 @@ func (p *PostgresBookShelfRepository) DeleteBookFromShelf(userId uuid.UUID, book
 
 	return nil
 }
+
+func (p *PostgresBookShelfRepository) SearchBookShelf(userId uuid.UUID, shelfType models.BookShelfType, genre string, sort string, isDirAsc bool) ([]*models.BookInShelfResponse, error) {
+	var status *models.BookShelfType
+	if shelfType == models.BookShelfAll {
+		status = nil
+	} else {
+		status = &shelfType
+	}
+
+    books := []*models.BookInShelfResponse{}
+
+    query := `
+    WITH ratings AS (
+        SELECT
+            r.book_id,
+            COALESCE(AVG(r.rating),0) as avg_ratings,
+            COUNT(*) as total_ratings
+        FROM reviews r
+        group by r.book_id
+    ),
+    user_ratings AS (
+        SELECT 
+            r.book_id,
+            r.review,
+            rating
+        FROM reviews r
+        WHERE r.user_id= $1
+    )
+    SELECT 
+        bk.title,
+        bk.author as author_id,
+        (SELECT username FROM users WHERE id=bk.author) as author_name,
+        bk.id as book_id,
+        bs.status,
+        bs.date,
+        COALESCE(r.avg_ratings, 0) as avg_ratings,
+        COALESCE(r.total_ratings,0) as total_ratings,
+        COALESCE(ur.review, '') as user_review,
+        COALESCE(ur.rating, 0) as user_rating
+    FROM bookshelf bs
+    JOIN books bk ON bs.book_id=bk.id
+    LEFT JOIN ratings r ON r.book_id=bk.id
+    LEFT JOIN user_ratings ur ON ur.book_id=bk.id
+    `
+    var genreId int
+    var err error
+    if genre != "" {
+        genreId, err = booksRepo.GetGenreById(genre)
+        if err != nil {
+            return nil, fmt.Errorf("failed to get genre id: %w", err)
+        }
+        query += "JOIN genres_books bg ON bg.book_id=bk.id"
+    }
+
+    query += " WHERE bs.user_id=$1 AND ($2::VARCHAR IS NULL OR bs.status=$2)"
+
+    if genre != "" {
+        query += " AND bg.genre_id=$3"
+    }
+
+	if sort != "" {
+		var direciton string
+		if isDirAsc{
+			direciton = "ASC"
+		} else {
+			direciton = "DESC"
+		}
+		query += " ORDER BY " + sort + " " + direciton
+	}
+
+    if genre != "" {
+        if  err := p.c.Select(&books, query, userId, status, genreId); err != nil {
+            return nil, fmt.Errorf("failed to search books in shelf: %w", err)
+        }
+    } else {
+        if  err := p.c.Select(&books, query, userId, status); err != nil {
+            return nil, fmt.Errorf("failed to search books in shelf: %w", err)
+        }
+    }
+
+    return books, nil
+}
