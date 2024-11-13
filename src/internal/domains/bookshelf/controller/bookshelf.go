@@ -224,25 +224,38 @@ func (bc *BookshelfController) EditBookInShelf(c *gin.Context) {
 }
 
 
+
+// DeleteBookFromShelf godoc
+// @Summary Delete book from shelf
+// @Description Delete book from shelf
+// @ID delete-book
+// @Tags bookshelf
+// @Param id query string true "Book ID"
+// @Produce  json
+// @Success 200 {object} string
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /users/shelf [delete]
 func (bc *BookshelfController) DeleteBookFromShelf(c * gin.Context) {
 	userId, errId := aux.GetLoggedUserId(c)
 	if errId != nil {
 		c.AbortWithError(errId.Status, errId)
 		return
 	}
-	var req models.BookShelfRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		er.AbortWithJsonErorr(c, err)
-		return
-	}
-	err := bc.service.DeleteBookFromShelf(userId, req.BookId)
+    
+    bookId, err := uuid.Parse(c.Query("id"))
+    if err != nil {
+        errDetails := er.NewErrorDetails("Error when deleting book from shelf", fmt.Errorf("invalid book id"), http.StatusBadRequest)
+        c.AbortWithError(errDetails.Status, errDetails)
+        return 
+    }
+
+	err = bc.service.DeleteBookFromShelf(userId, bookId)
 	if err != nil {if errors.Is(err, service.ErrUserNotFound) {
 		errDetails := er.NewErrorDetails("Error when editing book in shelf", err, http.StatusNotFound)
 		c.AbortWithError(errDetails.Status, errDetails)
 	} else if errors.Is(err, service.ErrBookNotFoundInLibrary) {
-		errDetails := er.NewErrorDetails("Error when editing book in shelf", err, http.StatusBadRequest)
-		c.AbortWithError(errDetails.Status, errDetails)
-	} else if errors.Is(err, service.ErrInvalidStatusType) {
 		errDetails := er.NewErrorDetails("Error when editing book in shelf", err, http.StatusBadRequest)
 		c.AbortWithError(errDetails.Status, errDetails)
 	} else {
@@ -252,5 +265,4 @@ func (bc *BookshelfController) DeleteBookFromShelf(c * gin.Context) {
 	return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Book deleted from shelf"})
-		
 }

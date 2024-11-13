@@ -90,7 +90,7 @@ definitions:
         type: string
       author_name:
         type: string
-      avg_rating:
+      avg_ratings:
         type: number
       book_id:
         type: string
@@ -1270,6 +1270,37 @@ paths:
       tags:
       - users
   /users/shelf:
+    delete:
+      description: Delete book from shelf
+      operationId: delete-book
+      parameters:
+      - description: Book ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Delete book from shelf
+      tags:
+      - bookshelf
     post:
       consumes:
       - application/json

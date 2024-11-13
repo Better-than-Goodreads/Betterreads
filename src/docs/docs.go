@@ -1295,6 +1295,52 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "Delete book from shelf",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookshelf"
+                ],
+                "summary": "Delete book from shelf",
+                "operationId": "delete-book",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Book ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
             }
         },
         "/users/{id}": {
@@ -1687,7 +1733,7 @@ const docTemplate = `{
                 "author_name": {
                     "type": "string"
                 },
-                "avg_rating": {
+                "avg_ratings": {
                     "type": "number"
                 },
                 "book_id": {
