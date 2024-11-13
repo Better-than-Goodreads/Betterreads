@@ -7,6 +7,7 @@ import (
 
 	"github.com/betterreads/internal/domains/bookshelf/models"
 	"github.com/betterreads/internal/domains/bookshelf/service"
+	bookService "github.com/betterreads/internal/domains/books/service"
 	aux "github.com/betterreads/internal/pkg/controller"
 	er "github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
@@ -65,6 +66,69 @@ func (bc *BookshelfController) GetBookShelf(c *gin.Context) {
 
 	}
 	c.JSON(200, shelf)
+}
+
+
+// SearchBookShelf godoc
+// @Summary Search books in shelf of an user
+// @Description Search books in shelf of an user. The search can be filtered by genre, sorted by avg_ratings, total_ratings and date. The direction can be asc or desc.
+// @Param status query string true "Shelf Type: all, read, plan-to-read, reading "
+// @Param genre query string false "Book Genre"
+// @Param sort query string false "Sort by publication_date, total_ratings, avg_rating"
+// @Param direction query string false "Sort direction asc or desc"
+// @Tags bookshelf
+// @Produce  json
+// @Success 200 {object} []models.BookInShelfResponse
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /users/{id}/shelf/search [get]
+func (bc *BookshelfController) SearchBookShelf(c *gin.Context) {
+
+    userId, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		errDetails := er.NewErrorDetails("Error when getting shelf", fmt.Errorf("invalid user id"), http.StatusBadRequest)
+		c.AbortWithError(errDetails.Status, errDetails)
+		return
+	}
+
+    shelfType := c.Query("type")
+    if shelfType == "" {
+        errParam := er.ErrorParam{Name: "type", Reason: "status is required"}
+        errDetails := er.NewErrorDetailsWithParams("Error when getting shelf", http.StatusBadRequest, errParam)
+        c.AbortWithError(errDetails.Status, errDetails)
+        return
+    }
+
+    genre := c.Query("genre")
+	sort := c.Query("sort")
+	direction := c.Query("direction")
+    books, err := bc.service.SearchBookShelf(userId, shelfType, genre, sort, direction)
+	if err != nil {
+		if errors.Is(err, bookService.ErrInvalidSort) {
+			errDetails := er.NewErrorDetailsWithParams(
+				"Error when searching books", http.StatusBadRequest, err)
+			c.AbortWithError(errDetails.Status, errDetails)
+		} else if errors.Is(err, bookService.ErrInvalidDirection) {
+			errDetails := er.NewErrorDetailsWithParams(
+				"Error when searching books", http.StatusBadRequest, err)
+			c.AbortWithError(errDetails.Status, errDetails)
+		} else if errors.Is(err, bookService.ErrDirectionWhenNoSort) {
+			errDetails := er.NewErrorDetails("Error when searching books", err, http.StatusBadRequest)
+			c.AbortWithError(errDetails.Status, errDetails)
+		} else if errors.Is(err, service.ErrGenreNotFound) {
+			errDetail := er.NewErrorDetails("Error when searching books in shelf", err, http.StatusBadRequest)
+			c.AbortWithError(errDetail.Status, errDetail)
+        } else if errors.Is(err, service.ErrInvalidStatusType) {
+            errDetails := er.NewErrorDetailsWithParams("Error when searching books in shelf",  http.StatusBadRequest, err)
+            c.AbortWithError(errDetails.Status, errDetails)
+		} else {
+			errDetail := er.NewErrorDetails("Error when searching books", err, http.StatusInternalServerError)
+			c.AbortWithError(errDetail.Status, errDetail)
+		}
+		return
+	}
+	c.JSON(http.StatusOK, books)
 }
 
 // AddBookToShelf godoc

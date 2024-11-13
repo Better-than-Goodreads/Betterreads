@@ -1,8 +1,8 @@
 package service
 
 import (
-	_ "errors"
-	bs "github.com/betterreads/internal/domains/books/service"
+    "errors"
+	bookService "github.com/betterreads/internal/domains/books/service"
 	"github.com/betterreads/internal/domains/bookshelf/models"
 	"github.com/betterreads/internal/domains/bookshelf/repository"
 	"github.com/google/uuid"
@@ -10,10 +10,10 @@ import (
 
 type BookShelfServiceImpl struct {
 	r           repository.BookshelfDatabase
-	bookService bs.BooksService
+	bookService bookService.BooksService
 }
 
-func NewBookShelfServiceImpl(r repository.BookshelfDatabase, bs bs.BooksService) BookshelfService {
+func NewBookShelfServiceImpl(r repository.BookshelfDatabase, bs bookService.BooksService) BookshelfService {
 	return &BookShelfServiceImpl{r: r, bookService: bs}
 }
 
@@ -111,4 +111,41 @@ func (bs *BookShelfServiceImpl) DeleteBookFromShelf(userId uuid.UUID, bookId uui
 	}
 
 	return nil
+}
+
+func ( bs * BookShelfServiceImpl) SearchBookShelf(userId uuid.UUID, shelfType string, genre string, sort string, direction string) ([]*models.BookInShelfResponse, error) {
+    userExists := bs.bookService.CheckIfUserExists(userId)
+    if !userExists {
+        return nil, ErrUserNotFound
+    }
+
+    if sort != "" {
+        if err := bookService.ValidateSort(sort); err != nil {
+            return nil, err
+        }
+    }
+
+    if sort == "" && direction != "" {
+		return nil, bookService.ErrDirectionWhenNoSort
+	}
+
+    if direction != "" && direction != "asc" && direction != "desc" {
+		return nil, bookService.ErrInvalidDirection
+	}
+
+    status := models.BookShelfType(shelfType)
+    if !validate_status(status) {
+        return nil, ErrInvalidStatusType
+    }
+
+    isDirAsc := direction == "asc"
+
+    books , err := bs.r.SearchBookShelf(userId, status, genre, sort, isDirAsc)
+    if err != nil {
+        if errors.Is(err, repository.ErrGenreNotFound) {
+            return nil, ErrGenreNotFound
+        }
+        return nil, err
+    }
+    return books, nil
 }

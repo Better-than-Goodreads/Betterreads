@@ -871,6 +871,53 @@ paths:
       summary: Get user picture
       tags:
       - users
+  /users/{id}/shelf/search:
+    get:
+      description: Search books in shelf of an user. The search can be filtered by
+        genre, sorted by avg_ratings, total_ratings and date. The direction can be
+        asc or desc.
+      parameters:
+      - description: 'Shelf Type: all, read, plan-to-read, reading '
+        in: query
+        name: status
+        required: true
+        type: string
+      - description: Book Genre
+        in: query
+        name: genre
+        type: string
+      - description: Sort by publication_date, total_ratings, avg_rating
+        in: query
+        name: sort
+        type: string
+      - description: Sort direction asc or desc
+        in: query
+        name: direction
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookInShelfResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Search books in shelf of an user
+      tags:
+      - bookshelf
   /users/{userId}/shelf:
     get:
       description: Get bookshelf of an user
@@ -972,7 +1019,7 @@ paths:
       description: Reject Friend Request from
       parameters:
       - description: Friend ID
-        in: path
+        in: query
         name: Id
         required: true
         type: string

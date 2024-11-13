@@ -40,7 +40,7 @@ type BookInShelfResponse struct {
 	AuthorId     string    `json:"author" db:"author_id"`
 	AuthorName   string    `json:"author_name" db:"author_name"`
 	UserReview   string    `json:"user_review" db:"user_review"`
-	AvgRating    float64   `json:"avg_rating" db:"avg_rating"`
+	AvgRating    float64   `json:"avg_ratings" db:"avg_ratings"`
 	TotalRatings int       `json:"total_ratings" db:"total_ratings"`
 	BookId       uuid.UUID `json:"book_id" db:"book_id"`
 	UserRating   int       `json:"user_rating" db:"user_rating"`

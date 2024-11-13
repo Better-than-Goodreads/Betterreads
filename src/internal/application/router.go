@@ -177,6 +177,7 @@ func AddBookshelfHandlers(r *Router, conn *sqlx.DB, books booksService.BooksServ
 	public := r.engine.Group("/users")
 	{
 		public.GET("/:id/shelf", bc.GetBookShelf)
+        public.GET("/:id/shelf/search", bc.SearchBookShelf)
 	}
 
 	private := r.engine.Group("users/shelf")

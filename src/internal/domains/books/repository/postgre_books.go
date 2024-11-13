@@ -15,7 +15,7 @@ type PostgresBookRepository struct {
 	c *sqlx.DB
 }
 
-func getGenreById(genre string) (int, error) {
+func GetGenreById(genre string) (int, error) {
 	for key, value := range GenresDict {
 		if value == genre {
 			return key, nil
@@ -154,7 +154,7 @@ func (r *PostgresBookRepository) SaveBook(book *models.NewBookRequest, author uu
              VALUES ($1, $2);`
 
 	for _, genre := range book.Genres {
-		genreid, err := getGenreById(genre)
+		genreid, err := GetGenreById(genre)
 		if err != nil {
 			return nil, ErrGenreNotFound
 		}
@@ -227,7 +227,7 @@ func (r *PostgresBookRepository) GetBooksByNameAndGenre(name string, genre strin
 	if genre == "" {
 		query = query_start + "WHERE LOWER(bk.title) LIKE LOWER('%'||$1||'%')"
 	} else {
-		genre_id, err = getGenreById(genre)
+		genre_id, err = GetGenreById(genre)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get books: %w", err)
 		}

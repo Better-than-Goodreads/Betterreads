@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/betterreads/internal/domains/bookshelf/models"
+	booksRepo "github.com/betterreads/internal/domains/books/repository"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -41,109 +42,58 @@ func NewPostgresBookShelfRepository(c *sqlx.DB) (BookshelfDatabase, error) {
 
 func (p *PostgresBookShelfRepository) GetBookShelf(userId uuid.UUID, shelfType models.BookShelfType) ([]*models.BookInShelfResponse, error) {
 	var status *models.BookShelfType
+
 	if shelfType == models.BookShelfAll {
 		status = nil
 	} else {
 		status = &shelfType
 	}
-	bookShelfs, err := p.getBookShelfData(userId, status)
-	if err != nil {
-		return nil, err
-	}
-
-	reviews, err := p.getBookshelfReviews(userId, status)
-	if err != nil {
-		return nil, err
-	}
-
-	ratingStats, err := p.getBookshelfRatingStats(userId, status)
-	if err != nil {
-		return nil, err
-	}
-
-	resMap := map[uuid.UUID]*models.BookInShelfResponse{}
-	for _, bookShelf := range bookShelfs {
-		bookShelf := &models.BookInShelfResponse{
-			Date:       bookShelf.Date,
-			Status:     bookShelf.Status,
-			Title:      bookShelf.Title,
-			AuthorId:   bookShelf.AuthorId,
-			AuthorName: bookShelf.AuthorName,
-			BookId:     bookShelf.BookId,
-		}
-		resMap[bookShelf.BookId] = bookShelf
-	}
-
-	for _, reviewMap := range reviews {
-		bookShelf := resMap[reviewMap.BookId]
-		bookShelf.UserReview = reviewMap.Review
-		bookShelf.UserRating = reviewMap.Rating
-	}
-
-	for _, ratingMap := range ratingStats {
-		bookShelf := resMap[ratingMap.BookId]
-		bookShelf.AvgRating = ratingMap.AvgRating
-		bookShelf.TotalRatings = ratingMap.TotalRatings
-	}
-
-	res := make([]*models.BookInShelfResponse, 0, len(resMap))
-	for _, bookShelf := range resMap {
-		res = append(res, bookShelf)
-	}
-
-	return res, nil
+    
+    res:= []*models.BookInShelfResponse{}
+    query := `
+    WITH ratings AS (
+        SELECT
+            r.book_id,
+            COALESCE(AVG(r.rating),0) as avg_ratings,
+            COUNT(*) as total_ratings
+        FROM reviews r
+        group by r.book_id
+    ),
+    user_ratings AS (
+        SELECT 
+            r.book_id,
+            r.review,
+            rating
+        FROM reviews r
+        WHERE r.user_id= $1
+    )
+    SELECT 
+        bk.title,
+        bk.author as author_id,
+        (SELECT username FROM users WHERE id=bk.author) as author_name,
+        bk.id as book_id,
+        bs.status,
+        bs.date,
+        COALESCE(r.avg_ratings, 0) as avg_ratings,
+        COALESCE(r.total_ratings,0) as total_ratings,
+        COALESCE(ur.review, '') as user_review,
+        COALESCE(ur.rating, 0) as user_rating
+    FROM bookshelf bs
+    JOIN books bk ON bs.book_id=bk.id
+    LEFT JOIN ratings r ON r.book_id=bk.id
+    LEFT JOIN user_ratings ur ON ur.book_id=bk.id
+    WHERE bs.user_id=$1 AND ($2::VARCHAR IS NULL OR bs.status=$2)
+    ORDER BY avg_ratings DESC;
+    `
+    if err := p.c.Select(&res, query, userId, status); err != nil {
+        if err != sql.ErrNoRows {
+            return nil, fmt.Errorf("failed to get bookshelf: %w", err)
+        }
+    }
+    
+    return res, nil
 }
 
-func (p *PostgresBookShelfRepository) getBookShelfData(userId uuid.UUID, shelfType *models.BookShelfType) ([]models.BookShelfBasicData, error) {
-	bookShelfData := []models.BookShelfBasicData{}
-
-	query := `SELECT bk.title, bk.author as author_id, a.username as author_name, bk.id as book_id, bs.status, bs.date
-                     FROM bookshelf bs
-                     JOIN books bk ON bs.book_id=bk.id
-                     JOIN users a ON bk.author=a.id
-                     WHERE bs.user_id=$1 AND ($2::VARCHAR IS NULL OR bs.status=$2);`
-
-	err := p.c.Select(&bookShelfData, query, userId, shelfType)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("failed to get bookshelf: %w", err)
-	}
-
-	return bookShelfData, nil
-
-}
-
-func (p *PostgresBookShelfRepository) getBookshelfReviews(userId uuid.UUID, shelfType *models.BookShelfType) ([]models.BookShelfUserReview, error) {
-	reviewsMaps := []models.BookShelfUserReview{}
-	query := `SELECT r.book_id, r.review, r.rating
-             FROM reviews r
-             WHERE r.user_id = $1 AND r.book_id IN (
-                SELECT bs.book_id 
-                FROM bookshelf bs 
-                WHERE bs.user_id=$1 AND ($2::VARCHAR IS NULL OR bs.status=$2)
-             );`
-	err := p.c.Select(&reviewsMaps, query, userId, shelfType)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("failed to get reviews: %w", err)
-	}
-	return reviewsMaps, nil
-}
-
-func (p *PostgresBookShelfRepository) getBookshelfRatingStats(userId uuid.UUID, shelfType *models.BookShelfType) ([]models.BookShelfRatingStats, error) {
-	RatingStatsMaps := []models.BookShelfRatingStats{}
-	query := `SELECT r.book_id, COALESCE(AVG(r.rating),0) as avg_ratings, COUNT(r.rating) as total_ratings
-                FROM reviews r
-                WHERE r.user_id = $1 AND r.book_id IN (
-                    SELECT book_id 
-                    FROM bookshelf bs
-                    WHERE user_id=$1 AND ($2::VARCHAR IS NULL OR bs.status=$2))
-                GROUP BY r.book_id;`
-
-	err := p.c.Select(&RatingStatsMaps, query, userId, shelfType)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, fmt.Errorf("failed to get rating stats: %w", err)
-	}
-	return RatingStatsMaps, nil
-}
 
 func (p *PostgresBookShelfRepository) AddBookToShelf(userId uuid.UUID, req *models.BookShelfRequest) error {
 	query := `INSERT INTO bookshelf (user_id, book_id, status, date)

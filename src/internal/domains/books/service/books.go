@@ -86,7 +86,7 @@ func (bs *BooksServiceImpl) GetBooksOfAuthor(authorId uuid.UUID, userId uuid.UUI
 
 func (bs *BooksServiceImpl) SearchBooks(name string, genre string, userId uuid.UUID, sort string, direction string) ([]*models.BookResponseWithReview, error) {
 	if sort != "" {
-		if err := validateSort(sort); err != nil {
+		if err := ValidateSort(sort); err != nil {
 			return nil, err
 		}
 	}
@@ -312,7 +312,7 @@ func (bs *BooksServiceImpl) CheckIfUserExists(userId uuid.UUID) bool {
 	return bs.booksRepository.CheckIfUserExists(userId)
 }
 
-func validateSort(sort string) error {
+func ValidateSort(sort string) error {
 	for _, s := range AvailableSorts {
 		if s == sort {
 			return nil

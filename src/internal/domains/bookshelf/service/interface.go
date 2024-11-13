@@ -15,6 +15,7 @@ var (
 		Name:   "status",
 		Reason: "status should be: 'plan-to-read', 'reading', 'read' or 'all",
 	}
+    ErrGenreNotFound         = errors.New("genre not found")
 )
 
 type BookshelfService interface {
@@ -22,4 +23,5 @@ type BookshelfService interface {
 	AddBookToShelf(userId uuid.UUID, req *models.BookShelfRequest) error
 	EditBookInShelf(userId uuid.UUID, req *models.BookShelfRequest) error
 	DeleteBookFromShelf(userId uuid.UUID, bookId uuid.UUID) error
+    SearchBookShelf(userId uuid.UUID, shelfType string, genre string, sort string, direction string) ([]*models.BookInShelfResponse, error)
 }

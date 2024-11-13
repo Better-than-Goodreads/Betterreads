@@ -853,7 +853,7 @@
                         "type": "string",
                         "description": "Friend ID",
                         "name": "Id",
-                        "in": "path",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -1413,6 +1413,74 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/shelf/search": {
+            "get": {
+                "description": "Search books in shelf of an user. The search can be filtered by genre, sorted by avg_ratings, total_ratings and date. The direction can be asc or desc.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookshelf"
+                ],
+                "summary": "Search books in shelf of an user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Shelf Type: all, read, plan-to-read, reading ",
+                        "name": "status",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Book Genre",
+                        "name": "genre",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by publication_date, total_ratings, avg_rating",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort direction asc or desc",
+                        "name": "direction",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.BookInShelfResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorDetails"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/errors.ErrorDetails"
                         }
