@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/betterreads/internal/domains/users/models"
 	"github.com/betterreads/internal/domains/friends/repository"
+	"github.com/betterreads/internal/domains/users/models"
 	users "github.com/betterreads/internal/domains/users/service"
 	"github.com/google/uuid"
 )
@@ -29,7 +29,7 @@ func (fs *FriendsServiceImpl) GetFriends(userID uuid.UUID) ([]models.UserRespons
 }
 
 func (fs *FriendsServiceImpl) AddFriend(senderId uuid.UUID, recipientId uuid.UUID) error {
-	if senderId== recipientId{
+	if senderId == recipientId {
 		return ErrSameUser
 	}
 	if !fs.us.CheckUserExists(senderId) {
@@ -119,9 +119,9 @@ func (fs *FriendsServiceImpl) DeleteFriend(userID uuid.UUID, friendID uuid.UUID)
 		return ErrFriendShipNotFound
 	}
 
-    if err := fs.fr.DeleteFriendship(userID, friendID); err != nil {
-        return err
-    }
+	if err := fs.fr.DeleteFriendship(userID, friendID); err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }

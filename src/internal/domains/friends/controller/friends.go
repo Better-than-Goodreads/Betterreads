@@ -3,14 +3,15 @@ package controller
 import (
 	"errors"
 	"fmt"
-	_ "github.com/betterreads/internal/domains/users/models"
+	"net/http"
+
 	"github.com/betterreads/internal/domains/friends/service"
+	_ "github.com/betterreads/internal/domains/users/models"
 	usersService "github.com/betterreads/internal/domains/users/service"
 	aux "github.com/betterreads/internal/pkg/controller"
 	er "github.com/betterreads/internal/pkg/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"net/http"
 )
 
 type FriendsController struct {
@@ -164,6 +165,7 @@ func (fc FriendsController) RejectFriendRequest(ctx *gin.Context) {
 		ctx.AbortWithError(http.StatusBadRequest, errorDetails)
 		return
 	}
+	fmt.Printf("senderId: %v, recipientId: %v \n", senderId, recipientId)
 	err = fc.FriendsService.RejectFriendRequest(recipientId, senderId)
 	if err != nil {
 		if errors.Is(err, service.ErrRequestNotFound) {
@@ -246,12 +248,12 @@ func (fc FriendsController) GetFriendRequestsReceived(ctx *gin.Context) {
 // @Failure 404 {object} errors.ErrorDetails
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /users/friends [delete]
-func (fc FriendsController) DeleteFriend(ctx *gin.Context){
-    id, errId := aux.GetLoggedUserId(ctx)
-    if errId !=nil {
-        ctx.AbortWithError(http.StatusUnauthorized, errId)
-        return
-    }
+func (fc FriendsController) DeleteFriend(ctx *gin.Context) {
+	id, errId := aux.GetLoggedUserId(ctx)
+	if errId != nil {
+		ctx.AbortWithError(http.StatusUnauthorized, errId)
+		return
+	}
 
 	friendId, err := uuid.Parse(ctx.Query("Id"))
 	if err != nil {
@@ -260,16 +262,16 @@ func (fc FriendsController) DeleteFriend(ctx *gin.Context){
 		return
 	}
 
-    if err := fc.FriendsService.DeleteFriend(id, friendId); err != nil {
-        if errors.Is(err, service.ErrFriendShipNotFound) {
-            errorDetails := er.NewErrorDetails("Error When deleting friend", err, http.StatusNotFound)
-            ctx.AbortWithError(http.StatusNotFound, errorDetails)
-        } else {
-            errorDetails := er.NewErrorDetails("Error When deleting friend", err, http.StatusInternalServerError)
-            ctx.AbortWithError(http.StatusInternalServerError, errorDetails)
-        }
-        return
-    }
+	if err := fc.FriendsService.DeleteFriend(id, friendId); err != nil {
+		if errors.Is(err, service.ErrFriendShipNotFound) {
+			errorDetails := er.NewErrorDetails("Error When deleting friend", err, http.StatusNotFound)
+			ctx.AbortWithError(http.StatusNotFound, errorDetails)
+		} else {
+			errorDetails := er.NewErrorDetails("Error When deleting friend", err, http.StatusInternalServerError)
+			ctx.AbortWithError(http.StatusInternalServerError, errorDetails)
+		}
+		return
+	}
 
-    ctx.JSON(http.StatusOK, gin.H{"message": "Friend deleted"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Friend deleted"})
 }
