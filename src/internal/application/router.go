@@ -20,6 +20,11 @@ import (
 	friendsRepository "github.com/betterreads/internal/domains/friends/repository"
 	friendsService "github.com/betterreads/internal/domains/friends/service"
 
+
+	communitiesController "github.com/betterreads/internal/domains/communities/controller"
+	communitiesRepository "github.com/betterreads/internal/domains/communities/repository"
+	communitiesService "github.com/betterreads/internal/domains/communities/service"
+
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -86,6 +91,7 @@ func NewRouter(port string) *Router {
 	AddBookshelfHandlers(r, conn, books)
 	AddRecommendationsHandlers(r, conn, books, booksRepo)
 	addFriendsHandlers(r, users, conn)
+	addComunitiesHandlers(r, conn)
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -225,6 +231,29 @@ func addFriendsHandlers(r *Router, users usersService.UsersService, conn *sqlx.D
 		private.GET("/requests/received", fc.GetFriendRequestsReceived)
 	}
 
+}
+
+func addCommunitiesHandlers(r *Router, conn *sqlx.DB) {
+	communitiesRepo, err := communitiesRepository.NewPostgresCommunitiesRepository(conn)
+	if err != nil {
+		fmt.Println("error: %w", err)
+	}
+	cs := communitiesService.NewCommunitiesServiceImpl(communitiesRepo)
+	cc := communitiesController.NewCommunitiesController(cs)
+	private := r.engine.Group("communities")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.POST("/", cc.CreateCommunity)
+		// private.GET("/", cc.GetCommunities)
+		// private.GET("/:id", cc.GetCommunity)
+		// private.POST("/:id/join", cc.JoinCommunity)
+		// private.DELETE("/:id/leave", cc.LeaveCommunity)
+		// private.GET("/:id/members", cc.GetCommunityMembers)
+		// private.GET("/:id/books", cc.GetCommunityBooks)
+		// private.POST("/:id/books", cc.AddBookToCommunity)
+		// private.DELETE("/:id/books", cc.RemoveBookFromCommunity)
+		// gracias por tanto copilot perdon por tan poco
+	}
 }
 
 func (r *Router) Run() {
