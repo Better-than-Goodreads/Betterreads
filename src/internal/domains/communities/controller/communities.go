@@ -33,3 +33,13 @@ func (c *CommunitiesController) CreateCommunity (ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, createdCommunity)
 }
+
+func (c *CommunitiesController) GetCommunities (ctx *gin.Context) {
+	communities, err := c.communitiesService.GetCommunities()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, communities)
+}

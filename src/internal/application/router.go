@@ -91,7 +91,7 @@ func NewRouter(port string) *Router {
 	AddBookshelfHandlers(r, conn, books)
 	AddRecommendationsHandlers(r, conn, books, booksRepo)
 	addFriendsHandlers(r, users, conn)
-	addComunitiesHandlers(r, conn)
+	AddCommunitiesHandlers(r, conn)
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -233,18 +233,18 @@ func addFriendsHandlers(r *Router, users usersService.UsersService, conn *sqlx.D
 
 }
 
-func addCommunitiesHandlers(r *Router, conn *sqlx.DB) {
+func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
 	communitiesRepo, err := communitiesRepository.NewPostgresCommunitiesRepository(conn)
 	if err != nil {
 		fmt.Println("error: %w", err)
 	}
 	cs := communitiesService.NewCommunitiesServiceImpl(communitiesRepo)
 	cc := communitiesController.NewCommunitiesController(cs)
-	private := r.engine.Group("communities")
+	private := r.engine.Group("/communities")
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.POST("/", cc.CreateCommunity)
-		// private.GET("/", cc.GetCommunities)
+		private.GET("/", cc.GetCommunities)
 		// private.GET("/:id", cc.GetCommunity)
 		// private.POST("/:id/join", cc.JoinCommunity)
 		// private.DELETE("/:id/leave", cc.LeaveCommunity)

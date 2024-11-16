@@ -8,5 +8,5 @@ import (
 
 type CommunitiesDatabase interface {
 	CreateCommunity(community model.NewCommunityRequest) (UUID.uuid, error)
-
+	GetCommunities() ([]model.CommunityResponse, error)
 }

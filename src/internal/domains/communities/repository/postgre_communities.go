@@ -48,9 +48,12 @@ func NewPostgresCommunitiesRepository(db *sql.DB) *PostgresCommunitiesRepository
 		CREATE TABLE IF NOT EXISTS communities_posts (
 			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 			community_id UUID NOT NULL,
-			description TEXT NOT NULL,
+			content TEXT NOT NULL,
+			created_at TIMESTAMP NOT NULL,
+			author_of_post_id UUID NOT NULL,
 			PRIMARY KEY (id),			
 			FOREIGN KEY (community_id) REFERENCES communities(id)
+			FOREIGN KEY (author_of_post_id) REFERENCES users(id)
 		);`
 	
 	if _, err := db.Exec(schemaCommunitiesPosts); err != nil {
@@ -61,12 +64,34 @@ func NewPostgresCommunitiesRepository(db *sql.DB) *PostgresCommunitiesRepository
 }
 
 func (db *PostgresCommunitiesRepository) CreateCommunity(community model.NewCommunityRequest) (UUID.uuid, error) {
-	// Create a new community in the database
-	
-	// Prepare the SQL query
 	query := `INSERT INTO communities (name, description, owner_id) VALUES ($1, $2, $3) RETURNING id`
 	
-	// Return the ID of the created community
-	return UUID.New(), nil
+	var id UUID.uuid
+	err := db.db.QueryRow(query, community.Name, community.Description, community.OwnerID).Scan(&id)
+	if err != nil {
+		return "", fmt.Errorf("failed to create community: %w", err)
+	}
+	 
+	return id, nil
+}
 
+func (db *PostgresCommunitiesRepository) GetCommunities() ([]model.CommunityResponse, error) {
+	query := `SELECT id, name, description, owner_id FROM communities`
+	rows, err := db.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get communities: %w", err)
+	}
+	defer rows.Close()
+
+	communities := []model.CommunityResponse{}
+	for rows.Next() {
+		var community model.CommunityResponse
+		err := rows.Scan(&community.ID, &community.Name, &community.Description, &community.OwnerID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan community: %w", err)
+		}
+		communities = append(communities, community)
+	}
+
+	return communities, nil
 }

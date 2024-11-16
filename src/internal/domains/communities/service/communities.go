@@ -23,3 +23,13 @@ func (cs *CommunitiesServiceImpl) CreateCommunity(community model.NewCommunityRe
 
 	return communityResponse, nil
 }
+
+
+func (cs *CommunitiesServiceImpl) GetCommunities() ([]model.CommunityResponse, error) {
+	communities, err := cs.r.GetCommunities()
+	if err != nil {
+		return nil, err
+	}
+
+	return communities, nil
+}
