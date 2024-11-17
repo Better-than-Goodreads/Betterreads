@@ -20,6 +20,10 @@ import (
 	friendsRepository "github.com/betterreads/internal/domains/friends/repository"
 	friendsService "github.com/betterreads/internal/domains/friends/service"
 
+	feedController "github.com/betterreads/internal/domains/feed/controller"
+	feedRepository "github.com/betterreads/internal/domains/feed/repository"
+	feedService "github.com/betterreads/internal/domains/feed/service"
+
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -86,6 +90,7 @@ func NewRouter(port string) *Router {
 	AddBookshelfHandlers(r, conn, books)
 	AddRecommendationsHandlers(r, conn, books, booksRepo)
 	addFriendsHandlers(r, users, conn)
+	addFeedHandlers(r, users, conn)
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -177,7 +182,7 @@ func AddBookshelfHandlers(r *Router, conn *sqlx.DB, books booksService.BooksServ
 	public := r.engine.Group("/users")
 	{
 		public.GET("/:id/shelf", bc.GetBookShelf)
-        public.GET("/:id/shelf/search", bc.SearchBookShelf)
+		public.GET("/:id/shelf/search", bc.SearchBookShelf)
 	}
 
 	private := r.engine.Group("users/shelf")
@@ -218,13 +223,24 @@ func addFriendsHandlers(r *Router, users usersService.UsersService, conn *sqlx.D
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.POST("/", fc.AddFriend)
-        private.DELETE("/", fc.DeleteFriend)
+		private.DELETE("/", fc.DeleteFriend)
 		private.POST("/requests", fc.AcceptFriendRequest)
 		private.DELETE("/requests", fc.RejectFriendRequest)
 		private.GET("/requests/sent", fc.GetFriendsRequestSent)
 		private.GET("/requests/received", fc.GetFriendRequestsReceived)
 	}
 
+}
+
+func addFeedHandlers(r *Router, users usersService.UsersService, conn *sqlx.DB) {
+	feedRepo := feedRepository.NewPostgresFeedRepository(conn)
+	fs := feedService.NewFeedServiceImpl(feedRepo, users)
+	fc := feedController.NewFeedController(fs)
+	private := r.engine.Group("feed")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.GET("/", fc.GetFeed)
+	}
 }
 
 func (r *Router) Run() {

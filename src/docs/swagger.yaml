@@ -197,6 +197,36 @@ definitions:
     required:
     - rating
     type: object
+  models.Post:
+    properties:
+      book_author:
+        type: string
+      book_description:
+        type: string
+      book_id:
+        type: string
+      book_title:
+        type: string
+      id:
+        type: string
+      publication_date:
+        type: string
+      rating:
+        description: |-
+          Ratings can be null to have the two posts.
+          - The publication of a book
+          - The rating of a book
+        type: integer
+      username:
+        type: string
+    type: object
+  models.PostDTO:
+    properties:
+      post:
+        $ref: '#/definitions/models.Post'
+      type:
+        type: string
+    type: object
   models.Review:
     properties:
       rating:
@@ -206,6 +236,8 @@ definitions:
     type: object
   models.ReviewOfBook:
     properties:
+      publication_date:
+        type: string
       rating:
         type: integer
       review:
@@ -220,6 +252,8 @@ definitions:
       book_id:
         type: string
       book_title:
+        type: string
+      publication_date:
         type: string
       rating:
         type: integer
@@ -676,6 +710,21 @@ paths:
       summary: Gets all reviews of a user
       tags:
       - books
+  /feed:
+    get:
+      description: 'Get feed. The type of posts can be : ["post", "rating"]'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.PostDTO'
+            type: array
+      summary: Get feed of an user
+      tags:
+      - feed
   /recommendations:
     get:
       consumes:
