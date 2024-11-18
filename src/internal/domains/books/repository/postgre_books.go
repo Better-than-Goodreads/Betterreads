@@ -57,6 +57,7 @@ func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
             book_id UUID,
             rating INTEGER NOT NULL,
             review VARCHAR (255) NOT NULL,
+			publication_date VARCHAR(255) NOT NULL DEFAULT CURRENT_DATE,
             PRIMARY KEY (user_id, book_id),
             FOREIGN KEY (book_id) REFERENCES books(id),
             FOREIGN KEY (user_id) REFERENCES users(id)
@@ -367,7 +368,7 @@ func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*model
 
 	res := []*models.ReviewOfUser{}
 	query := `
-        SELECT b.title AS book_title, r.review,b.id as book_id, r.rating
+        SELECT b.title AS book_title, r.review,b.id as book_id, r.rating, r.publication_date
         FROM reviews r
         INNER JOIN books b ON r.book_id = b.id
         WHERE r.user_id = $1;
@@ -440,7 +441,7 @@ func (r *PostgresBookRepository) CheckifReviewExists(bookId uuid.UUID, userId uu
 func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.ReviewOfBook, error) {
 	res := []*models.ReviewOfBook{}
 	query := `
-        SELECT u.username, r.review, u.id AS user_id, r.rating
+        SELECT u.username, r.review, u.id AS user_id, r.rating, r.publication_date
         FROM reviews r
         INNER JOIN users u ON r.user_id = u.id
         WHERE r.book_id = $1;

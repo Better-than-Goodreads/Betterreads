@@ -558,6 +558,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/feed": {
+            "get": {
+                "description": "Get feed. The type of posts can be : [\"post\", \"rating\"]",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "feed"
+                ],
+                "summary": "Get feed of an user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.PostDTO"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/recommendations": {
             "get": {
                 "description": "Get recommendations for an user based on his top 3 genres. It gets you 5 books for each genre if available.",
@@ -1894,6 +1917,47 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Post": {
+            "type": "object",
+            "properties": {
+                "book_author": {
+                    "type": "string"
+                },
+                "book_description": {
+                    "type": "string"
+                },
+                "book_id": {
+                    "type": "string"
+                },
+                "book_title": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "publication_date": {
+                    "type": "string"
+                },
+                "rating": {
+                    "description": "Ratings can be null to have the two posts.\n- The publication of a book\n- The rating of a book",
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PostDTO": {
+            "type": "object",
+            "properties": {
+                "post": {
+                    "$ref": "#/definitions/models.Post"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Review": {
             "type": "object",
             "properties": {
@@ -1908,6 +1972,9 @@ const docTemplate = `{
         "models.ReviewOfBook": {
             "type": "object",
             "properties": {
+                "publication_date": {
+                    "type": "string"
+                },
                 "rating": {
                     "type": "integer"
                 },
@@ -1929,6 +1996,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "book_title": {
+                    "type": "string"
+                },
+                "publication_date": {
                     "type": "string"
                 },
                 "rating": {
