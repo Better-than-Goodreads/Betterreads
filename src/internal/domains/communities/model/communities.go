@@ -11,15 +11,6 @@ type CommunityResponse struct {
 	OwnerID     uuid.UUID `json:"owner_id" db:"owner_id"`
 	//Picture    string    `json:"picture" db:"picture"`
 	//Banner   string    `json:"banner" db:"banner"`
-	Users 		[]uuid.UUID `json:"users" db:"users"`
-	Posts 		[]uuid.UUID `json:"posts" db:"posts"`	
-}
-
-type CommunityPost struct {
-	ID          uuid.UUID `json:"id" db:"id"`
-	CommunityID uuid.UUID `json:"community_id" db:"community_id"`
-	UserID      uuid.UUID `json:"user_id" db:"user_id"`
-	Content     string    `json:"content" db:"content"`
 }
 
 type NewCommunityRequest struct {

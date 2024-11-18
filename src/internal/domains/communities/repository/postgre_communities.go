@@ -5,6 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/betterreads/internal/domains/communities/model"
 	"github.com/google/uuid"
+	userModel "github.com/betterreads/internal/domains/users/models"
 )
 
 type PostgresCommunitiesRepository struct {
@@ -55,7 +56,6 @@ func (db *PostgresCommunitiesRepository) CreateCommunity(community model.NewComm
 		return nil, fmt.Errorf("failed to create community: %w", err)
 	}
 	
-
 	communityResponse := model.CommunityResponse{
 		ID: id,
 		Name: community.Name,
@@ -86,4 +86,50 @@ func (db *PostgresCommunitiesRepository) GetCommunities() ([]*model.CommunityRes
 	}
 
 	return communities, nil
+}
+
+func (db *PostgresCommunitiesRepository) JoinCommunity(communityId uuid.UUID, userId uuid.UUID) error {
+	query := `INSERT INTO communities_users (user_id, community_id) VALUES ($1, $2)`
+	_, err := db.db.Exec(query, userId, communityId)
+	if err != nil {
+		return fmt.Errorf("failed to join community: %w", err)
+	}
+
+	return nil
+}
+func (db *PostgresCommunitiesRepository) CheckIfUserIsInCommunity(communityId uuid.UUID, userId uuid.UUID) bool {
+	query := `SELECT EXISTS(SELECT 1 FROM communities_users WHERE user_id=$1 AND community_id=$2)`
+
+	var exists bool
+	err := db.db.QueryRow(query, userId, communityId).Scan(&exists)
+	if err != nil {
+		return false
+	}
+
+	return exists
+}
+
+
+func (db *PostgresCommunitiesRepository) GetCommunityUsers(communityId uuid.UUID) ([]*userModel.UserStageResponse, error) {
+	query := `SELECT u.email, u.username, u.first_name, u.last_name, u.is_author, u.id FROM users u 
+			  JOIN communities_users cu ON u.id = cu.user_id 
+			  WHERE cu.community_id = $1`
+	rows, err := db.db.Query(query, communityId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get community users: %w", err)
+	}
+	defer rows.Close()
+
+	users := []*userModel.UserStageResponse{}
+	for rows.Next() {
+		user := &userModel.UserStageResponse{}
+
+		err := rows.Scan(&user.Email, &user.Username, &user.First_name, &user.Last_name, &user.IsAuthor, &user.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan user: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }

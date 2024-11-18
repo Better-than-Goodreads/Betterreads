@@ -5,6 +5,7 @@ import (
 	"github.com/betterreads/internal/domains/communities/model"
 	"github.com/betterreads/internal/domains/communities/repository"
 	"github.com/google/uuid"
+	userModel "github.com/betterreads/internal/domains/users/models"
 )
 
 type CommunitiesServiceImpl struct {
@@ -33,4 +34,26 @@ func (cs *CommunitiesServiceImpl) GetCommunities() ([]*model.CommunityResponse, 
 	}
 
 	return communities, nil
+}
+
+func (cs *CommunitiesServiceImpl) JoinCommunity(communityId uuid.UUID, userId uuid.UUID) error {
+	if cs.r.CheckIfUserIsInCommunity(communityId, userId) {
+		return ErrUserAlreadyInCommunity
+	}
+
+	err := cs.r.JoinCommunity(communityId, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cs *CommunitiesServiceImpl) GetCommunityUsers(communityId uuid.UUID) ([]*userModel.UserStageResponse, error) {
+	users, err := cs.r.GetCommunityUsers(communityId)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
