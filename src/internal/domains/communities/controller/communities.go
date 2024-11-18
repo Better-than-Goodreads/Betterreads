@@ -1,5 +1,13 @@
 package controller
 
+import(
+	"net/http"
+	"github.com/gin-gonic/gin"
+	"github.com/betterreads/internal/domains/communities/service"
+	"github.com/betterreads/internal/domains/communities/model"
+	aux "github.com/betterreads/internal/pkg/controller"
+)
+
 type CommunitiesController struct {
 	communitiesService service.CommunitiesService
 }
@@ -25,7 +33,7 @@ func (c *CommunitiesController) CreateCommunity (ctx *gin.Context) {
 		return
 	}
 
-	createdCommunity, err := c.communitiesService.CreateCommunity(community)
+	createdCommunity, err := c.communitiesService.CreateCommunity(community, userId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

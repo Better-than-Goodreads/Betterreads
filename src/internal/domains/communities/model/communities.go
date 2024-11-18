@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type communityResponse struct {
+type CommunityResponse struct {
 	ID          uuid.UUID `json:"id" db:"id"`
 	Name        string    `json:"name" db:"name"`
 	Description string    `json:"description" db:"description"`
@@ -22,7 +22,7 @@ type CommunityPost struct {
 	Content     string    `json:"content" db:"content"`
 }
 
-type newCommunityRequest struct {
+type NewCommunityRequest struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description" binding:"required"`
 	OwnerID     string `json:"owner_id" binding:"required"`

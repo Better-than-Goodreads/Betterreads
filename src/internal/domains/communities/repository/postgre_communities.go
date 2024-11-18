@@ -1,14 +1,19 @@
 package repository
 
-
+import (
+	"fmt"
+	"github.com/jmoiron/sqlx"
+	"github.com/betterreads/internal/domains/communities/model"
+	"github.com/google/uuid"
+)
 
 type PostgresCommunitiesRepository struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewPostgresCommunitiesRepository(db *sql.DB) *PostgresCommunitiesRepository {
+func NewPostgresCommunitiesRepository(db *sqlx.DB) (CommunitiesDatabase, error) {
 	enableUUIDExtension := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
-	if _, err := c.Exec(enableUUIDExtension); err != nil {
+	if _, err := db.Exec(enableUUIDExtension); err != nil {
 		return nil, fmt.Errorf("failed to enable uuid extension: %w", err)
 	}
 
@@ -18,13 +23,7 @@ func NewPostgresCommunitiesRepository(db *sql.DB) *PostgresCommunitiesRepository
 			name VARCHAR(255) NOT NULL,
 			description TEXT NOT NULL,
 			owner_id UUID NOT NULL,
-			users UUID NOT NULL,
-			posts UUID NOT NULL,
-
-			PRIMARY KEY (id),
-			FOREIGN KEY (owner_id) REFERENCES users(id),
-			FOREIGN KEY (users) REFERENCES communities_users(id),
-			FOREIGN KEY (posts) REFERENCES communities_posts(id)
+			FOREIGN KEY (owner_id) REFERENCES users(id)
 		);`
 
 	if _, err := db.Exec(schemaCommunities); err != nil {
@@ -44,38 +43,30 @@ func NewPostgresCommunitiesRepository(db *sql.DB) *PostgresCommunitiesRepository
 		return nil, fmt.Errorf("failed to create communities_users table: %w", err)
 	}
 
-	schemaCommunitiesPosts := `
-		CREATE TABLE IF NOT EXISTS communities_posts (
-			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-			community_id UUID NOT NULL,
-			content TEXT NOT NULL,
-			created_at TIMESTAMP NOT NULL,
-			author_of_post_id UUID NOT NULL,
-			PRIMARY KEY (id),			
-			FOREIGN KEY (community_id) REFERENCES communities(id)
-			FOREIGN KEY (author_of_post_id) REFERENCES users(id)
-		);`
-	
-	if _, err := db.Exec(schemaCommunitiesPosts); err != nil {
-		return nil, fmt.Errorf("failed to create communities_posts table: %w", err)
-	}
-	
-	return &PostgresCommunitiesRepository{db: db}
+	return &PostgresCommunitiesRepository{db: db}, nil
 }
 
-func (db *PostgresCommunitiesRepository) CreateCommunity(community model.NewCommunityRequest) (UUID.uuid, error) {
+func (db *PostgresCommunitiesRepository) CreateCommunity(community model.NewCommunityRequest, userId uuid.UUID) (*model.CommunityResponse, error) {
 	query := `INSERT INTO communities (name, description, owner_id) VALUES ($1, $2, $3) RETURNING id`
 	
-	var id UUID.uuid
-	err := db.db.QueryRow(query, community.Name, community.Description, community.OwnerID).Scan(&id)
+	var id uuid.UUID
+	err := db.db.QueryRow(query, community.Name, community.Description, userId).Scan(&id)
 	if err != nil {
-		return "", fmt.Errorf("failed to create community: %w", err)
+		return nil, fmt.Errorf("failed to create community: %w", err)
 	}
-	 
-	return id, nil
+	
+
+	communityResponse := model.CommunityResponse{
+		ID: id,
+		Name: community.Name,
+		Description: community.Description,
+		OwnerID: userId,
+	}
+	fmt.Println(communityResponse)
+	return &communityResponse, nil
 }
 
-func (db *PostgresCommunitiesRepository) GetCommunities() ([]model.CommunityResponse, error) {
+func (db *PostgresCommunitiesRepository) GetCommunities() ([]*model.CommunityResponse, error) {
 	query := `SELECT id, name, description, owner_id FROM communities`
 	rows, err := db.db.Query(query)
 	if err != nil {
@@ -83,9 +74,10 @@ func (db *PostgresCommunitiesRepository) GetCommunities() ([]model.CommunityResp
 	}
 	defer rows.Close()
 
-	communities := []model.CommunityResponse{}
+	communities := []*model.CommunityResponse{}
 	for rows.Next() {
-		var community model.CommunityResponse
+		community := &model.CommunityResponse{}
+
 		err := rows.Scan(&community.ID, &community.Name, &community.Description, &community.OwnerID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan community: %w", err)
