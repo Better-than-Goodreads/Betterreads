@@ -20,9 +20,14 @@ import (
 	friendsRepository "github.com/betterreads/internal/domains/friends/repository"
 	friendsService "github.com/betterreads/internal/domains/friends/service"
 
+	communitiesController "github.com/betterreads/internal/domains/communities/controller"
+	communitiesRepository "github.com/betterreads/internal/domains/communities/repository"
+	communitiesService "github.com/betterreads/internal/domains/communities/service"
+
 	feedController "github.com/betterreads/internal/domains/feed/controller"
 	feedRepository "github.com/betterreads/internal/domains/feed/repository"
 	feedService "github.com/betterreads/internal/domains/feed/service"
+
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -90,7 +95,9 @@ func NewRouter(port string) *Router {
 	AddBookshelfHandlers(r, conn, books)
 	AddRecommendationsHandlers(r, conn, books, booksRepo)
 	addFriendsHandlers(r, users, conn)
+	AddCommunitiesHandlers(r, conn)
 	addFeedHandlers(r, users, conn)
+
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -232,6 +239,31 @@ func addFriendsHandlers(r *Router, users usersService.UsersService, conn *sqlx.D
 
 }
 
+
+func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
+	communitiesRepo, err := communitiesRepository.NewPostgresCommunitiesRepository(conn)
+	if err != nil {
+		fmt.Println("error: %w", err)
+	}
+	cs := communitiesService.NewCommunitiesServiceImpl(communitiesRepo)
+	cc := communitiesController.NewCommunitiesController(cs)
+	private := r.engine.Group("/communities")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.POST("/", cc.CreateCommunity)
+		private.GET("/", cc.GetCommunities)
+		// private.GET("/:id", cc.GetCommunity)
+		private.POST("/:id/join", cc.JoinCommunity)
+		private.GET("/:id/users", cc.GetCommunityUsers)
+		// private.DELETE("/:id/leave", cc.LeaveCommunity)
+		// private.GET("/:id/members", cc.GetCommunityMembers)
+		// private.GET("/:id/books", cc.GetCommunityBooks)
+		// private.POST("/:id/books", cc.AddBookToCommunity)
+		// private.DELETE("/:id/books", cc.RemoveBookFromCommunity)
+		// gracias por tanto copilot perdon por tan poco
+  }
+}
+
 func addFeedHandlers(r *Router, users usersService.UsersService, conn *sqlx.DB) {
 	feedRepo := feedRepository.NewPostgresFeedRepository(conn)
 	fs := feedService.NewFeedServiceImpl(feedRepo, users)
@@ -240,6 +272,7 @@ func addFeedHandlers(r *Router, users usersService.UsersService, conn *sqlx.DB) 
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.GET("/", fc.GetFeed)
+
 	}
 }
 
