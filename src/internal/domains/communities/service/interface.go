@@ -14,7 +14,7 @@ var (
 
 type CommunitiesService interface {
 	CreateCommunity(community model.NewCommunityRequest, userId uuid.UUID) (*model.CommunityResponse, error)
-	GetCommunities() ([]*model.CommunityResponse, error)
+	GetCommunities(userId uuid.UUID) ([]*model.CommunityResponse, error)
 	JoinCommunity(communityId uuid.UUID, userId uuid.UUID) error
 	GetCommunityUsers(communityId uuid.UUID) ([]*userModel.UserStageResponse, error)
 }

@@ -61,14 +61,33 @@ func (db *PostgresCommunitiesRepository) CreateCommunity(community model.NewComm
 		Name: community.Name,
 		Description: community.Description,
 		OwnerID: userId,
+		Joined: true,
 	}
-	fmt.Println(communityResponse)
+
+	JoinCommunityErr := db.JoinCommunity(id, userId)
+	if JoinCommunityErr != nil {
+		return nil, fmt.Errorf("failed to join user to community: %w", JoinCommunityErr)
+	}
+
 	return &communityResponse, nil
 }
 
-func (db *PostgresCommunitiesRepository) GetCommunities() ([]*model.CommunityResponse, error) {
-	query := `SELECT id, name, description, owner_id FROM communities`
-	rows, err := db.db.Query(query)
+func (db *PostgresCommunitiesRepository) GetCommunities(userId uuid.UUID) ([]*model.CommunityResponse, error) {
+	query := `SELECT 
+    c.id AS id, 
+    c.name AS name, 
+    c.description AS desc, 
+    c.owner_id AS owner,
+    CASE 
+        WHEN cu.user_id IS NOT NULL THEN true 
+        ELSE false 
+    END AS joined
+	FROM 
+    communities c
+	LEFT JOIN 
+    communities_users cu 
+    ON c.id = cu.community_id AND cu.user_id = $1`
+	rows, err := db.db.Query(query, userId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get communities: %w", err)
 	}
@@ -78,7 +97,7 @@ func (db *PostgresCommunitiesRepository) GetCommunities() ([]*model.CommunityRes
 	for rows.Next() {
 		community := &model.CommunityResponse{}
 
-		err := rows.Scan(&community.ID, &community.Name, &community.Description, &community.OwnerID)
+		err := rows.Scan(&community.ID, &community.Name, &community.Description, &community.OwnerID, &community.Joined)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan community: %w", err)
 		}

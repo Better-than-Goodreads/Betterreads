@@ -64,7 +64,12 @@ func (c *CommunitiesController) CreateCommunity (ctx *gin.Context) {
 // @Router /communities [get]
 
 func (c *CommunitiesController) GetCommunities (ctx *gin.Context) {
-	communities, err := c.communitiesService.GetCommunities()
+	userId, errDetail := aux.GetLoggedUserId(ctx)
+	if errDetail != nil {
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+	communities, err := c.communitiesService.GetCommunities(userId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

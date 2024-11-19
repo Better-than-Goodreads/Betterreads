@@ -27,8 +27,8 @@ func (cs *CommunitiesServiceImpl) CreateCommunity(community model.NewCommunityRe
 }
 
 
-func (cs *CommunitiesServiceImpl) GetCommunities() ([]*model.CommunityResponse, error) {
-	communities, err := cs.r.GetCommunities()
+func (cs *CommunitiesServiceImpl) GetCommunities(userId uuid.UUID) ([]*model.CommunityResponse, error) {
+	communities, err := cs.r.GetCommunities(userId)
 	if err != nil {
 		return nil, err
 	}
