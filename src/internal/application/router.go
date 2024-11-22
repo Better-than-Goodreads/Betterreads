@@ -28,7 +28,6 @@ import (
 	feedRepository "github.com/betterreads/internal/domains/feed/repository"
 	feedService "github.com/betterreads/internal/domains/feed/service"
 
-
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -97,7 +96,6 @@ func NewRouter(port string) *Router {
 	addFriendsHandlers(r, users, conn)
 	AddCommunitiesHandlers(r, conn)
 	addFeedHandlers(r, users, conn)
-
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -239,7 +237,6 @@ func addFriendsHandlers(r *Router, users usersService.UsersService, conn *sqlx.D
 
 }
 
-
 func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
 	communitiesRepo, err := communitiesRepository.NewPostgresCommunitiesRepository(conn)
 	if err != nil {
@@ -247,7 +244,13 @@ func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
 	}
 	cs := communitiesService.NewCommunitiesServiceImpl(communitiesRepo)
 	cc := communitiesController.NewCommunitiesController(cs)
-	private := r.engine.Group("/communities")
+
+	public := r.engine.Group("communities")
+	{
+		public.GET("/:id/picture", cc.GetCommunityPicture)
+	}
+
+	private := r.engine.Group("communities")
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.POST("/", cc.CreateCommunity)
@@ -257,11 +260,8 @@ func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
 		private.GET("/:id/users", cc.GetCommunityUsers)
 		// private.DELETE("/:id/leave", cc.LeaveCommunity)
 		// private.GET("/:id/members", cc.GetCommunityMembers)
-		// private.GET("/:id/books", cc.GetCommunityBooks)
-		// private.POST("/:id/books", cc.AddBookToCommunity)
-		// private.DELETE("/:id/books", cc.RemoveBookFromCommunity)
 		// gracias por tanto copilot perdon por tan poco
-  }
+	}
 }
 
 func addFeedHandlers(r *Router, users usersService.UsersService, conn *sqlx.DB) {

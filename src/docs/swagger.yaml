@@ -38,6 +38,33 @@ definitions:
       reason:
         type: string
     type: object
+  model.CommunityResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      joined:
+        type: boolean
+      name:
+        type: string
+      owner_id:
+        type: string
+    type: object
+  model.NewCommunityRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      picture:
+        items:
+          type: integer
+        type: array
+    required:
+    - description
+    - name
+    type: object
   model.RecommendationsByGenre:
     properties:
       books:
@@ -710,6 +737,137 @@ paths:
       summary: Gets all reviews of a user
       tags:
       - books
+  /communities:
+    get:
+      consumes:
+      - application/json
+      description: Get all communities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.CommunityResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get all communities
+      tags:
+      - communities
+    post:
+      consumes:
+      - multipart/form-data
+      description: creates a community, the community data should follow the model.NewCommunityRequest
+        in JSON
+      parameters:
+      - description: Community Data
+        in: formData
+        name: data
+        required: true
+        type: string
+      - description: Community Picture
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Don't need to send this in json, this param is only here to reference
+          NewCommunityRequest, DONT SEND PICTURE in JSON
+        in: body
+        name: community
+        required: true
+        schema:
+          $ref: '#/definitions/model.NewCommunityRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.CommunityResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: creates a community
+      tags:
+      - communities
+  /communities/{id}/join:
+    post:
+      consumes:
+      - application/json
+      description: Join a community
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Join a community
+      tags:
+      - communities
+  /communities/{id}/picture:
+    get:
+      description: Get community picture
+      parameters:
+      - description: Community id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get Community picture
+      tags:
+      - communities
+  /communities/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Get all users in a community
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UserStageResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get all users in a community
+      tags:
+      - communities
   /feed:
     get:
       description: 'Get feed. The type of posts can be : ["post", "rating"]'

@@ -1,16 +1,14 @@
 package service
 
-
 import (
 	"github.com/betterreads/internal/domains/communities/model"
 	"github.com/betterreads/internal/domains/communities/repository"
-	"github.com/google/uuid"
 	userModel "github.com/betterreads/internal/domains/users/models"
+	"github.com/google/uuid"
 )
 
 type CommunitiesServiceImpl struct {
 	r repository.CommunitiesDatabase
-	// communitySerice CommunitiesService
 }
 
 func NewCommunitiesServiceImpl(r repository.CommunitiesDatabase) CommunitiesService {
@@ -25,7 +23,6 @@ func (cs *CommunitiesServiceImpl) CreateCommunity(community model.NewCommunityRe
 
 	return communityResponse, nil
 }
-
 
 func (cs *CommunitiesServiceImpl) GetCommunities(userId uuid.UUID) ([]*model.CommunityResponse, error) {
 	communities, err := cs.r.GetCommunities(userId)
@@ -54,6 +51,14 @@ func (cs *CommunitiesServiceImpl) GetCommunityUsers(communityId uuid.UUID) ([]*u
 	if err != nil {
 		return nil, err
 	}
-
 	return users, nil
+}
+
+
+func (cs *CommunitiesServiceImpl) GetCommunityPicture(communityId uuid.UUID) ([]byte, error) {
+	picture, err := cs.r.GetCommunityPicture(communityId)
+	if err != nil {
+		return nil, err
+	}
+	return picture, nil
 }

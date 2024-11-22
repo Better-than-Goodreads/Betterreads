@@ -1,11 +1,13 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
+
 	"github.com/betterreads/internal/domains/communities/model"
-	"github.com/google/uuid"
 	userModel "github.com/betterreads/internal/domains/users/models"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type PostgresCommunitiesRepository struct {
@@ -39,9 +41,22 @@ func NewPostgresCommunitiesRepository(db *sqlx.DB) (CommunitiesDatabase, error) 
 			FOREIGN KEY (user_id) REFERENCES users(id),
 			FOREIGN KEY (community_id) REFERENCES communities(id)
 		);`
-	
+
 	if _, err := db.Exec(schemaCommunitiesUsers); err != nil {
 		return nil, fmt.Errorf("failed to create communities_users table: %w", err)
+	}
+
+	schemaCommunitiesPictures := `
+		CREATE TABLE IF NOT EXISTS communities_pictures (
+			community_id UUID NOT NULL,
+			picture BYTEA NOT NULL,
+			PRIMARY KEY (community_id),
+			FOREIGN KEY (community_id) REFERENCES communities(id)
+		);
+	`
+
+	if _, err := db.Exec(schemaCommunitiesPictures); err != nil {
+		return nil, fmt.Errorf("failed to create communities_pictures table: %w", err)
 	}
 
 	return &PostgresCommunitiesRepository{db: db}, nil
@@ -49,19 +64,25 @@ func NewPostgresCommunitiesRepository(db *sqlx.DB) (CommunitiesDatabase, error) 
 
 func (db *PostgresCommunitiesRepository) CreateCommunity(community model.NewCommunityRequest, userId uuid.UUID) (*model.CommunityResponse, error) {
 	query := `INSERT INTO communities (name, description, owner_id) VALUES ($1, $2, $3) RETURNING id`
-	
+
 	var id uuid.UUID
 	err := db.db.QueryRow(query, community.Name, community.Description, userId).Scan(&id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create community: %w", err)
 	}
-	
+
+	query = `INSERT INTO communities_pictures (community_id, picture) VALUES ($1, $2)`
+	_, err = db.db.Exec(query, id, community.Picture)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create community picture: %w", err)
+	}
+
 	communityResponse := model.CommunityResponse{
-		ID: id,
-		Name: community.Name,
+		ID:          id,
+		Name:        community.Name,
 		Description: community.Description,
-		OwnerID: userId,
-		Joined: true,
+		OwnerID:     userId,
+		Joined:      true,
 	}
 
 	JoinCommunityErr := db.JoinCommunity(id, userId)
@@ -128,7 +149,6 @@ func (db *PostgresCommunitiesRepository) CheckIfUserIsInCommunity(communityId uu
 	return exists
 }
 
-
 func (db *PostgresCommunitiesRepository) GetCommunityUsers(communityId uuid.UUID) ([]*userModel.UserStageResponse, error) {
 	query := `SELECT u.email, u.username, u.first_name, u.last_name, u.is_author, u.id FROM users u 
 			  JOIN communities_users cu ON u.id = cu.user_id 
@@ -151,4 +171,18 @@ func (db *PostgresCommunitiesRepository) GetCommunityUsers(communityId uuid.UUID
 	}
 
 	return users, nil
+}
+
+func (db *PostgresCommunitiesRepository) GetCommunityPicture(communityId uuid.UUID) ([]byte, error) {
+	query := `SELECT picture FROM communities_pictures WHERE community_id = $1`
+	var picture []byte
+	err := db.db.QueryRow(query, communityId).Scan(&picture)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return picture, nil
+		}
+		return nil, fmt.Errorf("failed to get community picture: %w", err)
+	}
+
+	return picture, nil
 }

@@ -1,15 +1,15 @@
 package service
 
 import (
-	"github.com/betterreads/internal/domains/communities/model"
-	"github.com/google/uuid"
-	userModel "github.com/betterreads/internal/domains/users/models"
 	"errors"
+
+	"github.com/betterreads/internal/domains/communities/model"
+	userModel "github.com/betterreads/internal/domains/users/models"
+	"github.com/google/uuid"
 )
 
 var (
-	ErrUserAlreadyInCommunity  = errors.New("user is already in community")
-
+	ErrUserAlreadyInCommunity = errors.New("user is already in community")
 )
 
 type CommunitiesService interface {
@@ -17,4 +17,5 @@ type CommunitiesService interface {
 	GetCommunities(userId uuid.UUID) ([]*model.CommunityResponse, error)
 	JoinCommunity(communityId uuid.UUID, userId uuid.UUID) error
 	GetCommunityUsers(communityId uuid.UUID) ([]*userModel.UserStageResponse, error)
+	GetCommunityPicture(communityId uuid.UUID) ([]byte, error)
 }
