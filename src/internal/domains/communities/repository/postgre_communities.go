@@ -186,3 +186,27 @@ func (db *PostgresCommunitiesRepository) GetCommunityPicture(communityId uuid.UU
 
 	return picture, nil
 }
+
+func (db *PostgresCommunitiesRepository) SearchCommunities(search string, curr_user uuid.UUID) ([]*model.CommunityResponse, error) {
+	query := `SELECT 
+    c.id, 
+    c.name, 
+    c.description,
+    c.owner_id,  -- Add a comma here
+    CASE 
+        WHEN cu.user_id IS NOT NULL THEN true 
+        ELSE false 
+    END AS joined
+    FROM communities c
+    LEFT JOIN communities_users cu 
+        ON c.id = cu.community_id
+    WHERE c.name ILIKE '%' || $1 || '%'`
+
+	var communities []*model.CommunityResponse
+	err := db.db.Select(&communities, query, search)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search communities: %w", err)
+	}
+
+	return communities, nil
+}

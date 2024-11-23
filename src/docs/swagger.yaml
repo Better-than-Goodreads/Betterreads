@@ -868,6 +868,30 @@ paths:
       summary: Get all users in a community
       tags:
       - communities
+  /communities/search:
+    get:
+      consumes:
+      - application/json
+      description: Search communities by name. It returns all communities that have
+        the search string in their name
+      parameters:
+      - description: Search string
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.CommunityResponse'
+            type: array
+      summary: Search communities by name
+      tags:
+      - communities
   /feed:
     get:
       description: 'Get feed. The type of posts can be : ["post", "rating"]'

@@ -181,6 +181,33 @@ func (c *CommunitiesController) GetCommunityPicture(ctx *gin.Context) {
 	ctx.Data(http.StatusOK, "image/jpeg", picture)
 }
 
+// SearchCommunities godoc
+// @Summary Search communities by name
+// @Description Search communities by name. It returns all communities that have the search string in their name
+// @Tags communities
+// @Accept json
+// @Produce json
+// @Param name query string true "Search string"
+// @Success 200 {array} model.CommunityResponse
+// @Router /communities/search [get]
+func (c CommunitiesController) SearchCommunities(ctx *gin.Context) {
+	search := ctx.Query("name")
+	userId, errDetail := aux.GetLoggedUserId(ctx)
+	if errDetail != nil {
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	communities, err := c.communitiesService.SearchComunnity(search, userId)
+	if err != nil {
+		errDetail := er.NewErrorDetails("Error when searching communities", err, http.StatusInternalServerError)
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, communities)
+}
+
 /*
 * getCommunityRequest is a helper function that parses the request body and returns a New
 * Community Request struct. It also gets the picture from the request and adds it to the

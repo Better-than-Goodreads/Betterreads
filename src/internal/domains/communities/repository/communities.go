@@ -13,4 +13,5 @@ type CommunitiesDatabase interface {
 	CheckIfUserIsInCommunity(communityId uuid.UUID, userId uuid.UUID) bool
 	GetCommunityUsers(communityId uuid.UUID) ([]*userModel.UserStageResponse, error)
 	GetCommunityPicture(communityId uuid.UUID) ([]byte, error)
+	SearchCommunities(search string, currId uuid.UUID) ([]*model.CommunityResponse, error)
 }

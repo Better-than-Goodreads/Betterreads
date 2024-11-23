@@ -255,6 +255,7 @@ func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
 	{
 		private.POST("/", cc.CreateCommunity)
 		private.GET("/", cc.GetCommunities)
+		private.GET("/search", cc.SearchCommunities)
 		// private.GET("/:id", cc.GetCommunity)
 		private.POST("/:id/join", cc.JoinCommunity)
 		private.GET("/:id/users", cc.GetCommunityUsers)

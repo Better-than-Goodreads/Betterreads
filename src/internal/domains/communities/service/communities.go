@@ -54,11 +54,18 @@ func (cs *CommunitiesServiceImpl) GetCommunityUsers(communityId uuid.UUID) ([]*u
 	return users, nil
 }
 
-
 func (cs *CommunitiesServiceImpl) GetCommunityPicture(communityId uuid.UUID) ([]byte, error) {
 	picture, err := cs.r.GetCommunityPicture(communityId)
 	if err != nil {
 		return nil, err
 	}
 	return picture, nil
+}
+
+func (cs *CommunitiesServiceImpl) SearchComunnity(search string, currId uuid.UUID) ([]*model.CommunityResponse, error) {
+	communities, err := cs.r.SearchCommunities(search, currId)
+	if err != nil {
+		return nil, err
+	}
+	return communities, nil
 }

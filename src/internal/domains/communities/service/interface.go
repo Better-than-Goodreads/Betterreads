@@ -18,4 +18,5 @@ type CommunitiesService interface {
 	JoinCommunity(communityId uuid.UUID, userId uuid.UUID) error
 	GetCommunityUsers(communityId uuid.UUID) ([]*userModel.UserStageResponse, error)
 	GetCommunityPicture(communityId uuid.UUID) ([]byte, error)
+	SearchComunnity(search string, currId uuid.UUID) ([]*model.CommunityResponse, error)
 }

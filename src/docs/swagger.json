@@ -641,6 +641,41 @@
                 }
             }
         },
+        "/communities/search": {
+            "get": {
+                "description": "Search communities by name. It returns all communities that have the search string in their name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "communities"
+                ],
+                "summary": "Search communities by name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search string",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.CommunityResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/communities/{id}/join": {
             "post": {
                 "security": [
