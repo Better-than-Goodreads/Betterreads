@@ -10,8 +10,6 @@ type CommunityResponse struct {
 	Description string    `json:"description" db:"description"`
 	OwnerID     uuid.UUID `json:"owner_id" db:"owner_id"`
 	Joined      bool      `json:"joined" db:"joined"`
-	//Picture    string    `json:"picture" db:"picture"`
-	//Banner   string    `json:"banner" db:"banner"`
 }
 
 type NewCommunityRequest struct {
