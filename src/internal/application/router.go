@@ -246,21 +246,23 @@ func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
 	cc := communitiesController.NewCommunitiesController(cs)
 
 	public := r.engine.Group("communities")
+	public.Use(middlewares.AuthPublicMiddleware)
 	{
 		public.GET("/:id/picture", cc.GetCommunityPicture)
+		public.GET("/:id", cc.GetCommunityById)
+		public.GET("/", cc.GetCommunities)
+		public.GET("/search", cc.SearchCommunities)
+		public.GET("/:id/users", cc.GetCommunityUsers)
+		public.GET("/:id/posts", cc.GetCommunityPosts)
 	}
 
 	private := r.engine.Group("communities")
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.POST("/", cc.CreateCommunity)
-		private.GET("/", cc.GetCommunities)
-		private.GET("/search", cc.SearchCommunities)
-		private.GET("/:id", cc.GetCommunityById)
 		private.POST("/:id/join", cc.JoinCommunity)
-		private.GET("/:id/users", cc.GetCommunityUsers)
-		private.GET("/:id/posts", cc.GetCommunityPosts)
 		private.POST("/:id/posts", cc.CreateCommunityPost)
+		private.DELETE("/:id/leave", cc.LeaveCommunity)
 	}
 }
 
@@ -272,7 +274,6 @@ func addFeedHandlers(r *Router, users usersService.UsersService, conn *sqlx.DB) 
 	private.Use(middlewares.AuthMiddleware)
 	{
 		private.GET("/", fc.GetFeed)
-
 	}
 }
 

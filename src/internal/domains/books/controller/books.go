@@ -92,7 +92,7 @@ func (bc *BooksController) PublishBook(ctx *gin.Context) {
 // @Failure 404 {object} errors.ErrorDetails
 // @Router /books/{id}/info [get]
 func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
-	userId := getUserIdIfLogged(ctx)
+	userId := aux.GetUserIdIfLogged(ctx)
 	bookId := ctx.Param("id")
 	bookUuid, err := uuid.Parse(bookId)
 	if err != nil {
@@ -129,7 +129,7 @@ func (bc *BooksController) GetBookInfo(ctx *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Router /books/info/search [get]
 func (bc *BooksController) SearchBooksInfo(ctx *gin.Context) {
-	userId := getUserIdIfLogged(ctx)
+	userId := aux.GetUserIdIfLogged(ctx)
 	name := ctx.Query("name")
 	genre := ctx.Query("genre")
 	sort := ctx.Query("sort")
@@ -169,7 +169,7 @@ func (bc *BooksController) SearchBooksInfo(ctx *gin.Context) {
 // @Failure 400 {object} errors.ErrorDetails
 // @Router /books/author/{id} [get]
 func (bc *BooksController) GetBooksOfAuthor(ctx *gin.Context) {
-	userId := getUserIdIfLogged(ctx)
+	userId := aux.GetUserIdIfLogged(ctx)
 
 	authorId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
@@ -243,7 +243,7 @@ func (bc *BooksController) GetBookPicture(ctx *gin.Context) {
 // @Failure 500 {object} errors.ErrorDetails
 // @Router /books/info [get]
 func (bc *BooksController) GetBooksInfo(ctx *gin.Context) {
-	userId := getUserIdIfLogged(ctx)
+	userId := aux.GetUserIdIfLogged(ctx)
 	books, err := bc.bookService.GetBooksInfo(userId)
 	if err != nil {
 		err := er.NewErrorDetails("Error when getting books", err, http.StatusInternalServerError)
@@ -546,16 +546,4 @@ func getPicture(ctx *gin.Context) ([]byte, *er.ErrorDetailsWithParams) {
 		return nil, er.NewErrorDetailsWithParams("Error Publishing Book", http.StatusBadRequest, errParam)
 	}
 	return picture, nil
-}
-
-func getUserIdIfLogged(ctx *gin.Context) uuid.UUID {
-	_userId := ctx.GetString("userId")
-	if _userId == "" {
-		return uuid.Nil
-	}
-	userId, err := uuid.Parse(_userId)
-	if err != nil {
-		return uuid.Nil
-	}
-	return userId
 }

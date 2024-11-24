@@ -22,3 +22,15 @@ func GetLoggedUserId(ctx *gin.Context) (uuid.UUID, *er.ErrorDetails) {
 	}
 	return userId, nil
 }
+
+func GetUserIdIfLogged(ctx *gin.Context) uuid.UUID {
+	_userId := ctx.GetString("userId")
+	if _userId == "" {
+		return uuid.Nil
+	}
+	userId, err := uuid.Parse(_userId)
+	if err != nil {
+		return uuid.Nil
+	}
+	return userId
+}

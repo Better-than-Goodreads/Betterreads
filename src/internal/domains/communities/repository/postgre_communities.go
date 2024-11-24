@@ -216,8 +216,8 @@ func (db *PostgresCommunitiesRepository) SearchCommunities(search string, curr_u
     END AS joined
     FROM communities c
     LEFT JOIN communities_users cu 
-        ON c.id = cu.community_id
-    WHERE c.name ILIKE '%' || $1 || '%' AND cu.user_id = $2`
+        ON c.id = cu.community_id AND cu.user_id = $2
+    WHERE c.name ILIKE '%' || $1 || '%'`
 
 	var communities []*model.CommunityResponse
 	err := db.db.Select(&communities, query, search, curr_user)

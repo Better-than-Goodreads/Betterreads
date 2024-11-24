@@ -64,9 +64,15 @@ func (cs *CommunitiesServiceImpl) GetCommunityPicture(communityId uuid.UUID) ([]
 
 func (cs *CommunitiesServiceImpl) SearchComunnity(search string, currId uuid.UUID) ([]*model.CommunityResponse, error) {
 	communities, err := cs.r.SearchCommunities(search, currId)
+
 	if err != nil {
 		return nil, err
 	}
+
+	if len(communities) == 0 {
+		return []*model.CommunityResponse{}, nil
+	}
+
 	return communities, nil
 }
 

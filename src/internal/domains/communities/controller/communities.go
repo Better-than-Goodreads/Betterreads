@@ -71,11 +71,7 @@ func (c *CommunitiesController) CreateCommunity(ctx *gin.Context) {
 // @Success 200 {array} model.CommunityResponse
 // @Router /communities [get]
 func (c *CommunitiesController) GetCommunities(ctx *gin.Context) {
-	userId, errDetail := aux.GetLoggedUserId(ctx)
-	if errDetail != nil {
-		ctx.AbortWithError(errDetail.Status, errDetail)
-		return
-	}
+	userId := aux.GetUserIdIfLogged(ctx)
 	communities, err := c.communitiesService.GetCommunities(userId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -192,17 +188,18 @@ func (c *CommunitiesController) GetCommunityPicture(ctx *gin.Context) {
 // @Router /communities/search [get]
 func (c CommunitiesController) SearchCommunities(ctx *gin.Context) {
 	search := ctx.Query("name")
-	userId, errDetail := aux.GetLoggedUserId(ctx)
-	if errDetail != nil {
-		ctx.AbortWithError(errDetail.Status, errDetail)
-		return
-	}
+
+	userId := aux.GetUserIdIfLogged(ctx)
 
 	communities, err := c.communitiesService.SearchComunnity(search, userId)
 	if err != nil {
 		errDetail := er.NewErrorDetails("Error when searching communities", err, http.StatusInternalServerError)
 		ctx.AbortWithError(errDetail.Status, errDetail)
 		return
+	}
+
+	if len(communities) == 0 {
+		communities = []*model.CommunityResponse{}
 	}
 
 	ctx.JSON(http.StatusOK, communities)
@@ -230,11 +227,7 @@ func (c *CommunitiesController) GetCommunityById(ctx *gin.Context) {
 		return
 	}
 
-	userId, errDetail := aux.GetLoggedUserId(ctx)
-	if errDetail != nil {
-		ctx.AbortWithError(errDetail.Status, errDetail)
-		return
-	}
+	userId := aux.GetUserIdIfLogged(ctx)
 
 	community, err := c.communitiesService.GetCommunityById(communityIdParsed, userId)
 	if err != nil {
