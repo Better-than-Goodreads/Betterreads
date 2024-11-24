@@ -371,7 +371,8 @@ func (r *PostgresBookRepository) GetAllReviewsOfUser(userId uuid.UUID) ([]*model
         SELECT b.title AS book_title, r.review,b.id as book_id, r.rating, r.publication_date
         FROM reviews r
         INNER JOIN books b ON r.book_id = b.id
-        WHERE r.user_id = $1;
+        WHERE r.user_id = $1
+		ORDER BY r.publication_date DESC;
     `
 	if err := r.c.Select(&res, query, userId); err != nil {
 		if err == sql.ErrNoRows {
@@ -444,7 +445,8 @@ func (r *PostgresBookRepository) GetBookReviews(bookID uuid.UUID) ([]*models.Rev
         SELECT u.username, r.review, u.id AS user_id, r.rating, r.publication_date
         FROM reviews r
         INNER JOIN users u ON r.user_id = u.id
-        WHERE r.book_id = $1;
+        WHERE r.book_id = $1
+		ORDER BY r.publication_date DESC;
     `
 
 	if err := r.c.Select(&res, query, bookID); err != nil {
