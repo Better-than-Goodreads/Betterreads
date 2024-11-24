@@ -240,8 +240,8 @@ func (db *PostgresCommunitiesRepository) GetCommunityById(id uuid.UUID, userId u
     END AS joined
     FROM communities c
     LEFT JOIN communities_users cu 
-        ON c.id = cu.community_id
-    WHERE c.id = $2 AND cu.user_id = $1`
+        ON c.id = cu.community_id and cu.user_id = $1
+    WHERE c.id = $2 `
 
 	var community model.CommunityResponse
 	err := db.db.Get(&community, query, userId, id)
