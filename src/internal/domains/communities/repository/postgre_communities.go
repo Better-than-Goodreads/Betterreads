@@ -59,6 +59,22 @@ func NewPostgresCommunitiesRepository(db *sqlx.DB) (CommunitiesDatabase, error) 
 		return nil, fmt.Errorf("failed to create communities_pictures table: %w", err)
 	}
 
+	schemaCommunitiesPosts := `
+		CREATE TABLE IF NOT EXISTS communities_posts (
+			id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+			community_id UUID NOT NULL,
+			user_id UUID NOT NULL,
+			content TEXT NOT NULL,
+			title VARCHAR(255) NOT NULL,
+			date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (community_id) REFERENCES communities(id),
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		);`
+
+	if _, err := db.Exec(schemaCommunitiesPosts); err != nil {
+		return nil, fmt.Errorf("failed to create communities_posts table: %w", err)
+	}
+
 	return &PostgresCommunitiesRepository{db: db}, nil
 }
 
@@ -137,6 +153,7 @@ func (db *PostgresCommunitiesRepository) JoinCommunity(communityId uuid.UUID, us
 
 	return nil
 }
+
 func (db *PostgresCommunitiesRepository) CheckIfUserIsInCommunity(communityId uuid.UUID, userId uuid.UUID) bool {
 	query := `SELECT EXISTS(SELECT 1 FROM communities_users WHERE user_id=$1 AND community_id=$2)`
 
@@ -200,13 +217,93 @@ func (db *PostgresCommunitiesRepository) SearchCommunities(search string, curr_u
     FROM communities c
     LEFT JOIN communities_users cu 
         ON c.id = cu.community_id
-    WHERE c.name ILIKE '%' || $1 || '%'`
+    WHERE c.name ILIKE '%' || $1 || '%' AND cu.user_id = $2`
 
 	var communities []*model.CommunityResponse
-	err := db.db.Select(&communities, query, search)
+	err := db.db.Select(&communities, query, search, curr_user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search communities: %w", err)
 	}
 
 	return communities, nil
+}
+
+func (db *PostgresCommunitiesRepository) GetCommunityById(id uuid.UUID, userId uuid.UUID) (*model.CommunityResponse, error) {
+	query := `SELECT 
+    c.id, 
+    c.name, 
+    c.description,
+    c.owner_id,  -- Add a comma here
+    CASE 
+        WHEN cu.user_id IS NOT NULL THEN true 
+        ELSE false 
+    END AS joined
+    FROM communities c
+    LEFT JOIN communities_users cu 
+        ON c.id = cu.community_id
+    WHERE c.id = $2 AND cu.user_id = $1`
+
+	var community model.CommunityResponse
+	err := db.db.Get(&community, query, userId, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrCommunityNotFound
+		}
+		return nil, fmt.Errorf("failed to get community: %w", err)
+	}
+	return &community, nil
+}
+
+func (db *PostgresCommunitiesRepository) GetCommunityPosts(communityId uuid.UUID) ([]*model.CommunityPostResponse, error) {
+	query := `SELECT 
+	cp.id, 
+	cp.title,
+	cp.content, 
+	cp.user_id,
+	u.username,
+	cp.date
+	FROM communities_posts cp
+	JOIN users u ON cp.user_id = u.id
+	WHERE cp.community_id = $1
+	ORDER BY cp.date DESC`
+
+	var posts []*model.CommunityPostResponse
+	err := db.db.Select(&posts, query, communityId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return []*model.CommunityPostResponse{}, nil
+		}
+		return nil, fmt.Errorf("failed to get community posts: %w", err)
+	}
+	return posts, nil
+}
+
+func (db *PostgresCommunitiesRepository) CreateCommunityPost(communityId uuid.UUID, userId uuid.UUID, content string, title string) error {
+	query := `INSERT INTO communities_posts (community_id, user_id, content, title) VALUES ($1, $2, $3, $4)`
+	_, err := db.db.Exec(query, communityId, userId, content, title)
+	if err != nil {
+		return fmt.Errorf("failed to create community post: %w", err)
+	}
+	return nil
+}
+
+func (db *PostgresCommunitiesRepository) LeaveCommunity(communityId uuid.UUID, userId uuid.UUID) error {
+	query := `DELETE FROM communities_users WHERE community_id = $1 AND user_id = $2`
+	_, err := db.db.Exec(query, communityId, userId)
+	if err != nil {
+		return fmt.Errorf("failed to leave community: %w", err)
+	}
+	return nil
+}
+
+func (db *PostgresCommunitiesRepository) CheckIFCommunityExists(communityId uuid.UUID) bool {
+	query := `SELECT EXISTS(SELECT 1 FROM communities WHERE id=$1)`
+
+	var exists bool
+	err := db.db.QueryRow(query, communityId).Scan(&exists)
+	if err != nil {
+		return false
+	}
+
+	return exists
 }

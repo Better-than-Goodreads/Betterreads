@@ -20,4 +20,14 @@ type NewCommunityRequest struct {
 
 type NewCommunityPostRequest struct {
 	Content string `json:"content" binding:"required"`
+	Title   string `json:"title" binding:"required,max=255"`
+}
+
+type CommunityPostResponse struct {
+	ID       uuid.UUID `json:"id" db:"id"`
+	Content  string    `json:"content" db:"content"`
+	Title    string    `json:"title" db:"title"`
+	Username string    `json:"username" db:"username"`
+	User     uuid.UUID `json:"user_id" db:"user_id"`
+	Date     string    `json:"date" db:"date"`
 }

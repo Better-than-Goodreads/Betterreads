@@ -51,6 +51,17 @@ definitions:
       owner_id:
         type: string
     type: object
+  model.NewCommunityPostRequest:
+    properties:
+      content:
+        type: string
+      title:
+        maxLength: 255
+        type: string
+    required:
+    - content
+    - title
+    type: object
   model.NewCommunityRequest:
     properties:
       description:
@@ -797,6 +808,39 @@ paths:
       summary: creates a community
       tags:
       - communities
+  /communities/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a community by id
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CommunityResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get a community by id
+      tags:
+      - communities
   /communities/{id}/join:
     post:
       consumes:
@@ -820,6 +864,29 @@ paths:
       summary: Join a community
       tags:
       - communities
+  /communities/{id}/leave:
+    delete:
+      consumes:
+      - application/json
+      description: Leave a community
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Leave a community
+      tags:
+      - communities
   /communities/{id}/picture:
     get:
       description: Get community picture
@@ -841,6 +908,59 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Get Community picture
+      tags:
+      - communities
+  /communities/{id}/posts:
+    get:
+      consumes:
+      - application/json
+      description: gets the posts of a community
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Post Content
+        in: body
+        name: content
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: gets the posts of a community
+      tags:
+      - communities
+    post:
+      consumes:
+      - application/json
+      description: Create a post in a community
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Post Data
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/model.NewCommunityPostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+      summary: Create a post in a community
       tags:
       - communities
   /communities/{id}/users:

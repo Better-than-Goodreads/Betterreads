@@ -208,6 +208,172 @@ func (c CommunitiesController) SearchCommunities(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, communities)
 }
 
+// GetCommunityById godoc
+// @Summary Get a community by id
+// @Description Get a community by id
+// @Tags communities
+// @Accept json
+// @Produce json
+// @Param id path string true "Community ID"
+// @Success 200 {object} model.CommunityResponse
+// @Failure 400 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /communities/{id} [get]
+func (c *CommunitiesController) GetCommunityById(ctx *gin.Context) {
+	communityId := ctx.Param("id")
+	communityIdParsed, err := uuid.Parse(communityId)
+	if err != nil {
+		err_detail := fmt.Errorf("Invalid community id: %s", communityId)
+		errDetail := er.NewErrorDetails("Error Parsing Community ID", err_detail, http.StatusBadRequest)
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	userId, errDetail := aux.GetLoggedUserId(ctx)
+	if errDetail != nil {
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	community, err := c.communitiesService.GetCommunityById(communityIdParsed, userId)
+	if err != nil {
+		if err == service.ErrCommunityNotFound {
+			details := er.NewErrorDetails("Error when getting Community", err, http.StatusNotFound)
+			ctx.AbortWithError(details.Status, details)
+		} else {
+			details := er.NewErrorDetails("Error when getting community", err, http.StatusInternalServerError)
+			ctx.AbortWithError(details.Status, details)
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, community)
+}
+
+// CreateCommunityPost godoc
+// @Summary gets the posts of a community
+// @Description gets the posts of a community
+// @Tags communities
+// @Accept json
+// @Produce json
+// @Param id path string true "Community ID"
+// @Param content body string true "Post Content"
+// @Success 200 {string} model.CommunityPostResponse
+// @Router /communities/{id}/posts [get]
+func (c *CommunitiesController) GetCommunityPosts(ctx *gin.Context) {
+	communityId := ctx.Param("id")
+	communityIdParsed, err := uuid.Parse(communityId)
+	if err != nil {
+		err_detail := fmt.Errorf("Invalid community id: %s", communityId)
+		errDetail := er.NewErrorDetails("Error Parsing Community ID", err_detail, http.StatusBadRequest)
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	posts, err := c.communitiesService.GetCommunityPosts(communityIdParsed)
+	if err != nil {
+		if err == service.ErrCommunityNotFound {
+			details := er.NewErrorDetails("Error when getting posts", err, http.StatusNotFound)
+			ctx.AbortWithError(details.Status, details)
+		} else {
+			details := er.NewErrorDetails("Error when getting posts", err, http.StatusInternalServerError)
+			ctx.AbortWithError(details.Status, details)
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, posts)
+}
+
+// CreateCommunityPost godoc
+// @Summary Create a post in a community
+// @Description Create a post in a community
+// @Tags communities
+// @Accept json
+// @Produce json
+// @Param id path string true "Community ID"
+// @Param post body model.NewCommunityPostRequest true "Post Data"
+// @Success 201 {string} string
+// @Router /communities/{id}/posts [post]
+func (c *CommunitiesController) CreateCommunityPost(ctx *gin.Context) {
+	userId, errDetail := aux.GetLoggedUserId(ctx)
+	if errDetail != nil {
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	communityId := ctx.Param("id")
+	communityIdParsed, err := uuid.Parse(communityId)
+	if err != nil {
+		err_detail := fmt.Errorf("Invalid community id: %s", communityId)
+		errDetail := er.NewErrorDetails("Error Parsing Community ID", err_detail, http.StatusBadRequest)
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+	post := &model.NewCommunityPostRequest{}
+	err = ctx.ShouldBindJSON(post)
+	if err != nil {
+		er.AbortWithJsonErorr(ctx, err)
+		return
+	}
+
+	err = c.communitiesService.CreateCommunityPost(communityIdParsed, userId, post.Content, post.Title)
+	if err != nil {
+		if err == service.ErrUserNotInCommunity {
+			details := er.NewErrorDetails("Error when creating post", err, http.StatusBadRequest)
+			ctx.AbortWithError(details.Status, details)
+		} else {
+			details := er.NewErrorDetails("Error when creating post", err, http.StatusInternalServerError)
+			ctx.AbortWithError(details.Status, details)
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"message": "Post created"})
+}
+
+// LeaveCommunity godoc
+// @Summary Leave a community
+// @Description Leave a community
+// @Tags communities
+// @Accept json
+// @Produce json
+// @Param id path string true "Community ID"
+// @Security ApiKeyAuth
+// @Success 200 {string} string
+// @Router /communities/{id}/leave [delete]
+func (c *CommunitiesController) LeaveCommunity(ctx *gin.Context) {
+	userId, errDetail := aux.GetLoggedUserId(ctx)
+	if errDetail != nil {
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	communityId := ctx.Param("id")
+	communityIdParsed, err := uuid.Parse(communityId)
+	if err != nil {
+		err_detail := fmt.Errorf("Invalid community id: %s", communityId)
+		errDetail := er.NewErrorDetails("Error Parsing Community ID", err_detail, http.StatusBadRequest)
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	err = c.communitiesService.LeaveCommunity(communityIdParsed, userId)
+	if err != nil {
+		if err == service.ErrUserNotInCommunity {
+			details := er.NewErrorDetails("Error when leaving community", err, http.StatusBadRequest)
+			ctx.AbortWithError(details.Status, details)
+		} else {
+			details := er.NewErrorDetails("Error when leaving community", err, http.StatusInternalServerError)
+			ctx.AbortWithError(details.Status, details)
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "User left community"})
+}
+
 /*
 * getCommunityRequest is a helper function that parses the request body and returns a New
 * Community Request struct. It also gets the picture from the request and adds it to the

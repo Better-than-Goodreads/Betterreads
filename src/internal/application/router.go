@@ -256,12 +256,11 @@ func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
 		private.POST("/", cc.CreateCommunity)
 		private.GET("/", cc.GetCommunities)
 		private.GET("/search", cc.SearchCommunities)
-		// private.GET("/:id", cc.GetCommunity)
+		private.GET("/:id", cc.GetCommunityById)
 		private.POST("/:id/join", cc.JoinCommunity)
 		private.GET("/:id/users", cc.GetCommunityUsers)
-		// private.DELETE("/:id/leave", cc.LeaveCommunity)
-		// private.GET("/:id/members", cc.GetCommunityMembers)
-		// gracias por tanto copilot perdon por tan poco
+		private.GET("/:id/posts", cc.GetCommunityPosts)
+		private.POST("/:id/posts", cc.CreateCommunityPost)
 	}
 }
 
