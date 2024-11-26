@@ -29,7 +29,7 @@ func NewBookshelfController(service service.BookshelfService) BookshelfControlle
 // @Produce  json
 // @Tags bookshelf
 // @Param userId path string true "User ID"
-// @Param type query string true "Shelf Type"
+// @Param status query string true "Shelf Type"
 // @Success 200 {object} []models.BookInShelfResponse
 // @Failure 400 {object} errors.ErrorDetails
 // @Failure 404 {object} errors.ErrorDetails

@@ -1988,7 +1988,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Shelf Type",
-                        "name": "type",
+                        "name": "status",
                         "in": "query",
                         "required": true
                     }

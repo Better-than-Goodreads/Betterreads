@@ -1281,7 +1281,7 @@ paths:
         type: string
       - description: Shelf Type
         in: query
-        name: type
+        name: status
         required: true
         type: string
       produces:
