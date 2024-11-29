@@ -124,6 +124,8 @@ definitions:
     type: object
   models.BookInShelfResponse:
     properties:
+      amount_of_pages:
+        type: integer
       author:
         type: string
       author_name:
@@ -133,6 +135,18 @@ definitions:
       book_id:
         type: string
       date_added:
+        type: string
+      description:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      ignore:
+        type: string
+      language:
+        type: string
+      publication_date:
         type: string
       status:
         type: string

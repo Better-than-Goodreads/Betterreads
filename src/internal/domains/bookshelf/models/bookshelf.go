@@ -34,16 +34,22 @@ type BookShelfRatingStats struct {
 }
 
 type BookInShelfResponse struct {
-	Date         string    `json:"date_added" db:"date"`
-	Status       string    `json:"status" db:"status"`
-	Title        string    `json:"title" db:"title"`
-	AuthorId     string    `json:"author" db:"author_id"`
-	AuthorName   string    `json:"author_name" db:"author_name"`
-	UserReview   string    `json:"user_review" db:"user_review"`
-	AvgRating    float64   `json:"avg_ratings" db:"avg_ratings"`
-	TotalRatings int       `json:"total_ratings" db:"total_ratings"`
-	BookId       uuid.UUID `json:"book_id" db:"book_id"`
-	UserRating   int       `json:"user_rating" db:"user_rating"`
+	Title           string    `json:"title" db:"title"`
+	Author          string    `json:"author" db:"author_id"`
+	AuthorName      string    `json:"author_name" db:"author_name"`
+	Description     string    `json:"description" db:"description"`
+	PublicationDate string    `json:"publication_date" db:"publication_date"`
+	Date            string    `json:"date_added" db:"date"`
+	Language        string    `json:"language" db:"language"`
+	Genres          string    `json:"ignore,omitempty" db:"genres"`
+	GenresArray     *[]string `json:"genres" db:"genres_array"`
+	AmountOfPages   int       `json:"amount_of_pages" db:"amount_of_pages"`
+	TotalRatings    int       `json:"total_ratings" db:"total_ratings"`
+	AvgRating       float64   `json:"avg_ratings" db:"avg_ratings"`
+	Status          string    `json:"status" db:"status"`
+	UserReview      string    `json:"user_review" db:"user_review"`
+	UserRating      int       `json:"user_rating" db:"user_rating"`
+	Id              uuid.UUID `json:"book_id" db:"id"`
 }
 
 type BookShelfRequest struct {

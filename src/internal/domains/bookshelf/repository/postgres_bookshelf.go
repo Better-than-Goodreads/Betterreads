@@ -2,11 +2,13 @@ package repository
 
 import (
 	"database/sql"
+	"strconv"
+	"strings"
 
 	"fmt"
 
-	"github.com/betterreads/internal/domains/bookshelf/models"
 	booksRepo "github.com/betterreads/internal/domains/books/repository"
+	"github.com/betterreads/internal/domains/bookshelf/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
@@ -40,6 +42,70 @@ func NewPostgresBookShelfRepository(c *sqlx.DB) (BookshelfDatabase, error) {
 	return &PostgresBookShelfRepository{c: c}, nil
 }
 
+const query_beggining = `
+   WITH ratings AS (
+        SELECT
+            r.book_id,
+            COALESCE(AVG(r.rating),0) as avg_ratings,
+            COUNT(*) as total_ratings
+        FROM reviews r
+        GROUP BY r.book_id
+    ),
+    user_ratings AS (
+        SELECT 
+            r.book_id,
+            r.review,
+            r.rating
+        FROM reviews r
+        WHERE r.user_id = $1
+    )
+    SELECT 
+        bk.title,
+        bk.author as author_id,
+		u.username as author_name,
+        bk.description, 
+        bk.publication_date,
+        bs.date,
+        bk.language,
+        array_agg(bg.genre_id) as genres,
+        bk.amount_of_pages,
+        COALESCE(r.total_ratings, 0) as total_ratings,
+        COALESCE(r.avg_ratings, 0) as avg_ratings,
+        bs.status,
+        COALESCE(ur.review, '') as user_review,
+        COALESCE(ur.rating, 0) as user_rating,
+        bk.id as id
+    FROM bookshelf bs
+    JOIN books bk ON bs.book_id = bk.id
+	JOIN users u ON bk.author = u.id
+    LEFT JOIN ratings r ON r.book_id = bk.id
+    LEFT JOIN user_ratings ur ON ur.book_id = bk.id
+    LEFT JOIN genres_books bg ON bg.book_id = bk.id 
+	WHERE
+`
+
+const query_normal_cond = `
+	($2::VARCHAR IS NULL OR bs.status=$2) AND bs.user_id=$1
+`
+
+const query_group_by = `
+    GROUP BY
+	bk.id,                 
+    bk.title,
+    bk.author,
+    u.username,
+    bk.description,
+    bk.publication_date,
+    bs.date,
+    bk.language,
+    bk.amount_of_pages,
+    bs.status,
+	total_ratings,
+	avg_ratings,
+	ur.review,
+	ur.rating
+`
+
 func (p *PostgresBookShelfRepository) GetBookShelf(userId uuid.UUID, shelfType models.BookShelfType) ([]*models.BookInShelfResponse, error) {
 	var status *models.BookShelfType
 
@@ -48,52 +114,26 @@ func (p *PostgresBookShelfRepository) GetBookShelf(userId uuid.UUID, shelfType m
 	} else {
 		status = &shelfType
 	}
-    
-    res:= []*models.BookInShelfResponse{}
-    query := `
-    WITH ratings AS (
-        SELECT
-            r.book_id,
-            COALESCE(AVG(r.rating),0) as avg_ratings,
-            COUNT(*) as total_ratings
-        FROM reviews r
-        group by r.book_id
-    ),
-    user_ratings AS (
-        SELECT 
-            r.book_id,
-            r.review,
-            rating
-        FROM reviews r
-        WHERE r.user_id= $1
-    )
-    SELECT 
-        bk.title,
-        bk.author as author_id,
-        (SELECT username FROM users WHERE id=bk.author) as author_name,
-        bk.id as book_id,
-        bs.status,
-        bs.date,
-        COALESCE(r.avg_ratings, 0) as avg_ratings,
-        COALESCE(r.total_ratings,0) as total_ratings,
-        COALESCE(ur.review, '') as user_review,
-        COALESCE(ur.rating, 0) as user_rating
-    FROM bookshelf bs
-    JOIN books bk ON bs.book_id=bk.id
-    LEFT JOIN ratings r ON r.book_id=bk.id
-    LEFT JOIN user_ratings ur ON ur.book_id=bk.id
-    WHERE bs.user_id=$1 AND ($2::VARCHAR IS NULL OR bs.status=$2)
-    ORDER BY avg_ratings DESC;
-    `
-    if err := p.c.Select(&res, query, userId, status); err != nil {
-        if err != sql.ErrNoRows {
-            return nil, fmt.Errorf("failed to get bookshelf: %w", err)
-        }
-    }
-    
-    return res, nil
-}
 
+	books := []*models.BookInShelfResponse{}
+	query := query_beggining + query_normal_cond + query_group_by + `
+	ORDER BY bs.date DESC;
+    `
+
+	if err := p.c.Select(&books, query, userId, status); err != nil {
+		if err != sql.ErrNoRows {
+			return nil, fmt.Errorf("failed to get bookshelf: %w", err)
+		}
+	}
+
+	for _, book := range books {
+		book.GenresArray = parseGenres(book.Genres)
+		book.Genres = ""
+	}
+
+	return books, nil
+
+}
 
 func (p *PostgresBookShelfRepository) AddBookToShelf(userId uuid.UUID, req *models.BookShelfRequest) error {
 	query := `INSERT INTO bookshelf (user_id, book_id, status, date)
@@ -148,60 +188,28 @@ func (p *PostgresBookShelfRepository) SearchBookShelf(userId uuid.UUID, shelfTyp
 		status = &shelfType
 	}
 
-    books := []*models.BookInShelfResponse{}
+	books := []*models.BookInShelfResponse{}
 
-    query := `
-    WITH ratings AS (
-        SELECT
-            r.book_id,
-            COALESCE(AVG(r.rating),0) as avg_ratings,
-            COUNT(*) as total_ratings
-        FROM reviews r
-        group by r.book_id
-    ),
-    user_ratings AS (
-        SELECT 
-            r.book_id,
-            r.review,
-            rating
-        FROM reviews r
-        WHERE r.user_id= $1
-    )
-    SELECT 
-        bk.title,
-        bk.author as author_id,
-        (SELECT username FROM users WHERE id=bk.author) as author_name,
-        bk.id as book_id,
-        bs.status,
-        bs.date,
-        COALESCE(r.avg_ratings, 0) as avg_ratings,
-        COALESCE(r.total_ratings,0) as total_ratings,
-        COALESCE(ur.review, '') as user_review,
-        COALESCE(ur.rating, 0) as user_rating
-    FROM bookshelf bs
-    JOIN books bk ON bs.book_id=bk.id
-    LEFT JOIN ratings r ON r.book_id=bk.id
-    LEFT JOIN user_ratings ur ON ur.book_id=bk.id
-    `
-    var genreId int
-    var err error
-    if genre != "" {
-        genreId, err = booksRepo.GetGenreById(genre)
-        if err != nil {
-            return nil, fmt.Errorf("failed to get genre id: %w", err)
-        }
-        query += "JOIN genres_books bg ON bg.book_id=bk.id"
-    }
+	query := query_beggining
 
-    query += " WHERE bs.user_id=$1 AND ($2::VARCHAR IS NULL OR bs.status=$2)"
+	var args []interface{}
+	args = append(args, userId, status)
+	var genreId int
+	var err error
+	if genre != "" {
+		genreId, err = booksRepo.GetGenreById(genre)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get genre id: %w", err)
+		}
+		query += "exists(SELECT 1 FROM genres_books WHERE book_id=bk.id AND genre_id=$3) AND "
+		args = append(args, genreId)
+	}
 
-    if genre != "" {
-        query += " AND bg.genre_id=$3"
-    }
+	query += query_normal_cond + query_group_by
 
 	if sort != "" {
 		var direciton string
-		if isDirAsc{
+		if isDirAsc {
 			direciton = "ASC"
 		} else {
 			direciton = "DESC"
@@ -209,15 +217,29 @@ func (p *PostgresBookShelfRepository) SearchBookShelf(userId uuid.UUID, shelfTyp
 		query += " ORDER BY " + sort + " " + direciton
 	}
 
-    if genre != "" {
-        if  err := p.c.Select(&books, query, userId, status, genreId); err != nil {
-            return nil, fmt.Errorf("failed to search books in shelf: %w", err)
-        }
-    } else {
-        if  err := p.c.Select(&books, query, userId, status); err != nil {
-            return nil, fmt.Errorf("failed to search books in shelf: %w", err)
-        }
-    }
+	if err := p.c.Select(&books, query, args...); err != nil {
+		return nil, fmt.Errorf("failed to search books in shelf: %w", err)
+	}
 
-    return books, nil
+	for _, book := range books {
+		book.GenresArray = parseGenres(book.Genres)
+		book.Genres = ""
+	}
+
+	return books, nil
+}
+
+func parseGenres(genres string) *[]string {
+	// Remove the curly braces
+	genres = strings.Trim(genres, "{}")
+	// Split the string by commas
+	genresArr := strings.Split(genres, ",")
+	res := make([]string, 0, len(genresArr))
+
+	for _, genre := range genresArr {
+		genreId, _ := strconv.Atoi(genre)
+		genre_str := booksRepo.GetGenre(genreId)
+		res = append(res, genre_str)
+	}
+	return &res
 }

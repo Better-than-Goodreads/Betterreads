@@ -24,6 +24,10 @@ func GetGenreById(genre string) (int, error) {
 	return -1, ErrGenreNotFound
 }
 
+func GetGenre(genre int) string {
+	return GenresDict[genre]
+}
+
 func NewPostgresBookRepository(c *sqlx.DB) (BooksDatabase, error) {
 	enableUUIDExtension := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 	if _, err := c.Exec(enableUUIDExtension); err != nil {

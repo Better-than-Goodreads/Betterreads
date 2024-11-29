@@ -2347,6 +2347,9 @@ const docTemplate = `{
         "models.BookInShelfResponse": {
             "type": "object",
             "properties": {
+                "amount_of_pages": {
+                    "type": "integer"
+                },
                 "author": {
                     "type": "string"
                 },
@@ -2360,6 +2363,24 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "date_added": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "genres": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ignore": {
+                    "type": "string"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "publication_date": {
                     "type": "string"
                 },
                 "status": {
