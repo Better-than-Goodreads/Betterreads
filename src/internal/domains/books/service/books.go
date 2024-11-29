@@ -328,3 +328,58 @@ func (bs *BooksServiceImpl) GetGenres() ([]string, error) {
 	}
 	return genres, nil
 }
+
+func (bs *BooksServiceImpl) DeleteReview(bookId uuid.UUID, userId uuid.UUID) error {
+	exists, err := bs.booksRepository.CheckifReviewExists(bookId, userId)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return ErrReviewNotFound
+	}
+
+	err = bs.booksRepository.DeleteReview(bookId, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (bs *BooksServiceImpl) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
+	exists, err := bs.booksRepository.CheckIfRatingExists(bookId, userId)
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		return ErrRatingNotFound
+	}
+
+	err = bs.booksRepository.DeleteReview(bookId, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (bs *BooksServiceImpl) EditReview(bookId uuid.UUID, userId uuid.UUID, editReview models.NewReviewRequest) error {
+	review := editReview.Review
+	rating := editReview.Rating
+
+	if rating < 1 || rating > 5 {
+		return ErrRatingAmount
+	}
+
+	exists, err := bs.booksRepository.CheckifReviewExists(bookId, userId)
+	if !exists {
+		return ErrReviewNotFound
+	}
+
+	err = bs.booksRepository.EditReview(bookId, userId, rating, review)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -65,4 +65,7 @@ type BooksService interface {
 	CheckIfUserExists(userId uuid.UUID) bool
 	CheckIfAuthorIsRatingOwnBook(bookId uuid.UUID, userId uuid.UUID) (bool, error)
 	GetGenres() ([]string, error)
+	DeleteReview(bookId uuid.UUID, userId uuid.UUID) error
+	DeleteRating(bookId uuid.UUID, userId uuid.UUID) error
+	EditReview(bookId uuid.UUID, userId uuid.UUID, review models.NewReviewRequest) error
 }

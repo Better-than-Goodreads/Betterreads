@@ -130,3 +130,20 @@ func (cs *CommunitiesServiceImpl) LeaveCommunity(communityId uuid.UUID, userId u
 	}
 	return nil
 }
+
+func (cs *CommunitiesServiceImpl) DeleteCommunity(communityId uuid.UUID, userId uuid.UUID) error {
+	exists := cs.r.CheckIFCommunityExists(communityId)
+	if !exists {
+		return ErrCommunityNotFound
+	}
+
+	if !cs.r.CheckIfUserIsCreator(communityId, userId) {
+		return ErrUserNotCreator
+	}
+
+	err := cs.r.DeleteCommunity(communityId)
+	if err != nil {
+		return err
+	}
+	return nil
+}

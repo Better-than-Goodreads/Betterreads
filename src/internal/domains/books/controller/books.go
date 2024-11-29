@@ -498,6 +498,94 @@ func (bc *BooksController) GetGenres(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"genres": genres})
 }
 
+// DeleteReview godoc
+// @Summary Delete review of a book
+// @Description Delete review of a book that belongs to the user
+// @Tags books
+// @Param id path string true "Book Id"
+// @Produce  json
+// @Success 204
+// @Failure 404 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /books/{id}/review [delete]
+func (bc *BooksController) DeleteReview(ctx *gin.Context) {
+	userId, errDetails := aux.GetLoggedUserId(ctx)
+	if errDetails != nil {
+		ctx.AbortWithError(errDetails.Status, errDetails)
+		return
+	}
+
+	bookId, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %s", ctx.Param("id")), http.StatusBadRequest)
+		ctx.AbortWithError(errDetails.Status, errDetails)
+		return
+	}
+
+	err = bc.bookService.DeleteReview(bookId, userId)
+	if err != nil {
+		if errors.Is(err, service.ErrReviewNotFound) {
+			errDetails := er.NewErrorDetails("Error when deleting review", err, http.StatusNotFound)
+			ctx.AbortWithError(errDetails.Status, errDetails)
+		} else {
+			errDetails := er.NewErrorDetails("Error when deleting review", err, http.StatusInternalServerError)
+			ctx.AbortWithError(errDetails.Status, errDetails)
+		}
+		return
+	}
+	ctx.JSON(http.StatusNoContent, nil)
+}
+
+// EditReview godoc
+// @Summary Edit review of a book
+// @Description Edit review of a book that belongs to the user
+// @Tags books
+// @Param id path string true "Book Id"
+// @Produce json
+// @Param user body models.NewReviewRequest true "Review Request"
+// @Success 200 {object} models.NewReviewRequest
+// @Failure 400 {object} errors.ErrorDetailsWithParams
+// @Failure 404 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Router /books/{id}/review [put]
+func (bc *BooksController) EditReview(ctx *gin.Context) {
+	userId, errDetails := aux.GetLoggedUserId(ctx)
+	if errDetails != nil {
+		ctx.AbortWithError(errDetails.Status, errDetails)
+		return
+	}
+
+	bookId, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		errDetails := er.NewErrorDetails("Error when getting Book id", fmt.Errorf("Invalid uuid %s", ctx.Param("id")), http.StatusBadRequest)
+		ctx.AbortWithError(errDetails.Status, errDetails)
+		return
+	}
+
+	var newReview models.NewReviewRequest
+	if err := ctx.ShouldBindJSON(&newReview); err != nil {
+		er.AbortWithJsonErorr(ctx, err)
+		return
+	}
+
+	err = bc.bookService.EditReview(bookId, userId, newReview)
+	if err != nil {
+		if errors.Is(err, service.ErrReviewNotFound) {
+			errDetails := er.NewErrorDetails("Error when editing review", err, http.StatusNotFound)
+			ctx.AbortWithError(errDetails.Status, errDetails)
+		} else if errors.Is(err, service.ErrRatingAmount) {
+			errDetails := er.NewErrorDetailsWithParams("Error when editing review", http.StatusBadRequest, err)
+			ctx.AbortWithError(errDetails.Status, errDetails)
+		} else {
+			errDetails := er.NewErrorDetails("Error when editing review", err, http.StatusInternalServerError)
+			ctx.AbortWithError(errDetails.Status, errDetails)
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"review": newReview.Review})
+}
+
 // AUX FUNCTIONS
 /*
 * getBookRequest is a helper function that parses the request body and returns a New

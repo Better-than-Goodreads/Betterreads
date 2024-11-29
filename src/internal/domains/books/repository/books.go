@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+
 	"github.com/betterreads/internal/domains/books/models"
 	"github.com/google/uuid"
 )
@@ -71,4 +72,5 @@ type BooksDatabase interface {
 	GetBookshelfStatusOfUser(bookId uuid.UUID, userId uuid.UUID) (*string, error)
 	GetAllReviewsOfUser(userId uuid.UUID) ([]*models.ReviewOfUser, error)
 	EditReview(bookId uuid.UUID, userId uuid.UUID, rating int, review string) error
+	DeleteReview(bookId uuid.UUID, userId uuid.UUID) error
 }

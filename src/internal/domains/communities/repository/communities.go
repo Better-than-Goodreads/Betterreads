@@ -25,4 +25,6 @@ type CommunitiesDatabase interface {
 	GetCommunityPosts(communityId uuid.UUID) ([]*model.CommunityPostResponse, error)
 	CreateCommunityPost(communityId uuid.UUID, userId uuid.UUID, content string, title string) error
 	LeaveCommunity(communityId uuid.UUID, userId uuid.UUID) error
+	CheckIfUserIsCreator(communityId uuid.UUID, userId uuid.UUID) bool
+	DeleteCommunity(communityId uuid.UUID) error
 }

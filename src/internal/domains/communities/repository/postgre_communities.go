@@ -307,3 +307,44 @@ func (db *PostgresCommunitiesRepository) CheckIFCommunityExists(communityId uuid
 
 	return exists
 }
+
+func (db *PostgresCommunitiesRepository) DeleteCommunity(communityId uuid.UUID) error {
+	query := `DELETE FROM communities_posts WHERE community_id = $1`
+	_, err := db.db.Exec(query, communityId)
+	if err != nil {
+		return fmt.Errorf("failed to delete community: %w", err)
+	}
+
+	query = `DELETE FROM communities_pictures WHERE community_id = $1`
+	_, err = db.db.Exec(query, communityId)
+	if err != nil {
+		return fmt.Errorf("failed to delete community: %w", err)
+	}
+
+	// Deletes from users
+	query = `DELETE FROM communities_users WHERE community_id = $1`
+	_, err = db.db.Exec(query, communityId)
+	if err != nil {
+		return fmt.Errorf("failed to delete community: %w", err)
+	}
+
+	query = `DELETE FROM communities WHERE id = $1`
+	_, err = db.db.Exec(query, communityId)
+	if err != nil {
+		return fmt.Errorf("failed to delete community: %w", err)
+	}
+
+	return nil
+}
+
+func (db *PostgresCommunitiesRepository) CheckIfUserIsCreator(communityId uuid.UUID, userId uuid.UUID) bool {
+	query := `SELECT EXISTS(SELECT 1 FROM communities WHERE id=$1 AND owner_id=$2)`
+
+	var exists bool
+	err := db.db.QueryRow(query, communityId, userId).Scan(&exists)
+	if err != nil {
+		return false
+	}
+
+	return exists
+}

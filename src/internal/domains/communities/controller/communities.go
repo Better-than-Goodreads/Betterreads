@@ -367,6 +367,51 @@ func (c *CommunitiesController) LeaveCommunity(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "User left community"})
 }
 
+// DeleteCommunity godoc
+// @Summary Delete a community
+// @Description Delete a community if the user is the creator
+// @Accept json
+// @Produce json
+// @Param id path string true "Community ID"
+// @Security ApiKeyAuth
+// @Failure 403 {object} errors.ErrorDetails
+// @Failure 404 {object} errors.ErrorDetails
+// @Failure 500 {object} errors.ErrorDetails
+// @Tags communities
+// @Router /communities/{id} [delete]
+func (c *CommunitiesController) DeleteCommunity(ctx *gin.Context) {
+	userId, errDetail := aux.GetLoggedUserId(ctx)
+	if errDetail != nil {
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	communityId := ctx.Param("id")
+	communityIdParsed, err := uuid.Parse(communityId)
+	if err != nil {
+		err_detail := fmt.Errorf("Invalid community id: %s", communityId)
+		errDetail := er.NewErrorDetails("Error Parsing Community ID", err_detail, http.StatusBadRequest)
+		ctx.AbortWithError(errDetail.Status, errDetail)
+		return
+	}
+
+	err = c.communitiesService.DeleteCommunity(communityIdParsed, userId)
+	if err != nil {
+		if err == service.ErrUserNotCreator {
+			details := er.NewErrorDetails("Error when deleting community", err, http.StatusForbidden)
+			ctx.AbortWithError(details.Status, details)
+		} else if err == service.ErrCommunityNotFound {
+			details := er.NewErrorDetails("Error when deleting community", err, http.StatusNotFound)
+			ctx.AbortWithError(details.Status, details)
+		} else {
+			details := er.NewErrorDetails("Error when deleting community", err, http.StatusInternalServerError)
+			ctx.AbortWithError(details.Status, details)
+		}
+		return
+	}
+	ctx.JSON(http.StatusNoContent, nil)
+}
+
 /*
 * getCommunityRequest is a helper function that parses the request body and returns a New
 * Community Request struct. It also gets the picture from the request and adds it to the

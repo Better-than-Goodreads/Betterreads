@@ -418,7 +418,16 @@ func (r *PostgresBookRepository) EditReview(bookId uuid.UUID, userId uuid.UUID, 
 }
 
 func (r *PostgresBookRepository) DeleteReview(bookId uuid.UUID, userId uuid.UUID) error {
-	return nil //lol
+	query := `DELETE FROM reviews WHERE book_id = $1 AND user_id = $2;`
+	args := []interface{}{bookId, userId}
+	if _, err := r.c.Exec(query, args...); err != nil {
+		return fmt.Errorf("failed to delete review: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresBookRepository) DeleteRating(bookId uuid.UUID, userId uuid.UUID) error {
+	return r.DeleteReview(bookId, userId)
 }
 
 func (r *PostgresBookRepository) CheckifReviewExists(bookId uuid.UUID, userId uuid.UUID) (bool, error) {

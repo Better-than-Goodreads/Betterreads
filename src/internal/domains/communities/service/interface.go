@@ -12,6 +12,7 @@ var (
 	ErrUserAlreadyInCommunity = errors.New("user is already in community")
 	ErrUserNotInCommunity     = errors.New("user is not in community")
 	ErrCommunityNotFound      = errors.New("community not found")
+	ErrUserNotCreator         = errors.New("user is not the creator")
 )
 
 type CommunitiesService interface {
@@ -25,4 +26,5 @@ type CommunitiesService interface {
 	GetCommunityPosts(communityId uuid.UUID) ([]*model.CommunityPostResponse, error)
 	CreateCommunityPost(communityId uuid.UUID, userId uuid.UUID, content string, title string) error
 	LeaveCommunity(communityId uuid.UUID, userId uuid.UUID) error
+	DeleteCommunity(communityId uuid.UUID, userId uuid.UUID) error
 }

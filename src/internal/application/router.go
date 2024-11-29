@@ -171,6 +171,8 @@ func addBooksHandlers(r *Router, conn *sqlx.DB) (booksService.BooksService, book
 		private.PUT("/:id/rating", bc.UpdateRatingOfBook)
 		private.GET("/author/:id", bc.GetBooksOfAuthor)
 		private.GET("/user/:id/reviews", bc.GetAllReviewsOfUser)
+		private.DELETE("/:id/reviews", bc.DeleteReview)
+		private.PUT("/:id/reviews", bc.EditReview)
 	}
 
 	return bs, booksRepo
@@ -263,6 +265,7 @@ func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
 		private.POST("/:id/join", cc.JoinCommunity)
 		private.POST("/:id/posts", cc.CreateCommunityPost)
 		private.DELETE("/:id/leave", cc.LeaveCommunity)
+		private.DELETE("/:id", cc.DeleteCommunity)
 	}
 }
 

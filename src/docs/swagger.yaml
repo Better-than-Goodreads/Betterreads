@@ -553,6 +553,30 @@ paths:
       tags:
       - books
   /books/{id}/review:
+    delete:
+      description: Delete review of a book that belongs to the user
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Delete review of a book
+      tags:
+      - books
     get:
       description: Get reviews of a book
       parameters:
@@ -613,6 +637,42 @@ paths:
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
       summary: Add review to a book
+      tags:
+      - books
+    put:
+      description: Edit review of a book that belongs to the user
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.NewReviewRequest'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Edit review of a book
       tags:
       - books
   /books/author/{id}:
