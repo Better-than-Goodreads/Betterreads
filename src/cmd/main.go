@@ -1,8 +1,8 @@
 package main
 
 import (
+	_ "github.com/betterreads/docs"
 	"github.com/betterreads/internal/application"
-    _ "github.com/betterreads/docs"
 )
 
 // @title BetterReads API
@@ -15,4 +15,3 @@ func main() {
 	r := application.NewRouter(":8080")
 	r.Run()
 }
-

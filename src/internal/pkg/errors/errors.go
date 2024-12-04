@@ -5,7 +5,7 @@ import (
 
 	gin "github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-    "net/http"
+	"net/http"
 )
 
 // Follows RFC 7807: https://datatracker.ietf.org/doc/html/rfc7807
@@ -18,8 +18,8 @@ type ErrorDetails struct {
 }
 
 func (e ErrorDetails) Error() string {
-    string := e.Title + " " + e.Detail
-    return string
+	string := e.Title + " " + e.Detail
+	return string
 }
 
 func NewErrorDetails(title string, err error, status int) *ErrorDetails {
@@ -27,10 +27,9 @@ func NewErrorDetails(title string, err error, status int) *ErrorDetails {
 		Type:   "about:blank",
 		Title:  title,
 		Detail: err.Error(),
-		Status: status, 
+		Status: status,
 	}
 }
-
 
 type ErrorDetailsWithParams struct {
 	Type     string       `json:"type"`
@@ -42,8 +41,8 @@ type ErrorDetailsWithParams struct {
 }
 
 func (e ErrorDetailsWithParams) Error() string {
-    string := e.Title + " " + e.Detail
-    return string
+	string := e.Title + " " + e.Detail
+	return string
 }
 
 type ErrorParam struct {
@@ -81,7 +80,7 @@ func parseParameters(err error) []ErrorParam {
 	return errors
 }
 
-func NewErrorDetailsWithParams(title string , status int, err error) *ErrorDetailsWithParams {
+func NewErrorDetailsWithParams(title string, status int, err error) *ErrorDetailsWithParams {
 	return &ErrorDetailsWithParams{
 		Type:   "about:blank",
 		Title:  title,
@@ -91,11 +90,10 @@ func NewErrorDetailsWithParams(title string , status int, err error) *ErrorDetai
 	}
 }
 
-func AbortWithJsonErorr(c *gin.Context, err error){
-    errToSend := NewErrorDetailsWithParams("Error parsing request json", http.StatusBadRequest, err)
-    c.AbortWithError(errToSend.Status, errToSend)
+func AbortWithJsonErorr(c *gin.Context, err error) {
+	errToSend := NewErrorDetailsWithParams("Error parsing request json", http.StatusBadRequest, err)
+	c.AbortWithError(errToSend.Status, errToSend)
 }
-
 
 func SendError(c *gin.Context, err *ErrorDetails) {
 	err.Instance = c.Request.RequestURI

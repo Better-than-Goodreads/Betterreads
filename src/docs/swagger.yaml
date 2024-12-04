@@ -38,6 +38,53 @@ definitions:
       reason:
         type: string
     type: object
+  model.CommunityResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      joined:
+        type: boolean
+      name:
+        type: string
+      owner_id:
+        type: string
+    type: object
+  model.NewCommunityPostRequest:
+    properties:
+      content:
+        type: string
+      title:
+        maxLength: 255
+        type: string
+    required:
+    - content
+    - title
+    type: object
+  model.NewCommunityRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      picture:
+        items:
+          type: integer
+        type: array
+    required:
+    - description
+    - name
+    type: object
+  model.RecommendationsByGenre:
+    properties:
+      books:
+        items:
+          $ref: '#/definitions/models.Book'
+        type: array
+      genre:
+        type: string
+    type: object
   models.Book:
     properties:
       amount_of_pages:
@@ -67,6 +114,7 @@ definitions:
     required:
     - amount_of_pages
     - author
+    - author_name
     - description
     - genres
     - id
@@ -76,15 +124,29 @@ definitions:
     type: object
   models.BookInShelfResponse:
     properties:
+      amount_of_pages:
+        type: integer
       author:
         type: string
       author_name:
         type: string
-      avg_rating:
+      avg_ratings:
         type: number
       book_id:
         type: string
       date_added:
+        type: string
+      description:
+        type: string
+      genres:
+        items:
+          type: string
+        type: array
+      ignore:
+        type: string
+      language:
+        type: string
+      publication_date:
         type: string
       status:
         type: string
@@ -187,6 +249,36 @@ definitions:
     required:
     - rating
     type: object
+  models.Post:
+    properties:
+      book_author:
+        type: string
+      book_description:
+        type: string
+      book_id:
+        type: string
+      book_title:
+        type: string
+      id:
+        type: string
+      publication_date:
+        type: string
+      rating:
+        description: |-
+          Ratings can be null to have the two posts.
+          - The publication of a book
+          - The rating of a book
+        type: integer
+      username:
+        type: string
+    type: object
+  models.PostDTO:
+    properties:
+      post:
+        $ref: '#/definitions/models.Post'
+      type:
+        type: string
+    type: object
   models.Review:
     properties:
       rating:
@@ -196,6 +288,8 @@ definitions:
     type: object
   models.ReviewOfBook:
     properties:
+      publication_date:
+        type: string
       rating:
         type: integer
       review:
@@ -210,6 +304,8 @@ definitions:
       book_id:
         type: string
       book_title:
+        type: string
+      publication_date:
         type: string
       rating:
         type: integer
@@ -471,6 +567,30 @@ paths:
       tags:
       - books
   /books/{id}/review:
+    delete:
+      description: Delete review of a book that belongs to the user
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Delete review of a book
+      tags:
+      - books
     get:
       description: Get reviews of a book
       parameters:
@@ -533,6 +653,42 @@ paths:
       summary: Add review to a book
       tags:
       - books
+    put:
+      description: Edit review of a book that belongs to the user
+      parameters:
+      - description: Book Id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review Request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewReviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.NewReviewRequest'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Edit review of a book
+      tags:
+      - books
   /books/author/{id}:
     get:
       description: Get the books of an author, if no books found returns an empty
@@ -559,6 +715,25 @@ paths:
       summary: Get books of an auther
       tags:
       - books
+  /books/genres:
+    get:
+      description: Get all genres
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get all genres
+      tags:
+      - books
   /books/info:
     get:
       consumes:
@@ -582,12 +757,25 @@ paths:
       - books
   /books/info/search:
     get:
-      description: Get books by name, if no books found returns an empty array
+      description: Get books by name, filters by genre and also sorts, if no books
+        found returns an empty array
       parameters:
       - description: Book Name
         in: query
         name: name
         required: true
+        type: string
+      - description: Book Genre
+        in: query
+        name: genre
+        type: string
+      - description: Sort by publication_date, total_ratings, avg_rating
+        in: query
+        name: sort
+        type: string
+      - description: Sort direction asc or desc
+        in: query
+        name: direction
         type: string
       produces:
       - application/json
@@ -634,26 +822,114 @@ paths:
       summary: Gets all reviews of a user
       tags:
       - books
-  /bookshelf:
-    post:
+  /communities:
+    get:
       consumes:
       - application/json
-      description: Add book to shelf
-      operationId: add-book
+      description: Get all communities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.CommunityResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get all communities
+      tags:
+      - communities
+    post:
+      consumes:
+      - multipart/form-data
+      description: creates a community, the community data should follow the model.NewCommunityRequest
+        in JSON
       parameters:
-      - description: Bookshelf entry
+      - description: Community Data
+        in: formData
+        name: data
+        required: true
+        type: string
+      - description: Community Picture
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Don't need to send this in json, this param is only here to reference
+          NewCommunityRequest, DONT SEND PICTURE in JSON
         in: body
-        name: bookShelfEntry
+        name: community
         required: true
         schema:
-          $ref: '#/definitions/models.BookShelfRequest'
+          $ref: '#/definitions/model.NewCommunityRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            type: string
+            $ref: '#/definitions/model.CommunityResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: creates a community
+      tags:
+      - communities
+  /communities/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a community if the user is the creator
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a community
+      tags:
+      - communities
+    get:
+      consumes:
+      - application/json
+      description: Get a community by id
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CommunityResponse'
         "400":
           description: Bad Request
           schema:
@@ -661,26 +937,25 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+            $ref: '#/definitions/errors.ErrorDetails'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
-      summary: Add book to shelf
+      summary: Get a community by id
       tags:
-      - bookshelf
-    put:
+      - communities
+  /communities/{id}/join:
+    post:
       consumes:
       - application/json
-      description: Edit book in shelf
-      operationId: edit-book
+      description: Join a community
       parameters:
-      - description: Bookshelf entry
-        in: body
-        name: bookShelfEntry
+      - description: Community ID
+        in: path
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/models.BookShelfRequest'
+        type: string
       produces:
       - application/json
       responses:
@@ -688,34 +963,119 @@ paths:
           description: OK
           schema:
             type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Join a community
+      tags:
+      - communities
+  /communities/{id}/leave:
+    delete:
+      consumes:
+      - application/json
+      description: Leave a community
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Leave a community
+      tags:
+      - communities
+  /communities/{id}/picture:
+    get:
+      description: Get community picture
+      parameters:
+      - description: Community id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/errors.ErrorDetails'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/errors.ErrorDetails'
-      summary: Edit book in shelf
+      summary: Get Community picture
       tags:
-      - bookshelf
-  /bookshelf/{userId}:
+      - communities
+  /communities/{id}/posts:
     get:
-      description: Get bookshelf of an user
-      operationId: get-book
+      consumes:
+      - application/json
+      description: gets the posts of a community
       parameters:
-      - description: User ID
+      - description: Community ID
         in: path
-        name: userId
+        name: id
         required: true
         type: string
-      - description: Shelf Type
-        in: query
-        name: shelfType
+      - description: Post Content
+        in: body
+        name: content
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: gets the posts of a community
+      tags:
+      - communities
+    post:
+      consumes:
+      - application/json
+      description: Create a post in a community
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Post Data
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/model.NewCommunityPostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+      summary: Create a post in a community
+      tags:
+      - communities
+  /communities/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Get all users in a community
+      parameters:
+      - description: Community ID
+        in: path
+        name: id
         required: true
         type: string
       produces:
@@ -725,7 +1085,66 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.BookInShelfResponse'
+              $ref: '#/definitions/models.UserStageResponse'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get all users in a community
+      tags:
+      - communities
+  /communities/search:
+    get:
+      consumes:
+      - application/json
+      description: Search communities by name. It returns all communities that have
+        the search string in their name
+      parameters:
+      - description: Search string
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.CommunityResponse'
+            type: array
+      summary: Search communities by name
+      tags:
+      - communities
+  /feed:
+    get:
+      description: 'Get feed. The type of posts can be : ["post", "rating"]'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.PostDTO'
+            type: array
+      summary: Get feed of an user
+      tags:
+      - feed
+  /recommendations:
+    get:
+      consumes:
+      - application/json
+      description: Get recommendations for an user based on his top 3 genres. It gets
+        you 5 books for each genre if available.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.RecommendationsByGenre'
             type: array
         "400":
           description: Bad Request
@@ -739,9 +1158,74 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/errors.ErrorDetails'
-      summary: Get bookshelf of an user
+      summary: Get recommendations for an user based on his top 3 genres.
       tags:
-      - bookshelf
+      - recommendations
+  /recommendations/friends:
+    get:
+      description: Get recommendations for an user based on his friends. It gets you
+        all friends books
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get recommendations for an user based on his friends.
+      tags:
+      - recommendations
+  /recommendations/more:
+    get:
+      consumes:
+      - application/json
+      description: Get more recommendations for an specific genre. May want to use
+        it after GetMoreRecommendations, it gets you 20 books if available for the
+        specific genre
+      parameters:
+      - description: Genre
+        in: query
+        name: genre
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get more recommendations for an specific genre.
+      tags:
+      - recommendations
   /users:
     get:
       consumes:
@@ -784,6 +1268,37 @@ paths:
       summary: Get user by id
       tags:
       - users
+  /users/{id}/friends:
+    get:
+      description: Get Friends of user logged in
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/models.UserResponse'
+              type: array
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get Friends
+      tags:
+      - Friends
   /users/{id}/picture:
     get:
       description: Get user picture
@@ -811,6 +1326,250 @@ paths:
       summary: Get user picture
       tags:
       - users
+  /users/{id}/shelf/search:
+    get:
+      description: Search books in shelf of an user. The search can be filtered by
+        genre, sorted by avg_ratings, total_ratings and date. The direction can be
+        asc or desc.
+      parameters:
+      - description: 'Shelf Type: all, read, plan-to-read, reading '
+        in: query
+        name: status
+        required: true
+        type: string
+      - description: Book Genre
+        in: query
+        name: genre
+        type: string
+      - description: Sort by publication_date, total_ratings, avg_rating
+        in: query
+        name: sort
+        type: string
+      - description: Sort direction asc or desc
+        in: query
+        name: direction
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookInShelfResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Search books in shelf of an user
+      tags:
+      - bookshelf
+  /users/{userId}/shelf:
+    get:
+      description: Get bookshelf of an user
+      operationId: get-book
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Shelf Type
+        in: query
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.BookInShelfResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get bookshelf of an user
+      tags:
+      - bookshelf
+  /users/friends:
+    delete:
+      description: Delete Friend from user logged in
+      parameters:
+      - description: Friend ID
+        in: query
+        name: Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Delete a friend
+      tags:
+      - Friends
+    post:
+      description: Add Friend to user logged in
+      parameters:
+      - description: Friend ID
+        in: query
+        name: Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Add a friend
+      tags:
+      - Friends
+  /users/friends/requests:
+    delete:
+      description: Reject Friend Request from
+      parameters:
+      - description: Friend ID
+        in: query
+        name: Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Reject a friend request
+      tags:
+      - Friends
+    post:
+      description: Accept Friend Request from user logged in
+      parameters:
+      - description: Friend ID
+        in: query
+        name: Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Accept a friend request
+      tags:
+      - Friends
+  /users/friends/requests/received:
+    get:
+      description: Get Friends Request Received
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UserResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get Friends Request Received
+      tags:
+      - Friends
+  /users/friends/requests/sent:
+    get:
+      description: Get Friends Request Sent
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/models.UserResponse'
+              type: array
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Get Friends Request Sent
+      tags:
+      - Friends
   /users/login:
     post:
       consumes:
@@ -933,4 +1692,136 @@ paths:
       summary: Register first step
       tags:
       - users
+  /users/search:
+    get:
+      consumes:
+      - application/json
+      description: Search users
+      parameters:
+      - description: User name
+        in: query
+        name: name
+        type: string
+      - description: Is author
+        in: query
+        name: author
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Search users
+      tags:
+      - users
+  /users/shelf:
+    delete:
+      description: Delete book from shelf
+      operationId: delete-book
+      parameters:
+      - description: Book ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Delete book from shelf
+      tags:
+      - bookshelf
+    post:
+      consumes:
+      - application/json
+      description: Add book to shelf
+      operationId: add-book
+      parameters:
+      - description: Bookshelf entry
+        in: body
+        name: bookShelfEntry
+        required: true
+        schema:
+          $ref: '#/definitions/models.BookShelfRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetailsWithParams'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Add book to shelf
+      tags:
+      - bookshelf
+    put:
+      consumes:
+      - application/json
+      description: Edit book in shelf
+      operationId: edit-book
+      parameters:
+      - description: Bookshelf entry
+        in: body
+        name: bookShelfEntry
+        required: true
+        schema:
+          $ref: '#/definitions/models.BookShelfRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ErrorDetails'
+      summary: Edit book in shelf
+      tags:
+      - bookshelf
 swagger: "2.0"

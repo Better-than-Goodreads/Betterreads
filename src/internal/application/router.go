@@ -8,9 +8,25 @@ import (
 	booksService "github.com/betterreads/internal/domains/books/service"
 	"github.com/jmoiron/sqlx"
 
-    bookshelfController "github.com/betterreads/internal/domains/bookshelf/controller"
-    bookshelfRepository "github.com/betterreads/internal/domains/bookshelf/repository"
-    bookshelfService "github.com/betterreads/internal/domains/bookshelf/service"
+	bookshelfController "github.com/betterreads/internal/domains/bookshelf/controller"
+	bookshelfRepository "github.com/betterreads/internal/domains/bookshelf/repository"
+	bookshelfService "github.com/betterreads/internal/domains/bookshelf/service"
+
+	recommendationsController "github.com/betterreads/internal/domains/recommendations/controller"
+	recommendationsRepository "github.com/betterreads/internal/domains/recommendations/repository"
+	recommendationsService "github.com/betterreads/internal/domains/recommendations/service"
+
+	friendsController "github.com/betterreads/internal/domains/friends/controller"
+	friendsRepository "github.com/betterreads/internal/domains/friends/repository"
+	friendsService "github.com/betterreads/internal/domains/friends/service"
+
+	communitiesController "github.com/betterreads/internal/domains/communities/controller"
+	communitiesRepository "github.com/betterreads/internal/domains/communities/repository"
+	communitiesService "github.com/betterreads/internal/domains/communities/service"
+
+	feedController "github.com/betterreads/internal/domains/feed/controller"
+	feedRepository "github.com/betterreads/internal/domains/feed/repository"
+	feedService "github.com/betterreads/internal/domains/feed/service"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -73,9 +89,13 @@ func NewRouter(port string) *Router {
 
 	r := createRouterFromConfig(cfg)
 	addCorsConfiguration(r)
-	addUsersHandlers(r, conn)
-    books := addBooksHandlers(r, conn)
-    AddBookshelfHandlers(r, conn, books)
+	users := addUsersHandlers(r, conn)
+	books, booksRepo := addBooksHandlers(r, conn)
+	AddBookshelfHandlers(r, conn, books)
+	AddRecommendationsHandlers(r, conn, books, booksRepo)
+	addFriendsHandlers(r, users, conn)
+	AddCommunitiesHandlers(r, conn)
+	addFeedHandlers(r, users, conn)
 
 	//Adds swagger documentation
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -92,7 +112,7 @@ func addCorsConfiguration(r *Router) {
 	r.engine.Use(cors.New(config))
 }
 
-func addUsersHandlers(r *Router, conn *sqlx.DB) {
+func addUsersHandlers(r *Router, conn *sqlx.DB) usersService.UsersService {
 
 	userRepo, err := usersRepository.NewPostgresUserRepository(conn)
 	if err != nil {
@@ -108,6 +128,7 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 		public.POST("/login", uc.LogIn)
 		public.GET("/:id", uc.GetUser)
 		public.GET("/:id/picture", uc.GetPicture)
+		public.GET("/search", uc.SearchUsers)
 	}
 
 	private := r.engine.Group("/users")
@@ -116,12 +137,16 @@ func addUsersHandlers(r *Router, conn *sqlx.DB) {
 		private.GET("/", uc.GetUsers)
 		private.POST("/picture", uc.PostPicture)
 	}
+	return us
 }
 
-func addBooksHandlers(r *Router, conn *sqlx.DB)  booksService.BooksService{
+func addBooksHandlers(r *Router, conn *sqlx.DB) (booksService.BooksService, booksRepository.BooksDatabase) {
 	booksRepo, err := booksRepository.NewPostgresBookRepository(conn)
 	if err != nil {
 		fmt.Println("error: %w", err)
+	}
+	if booksRepo == nil {
+		fmt.Println("booksRepo is nil")
 	}
 	bs := booksService.NewBooksServiceImpl(booksRepo)
 	bc := booksController.NewBooksController(bs)
@@ -132,8 +157,9 @@ func addBooksHandlers(r *Router, conn *sqlx.DB)  booksService.BooksService{
 		public.GET("/:id/picture", bc.GetBookPicture)
 		public.GET("/:id/info", bc.GetBookInfo)
 		public.GET("/info", bc.GetBooksInfo)
-		public.GET("/info/search", bc.SearchBooksInfoByName)
-        public.GET("/:id/reviews", bc.GetBookReviews)
+		public.GET("/info/search", bc.SearchBooksInfo)
+		public.GET("/:id/reviews", bc.GetBookReviews)
+		public.GET("/genres", bc.GetGenres)
 	}
 
 	private := r.engine.Group("/books")
@@ -142,34 +168,116 @@ func addBooksHandlers(r *Router, conn *sqlx.DB)  booksService.BooksService{
 		private.POST("/", bc.PublishBook)
 		private.POST("/:id/reviews", bc.ReviewBook)
 		private.POST("/:id/rating", bc.RateBook)
-        private.PUT("/:id/rating", bc.UpdateRatingOfBook)
-        private.GET("/author/:id", bc.GetBooksOfAuthor)
+		private.PUT("/:id/rating", bc.UpdateRatingOfBook)
+		private.GET("/author/:id", bc.GetBooksOfAuthor)
 		private.GET("/user/:id/reviews", bc.GetAllReviewsOfUser)
+		private.DELETE("/:id/reviews", bc.DeleteReview)
+		private.PUT("/:id/reviews", bc.EditReview)
 	}
 
-    return bs
+	return bs, booksRepo
 }
 
 func AddBookshelfHandlers(r *Router, conn *sqlx.DB, books booksService.BooksService) {
-    bookshelfRepo, err := bookshelfRepository.NewPostgresBookShelfRepository(conn)
-    if err != nil {
-        fmt.Println("error: %w", err)
-    }
-    bs := bookshelfService.NewBookShelfServiceImpl(bookshelfRepo, books)
-    bc := bookshelfController.NewBookshelfController(bs)
+	bookshelfRepo, err := bookshelfRepository.NewPostgresBookShelfRepository(conn)
+	if err != nil {
+		fmt.Println("error: %w", err)
+	}
+	bs := bookshelfService.NewBookShelfServiceImpl(bookshelfRepo, books)
+	bc := bookshelfController.NewBookshelfController(bs)
 
-    public := r.engine.Group("/bookshelf")
-    {
-        public.GET("/:id", bc.GetBookShelf)
-    }
+	public := r.engine.Group("/users")
+	{
+		public.GET("/:id/shelf", bc.GetBookShelf)
+		public.GET("/:id/shelf/search", bc.SearchBookShelf)
+	}
 
+	private := r.engine.Group("users/shelf")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.POST("/", bc.AddBookToShelf)
+		private.PUT("/", bc.EditBookInShelf)
+		private.DELETE("/", bc.DeleteBookFromShelf)
+	}
+}
 
-    private := r.engine.Group("/bookshelf")
-    private.Use(middlewares.AuthMiddleware)
-    {
-        private.POST("/", bc.AddBookToShelf)
-        private.PUT("/", bc.EditBookInShelf)
-    }
+func AddRecommendationsHandlers(r *Router, conn *sqlx.DB, books booksService.BooksService, booksRepo booksRepository.BooksDatabase) {
+	recommendationsRepo := recommendationsRepository.NewPostgresRecommendationsRepository(conn, booksRepo)
+	rs := recommendationsService.NewRecommendationsServiceImpl(recommendationsRepo, books)
+	rc := recommendationsController.NewRecommendationsController(rs)
+	private := r.engine.Group("users/recommendations")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.GET("/more", rc.GetMoreRecommendations)
+		private.GET("/", rc.GetRecommendations)
+		private.GET("/friends", rc.GetFriendsRecommendations)
+	}
+}
+
+func addFriendsHandlers(r *Router, users usersService.UsersService, conn *sqlx.DB) {
+	friendsRepo, err := friendsRepository.NewPostgresFriendsRepository(conn)
+	if err != nil {
+		fmt.Println("error: %w", err)
+	}
+	fs := friendsService.NewFriendsServiceImpl(friendsRepo, users)
+	fc := friendsController.NewFriendsController(fs)
+	public := r.engine.Group("users")
+	{
+		public.GET("/:id/friends", fc.GetFriends)
+	}
+
+	private := r.engine.Group("users/friends")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.POST("/", fc.AddFriend)
+		private.DELETE("/", fc.DeleteFriend)
+		private.POST("/requests", fc.AcceptFriendRequest)
+		private.DELETE("/requests", fc.RejectFriendRequest)
+		private.GET("/requests/sent", fc.GetFriendsRequestSent)
+		private.GET("/requests/received", fc.GetFriendRequestsReceived)
+	}
+
+}
+
+func AddCommunitiesHandlers(r *Router, conn *sqlx.DB) {
+	communitiesRepo, err := communitiesRepository.NewPostgresCommunitiesRepository(conn)
+	if err != nil {
+		fmt.Println("error: %w", err)
+	}
+	cs := communitiesService.NewCommunitiesServiceImpl(communitiesRepo)
+	cc := communitiesController.NewCommunitiesController(cs)
+
+	public := r.engine.Group("communities")
+	public.Use(middlewares.AuthPublicMiddleware)
+	{
+		public.GET("/:id/picture", cc.GetCommunityPicture)
+		public.GET("/:id", cc.GetCommunityById)
+		public.GET("/", cc.GetCommunities)
+		public.GET("/search", cc.SearchCommunities)
+		public.GET("/:id/users", cc.GetCommunityUsers)
+		public.GET("/:id/posts", cc.GetCommunityPosts)
+	}
+
+	private := r.engine.Group("communities")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.POST("/", cc.CreateCommunity)
+		private.POST("/:id/join", cc.JoinCommunity)
+		private.POST("/:id/posts", cc.CreateCommunityPost)
+		private.DELETE("/:id/leave", cc.LeaveCommunity)
+		private.DELETE("/:id", cc.DeleteCommunity)
+	}
+}
+
+func addFeedHandlers(r *Router, users usersService.UsersService, conn *sqlx.DB) {
+	feedRepo := feedRepository.NewPostgresFeedRepository(conn)
+	fs := feedService.NewFeedServiceImpl(feedRepo, users)
+	fc := feedController.NewFeedController(fs)
+	private := r.engine.Group("feed")
+	private.Use(middlewares.AuthMiddleware)
+	{
+		private.GET("/", fc.GetFeed)
+	}
 }
 
 func (r *Router) Run() {

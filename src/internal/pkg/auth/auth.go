@@ -1,13 +1,12 @@
 package auth
 
-
 import (
-    "os"
-    "fmt"
-    "time"
-    "strconv"
-    "github.com/golang-jwt/jwt/v5"
+	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"os"
+	"strconv"
+	"time"
 )
 
 var (
@@ -35,9 +34,9 @@ func VerifyPassword(hashedPassword, password string) bool {
 }
 
 type Claims struct {
-    IsAuthor bool `json:"is_author"`
-    UserId    string `json:"user_id"`
-    jwt.RegisteredClaims
+	IsAuthor bool   `json:"is_author"`
+	UserId   string `json:"user_id"`
+	jwt.RegisteredClaims
 }
 
 func GenerateToken(userId string, isAuthor bool) (string, error) {
@@ -49,8 +48,8 @@ func GenerateToken(userId string, isAuthor bool) (string, error) {
 	}
 
 	claims := Claims{
-        IsAuthor: isAuthor,
-		UserId:    userId,
+		IsAuthor: isAuthor,
+		UserId:   userId,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(jwtExpirationHours) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

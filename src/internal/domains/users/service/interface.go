@@ -1,6 +1,5 @@
 package service
 
-
 import (
 	"errors"
 
@@ -12,30 +11,30 @@ import (
 
 var (
 	ErrUsernameTaken = er.ErrorParam{
-		Name: "username",
-		Reason:  "username already taken",
+		Name:   "username",
+		Reason: "username already taken",
 	}
 
-	ErrEmailTaken = er.ErrorParam {
-		Name: "email",
+	ErrEmailTaken = er.ErrorParam{
+		Name:   "email",
 		Reason: "email already taken",
 	}
 
-    ErrUsernameNotFound = errors.New("username doesn't exist")
+	ErrUsernameNotFound = errors.New("username doesn't exist")
 
-    ErrWrongPassword = errors.New("wrong password")
+	ErrWrongPassword = errors.New("wrong password")
 
 	ErrUserNotFound = errors.New("user not found")
 )
 
 type UsersService interface {
-    RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error)
-    RegisterSecondStep(user *models.UserAdditionalRequest, id uuid.UUID) (*models.UserResponse, error)
-    LogInUser(user *models.UserLoginRequest) (*models.UserResponse, string, error)
-    GetUsers() ([]*models.UserResponse, error)
-    GetUser(id uuid.UUID) (*models.UserResponse, error)
-    PostUserPicture(id uuid.UUID, picture models.UserPictureRequest) error
-    GetUserPicture(id uuid.UUID) ([]byte, error)
+	RegisterFirstStep(user *models.UserStageRequest) (*models.UserStageResponse, error)
+	RegisterSecondStep(user *models.UserAdditionalRequest, id uuid.UUID) (*models.UserResponse, error)
+	LogInUser(user *models.UserLoginRequest) (*models.UserResponse, string, error)
+	GetUsers() ([]*models.UserResponse, error)
+	GetUser(id uuid.UUID) (*models.UserResponse, error)
+	PostUserPicture(id uuid.UUID, picture models.UserPictureRequest) error
+	GetUserPicture(id uuid.UUID) ([]byte, error)
+	SearchUsers(username string, isAuthor bool) ([]*models.UserResponse, error)
+	CheckUserExists(id uuid.UUID) bool
 }
-
-
