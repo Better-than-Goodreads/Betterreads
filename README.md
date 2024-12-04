@@ -36,7 +36,7 @@ POSTGRES_DB=db
 
 Simplemente entonces levantamos con docker compose: 
 ```shell
-docker compose up
+docker compose up --build
 ```
 
 
