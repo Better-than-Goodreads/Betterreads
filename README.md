@@ -1,7 +1,14 @@
 # Betterreads API
+The Betterreads API is a backend prototype inspired by Goodreads, designed to provide a platform for users to share their opinions about books and rate them. The project leverages Docker for easy deployment and integrates a PostgreSQL database to manage user and book data. It also includes automated API documentation generated using Swagger.
 
-The Betterreads API serves as a backend prototype inspired by Goodreads. Its goal is to provide a platform where users can share opinions about books and rate them.
-
+## Key features:
+- User reviews and ratings for books.
+- Bookshelfs where users can store their books.
+- Communities for users to share opinions
+- Docker-based setup for simplified development and deployment.
+- PostgreSQL integration with customizable environment variables.
+- Swagger UI for seamless API documentation and testing.
+  
 ## Dependencies
 
 The project is designed to run in Docker with a local database. Therefore, the only prerequisite is having Docker installed on your system.
