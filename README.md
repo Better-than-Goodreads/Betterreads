@@ -1,13 +1,14 @@
 # Betterreads API
 
-Bettereads API es el backend de prueba tomando como inspiración a goodreads. La idea es crear una plataforma donde los usuarios puedan compartir sus opiniones sobre libros y puntuarlos. 
+The Betterreads API serves as a backend prototype inspired by Goodreads. Its goal is to provide a platform where users can share opinions about books and rate them.
 
-## Dependencias
-El proyecto esta pensado para ser ejecutado en docker con una base de datos local. Por ende la unica dependencia necesaria es tener docker instalado en el sistema.
+## Dependencies
 
-### Variables de entorno
+The project is designed to run in Docker with a local database. Therefore, the only prerequisite is having Docker installed on your system.
 
-Aun así se necesita tener el .env dentro de la carpeta src con las variables de entorno necesarias.
+### Environment Variables
+
+To set up the environment, ensure the `.env` file exists in the `src` directory with the following variables:
 
 ```shell
 ENVIRONMENT=development
@@ -22,7 +23,7 @@ JWT_SECRET=any
 JWT_DURATION_HOURS=1
 ```
 
-Y otra .env dentro de /database: 
+Additionally, another `.env` file is required inside the `/database` directory:
 
 ```shell
 POSTGRES_USER=user
@@ -30,32 +31,34 @@ POSTGRES_PASSWORD=user123
 POSTGRES_DB=db
 ```
 
-> Notar que la informacion de las variables de entorno puede variar segun la configuración de la base de datos. Si notar que es importante que el user, password y database_name/postgres_db tienen que ser iguales en ambos archivos.
+> **Note:** The values for environment variables may vary depending on the database configuration. It's crucial that `user`, `password`, and `database_name`/`postgres_db` match in both files.
 
-### Levantar el proyecto y la base de datos
+### Starting the Project and Database
 
-Simplemente entonces levantamos con docker compose: 
+Start the project and database with Docker Compose:
+
 ```shell
 docker compose up
 ```
 
-## Documentación
+## Documentation
 
-La documentacion esta automatizada con swagger + swag en go.
-Para generar la documentación se utiliza necesita instalar la CLI de Swag con :
+The documentation is automated using Swagger and Swag for Go. To generate the documentation, install the Swag CLI with:
 
 ```shell
 go install github.com/swaggo/swag/cmd/swag@latest
 ```
 
-Luego para generar la documentación se utiliza el comando dentro de src/:
+Then, run the following command inside the `src/` directory to generate the documentation:
 
 ```shell
 swag init -g cmd/main.go
 ```
 
-Para visualizar la documentación, teniendo el servidor corriendo simplemente acceda a :
-[Link con puerto en 8080](http://localhost:8080/swagger/index.html#/)
-link generico : http://localhost:PORT/swagger/index.html#/
+To view the documentation, with the server running, navigate to:
+[Swagger UI](http://localhost:8080/swagger/index.html#/)
 
+Alternatively, replace `8080` with your configured port:
 
+```
+http://localhost:PORT/swagger/index.html#/
