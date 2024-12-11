@@ -33,7 +33,7 @@ POSTGRES_DB=db
 
 > **Note:** The values for environment variables may vary depending on the database configuration. It's crucial that `user`, `password`, and `database_name`/`postgres_db` match in both files.
 
-### Starting the Project and Database
+## Starting the Project and Database
 
 Start the project and database with Docker Compose:
 
